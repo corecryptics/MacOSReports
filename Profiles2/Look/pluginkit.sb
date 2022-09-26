@@ -1,0 +1,83 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; We need to be able to read arbitrary app bundles.
+(allow file-read*)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain-prefix "com.apple.pluginkit.")
+       (preference-domain "com.apple.ManagedClient"))
+
+;; Read/write access to per-user directories
+(allow file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR"))
+       (subpath (param "TRANSLOCATION_DIR"))
+       (subpath (param "USER_DIR")))
+
+;; Needed for translocation
+(allow file-mount
+       (subpath (param "TRANSLOCATION_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.pluginkit")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+      
+(allow file-read-data)
+(allow process-info-pidinfo)
+(allow file-issue-extension)
+(allow mach-issue-extension)
+(allow file-read-xattr)
+(allow mach-lookup (global-name "com.apple.system.opendirectoryd.api")
+                   (global-name "com.apple.lsd.mapdb")
+                   (global-name "com.apple.lsd.modifydb")
+                   (global-name "com.apple.security.translocation")
+                   (global-name "com.apple.familycontrols")
+                   (global-name "com.apple.mdmclient.agent")
+                   (global-name "com.apple.mdmclient.daemon")
+                   (global-name "com.apple.mdmclient.agent.unrestricted")
+                   (global-name "com.apple.mdmclient.daemon.unrestricted")
+                   (global-name "com.apple.mobile.usermanagerd.xpc")
+                   (global-name "com.apple.containermanagerd"))
+
+(allow file-map-executable
+    (literal "/System/Library/CoreServices/ManagedClient.app/Contents/PlugIns/MCXToolsInterface.bundle/Contents/MacOS/MCXToolsInterface"))
