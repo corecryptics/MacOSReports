@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Interfaces</key>
+	<array>
+		<dict>
+			<key>Active</key>
+			<true/>
+			<key>BSD Name</key>
+			<string>en0</string>
+			<key>IOBuiltin</key>
+			<true/>
+			<key>IOInterfaceNamePrefix</key>
+			<string>en</string>
+			<key>IOInterfaceType</key>
+			<integer>6</integer>
+			<key>IOInterfaceUnit</key>
+			<integer>0</integer>
+			<key>IOMACAddress</key>
+			<data>
+			8BiYJcfT
+			</data>
+			<key>IOPathMatch</key>
+			<string>IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/RP01@1C/IOPP/ARPT@0/AppleBCMWLANBusInterfacePCIe/AppleBCMWLANCore/AppleBCMWLANSkywalkInterface/IOSkywalkLegacyEthernet/en0</string>
+			<key>SCNetworkInterfaceInfo</key>
+			<dict>
+				<key>UserDefinedName</key>
+				<string>Wi-Fi</string>
+			</dict>
+			<key>SCNetworkInterfaceType</key>
+			<string>IEEE80211</string>
+		</dict>
+		<dict>
+			<key>Active</key>
+			<true/>
+			<key>BSD Name</key>
+			<string>en1</string>
+			<key>IOBuiltin</key>
+			<true/>
+			<key>IOInterfaceNamePrefix</key>
+			<string>en</string>
+			<key>IOInterfaceType</key>
+			<integer>6</integer>
+			<key>IOInterfaceUnit</key>
+			<integer>1</integer>
+			<key>IOMACAddress</key>
+			<data>
+			gpwzQmAB
+			</data>
+			<key>IOPathMatch</key>
+			<string>IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/PEG1@1,1/IOPP/UPSB@0/IOPP/DSB0@0/IOPP/NHI0@0/AppleThunderboltHAL/AppleThunderboltNHIType3/IOThunderboltController/IOThunderboltLocalNode/AppleThunderboltIPService/AppleThunderboltIPPort/en1</string>
+			<key>SCNetworkInterfaceInfo</key>
+			<dict>
+				<key>UserDefinedName</key>
+				<string>Thunderbolt 1</string>
+			</dict>
+			<key>SCNetworkInterfaceType</key>
+			<string>Ethernet</string>
+		</dict>
+		<dict>
+			<key>Active</key>
+			<true/>
+			<key>BSD Name</key>
+			<string>en2</string>
+			<key>IOBuiltin</key>
+			<true/>
+			<key>IOInterfaceNamePrefix</key>
+			<string>en</string>
+			<key>IOInterfaceType</key>
+			<integer>6</integer>
+			<key>IOInterfaceUnit</key>
+			<integer>2</integer>
+			<key>IOMACAddress</key>
+			<data>
+			gpwzQmAA
+			</data>
+			<key>IOPathMatch</key>
+			<string>IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/PEG1@1,1/IOPP/UPSB@0/IOPP/DSB0@0/IOPP/NHI0@0/AppleThunderboltHAL/AppleThunderboltNHIType3/IOThunderboltController/IOThunderboltLocalNode/AppleThunderboltIPService/AppleThunderboltIPPort/en2</string>
+			<key>SCNetworkInterfaceInfo</key>
+			<dict>
+				<key>UserDefinedName</key>
+				<string>Thunderbolt 2</string>
+			</dict>
+			<key>SCNetworkInterfaceType</key>
+			<string>Ethernet</string>
+		</dict>
+		<dict>
+			<key>Active</key>
+			<true/>
+			<key>BSD Name</key>
+			<string>en3</string>
+			<key>IOBuiltin</key>
+			<true/>
+			<key>IOInterfaceNamePrefix</key>
+			<string>en</string>
+			<key>IOInterfaceType</key>
+			<integer>6</integer>
+			<key>IOInterfaceUnit</key>
+			<integer>3</integer>
+			<key>IOMACAddress</key>
+			<data>
+			gpwzQmAF
+			</data>
+			<key>IOPathMatch</key>
+			<string>IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/PEG2@1,2/IOPP/UPSB@0/IOPP/DSB0@0/IOPP/NHI0@0/AppleThunderboltHAL/AppleThunderboltNHIType3/IOThunderboltController/IOThunderboltLocalNode/AppleThunderboltIPService/AppleThunderboltIPPort/en3</string>
+			<key>SCNetworkInterfaceInfo</key>
+			<dict>
+				<key>UserDefinedName</key>
+				<string>Thunderbolt 3</string>
+			</dict>
+			<key>SCNetworkInterfaceType</key>
+			<string>Ethernet</string>
+		</dict>
+		<dict>
+			<key>Active</key>
+			<true/>
+			<key>BSD Name</key>
+			<string>en4</string>
+			<key>IOBuiltin</key>
+			<true/>
+			<key>IOInterfaceNamePrefix</key>
+			<string>en</string>
+			<key>IOInterfaceType</key>
+			<integer>6</integer>
+			<key>IOInterfaceUnit</key>
+			<integer>4</integer>
+			<key>IOMACAddress</key>
+			<data>
+			gpwzQmAE
+			</data>
+			<key>IOPathMatch</key>
+			<string>IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/PEG2@1,2/IOPP/UPSB@0/IOPP/DSB0@0/IOPP/NHI0@0/AppleThunderboltHAL/AppleThunderboltNHIType3/IOThunderboltController/IOThunderboltLocalNode/AppleThunderboltIPService/AppleThunderboltIPPort/en4</string>
+			<key>SCNetworkInterfaceInfo</key>
+			<dict>
+				<key>UserDefinedName</key>
+				<string>Thunderbolt 4</string>
+			</dict>
+			<key>SCNetworkInterfaceType</key>
+			<string>Ethernet</string>
+		</dict>
+		<dict>
+			<key>Active</key>
+			<true/>
+			<key>BSD Name</key>
+			<string>en5</string>
+			<key>HiddenInterface</key>
+			<true/>
+			<key>IOBuiltin</key>
+			<false/>
+			<key>IOInterfaceNamePrefix</key>
+			<string>en</string>
+			<key>IOInterfaceType</key>
+			<integer>6</integer>
+			<key>IOInterfaceUnit</key>
+			<integer>5</integer>
+			<key>IOMACAddress</key>
+			<data>
+			rN5IABEi
+			</data>
+			<key>IOPathMatch</key>
+			<string>IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/RP17@1B/IOPP/IOBC@0,1/IOBufferCopyController/AppleUSBVHCIBCE@80000000/AppleUSBVHCIPort@80100000/Apple T2 Controller@80100000/NCM Data@1/AppleUSBNCMData/en5</string>
+			<key>SCNetworkInterfaceInfo</key>
+			<dict>
+				<key>UserDefinedName</key>
+				<string>iBridge</string>
+				<key>idProduct</key>
+				<integer>33331</integer>
+				<key>idVendor</key>
+				<integer>1452</integer>
+				<key>kUSBProductString</key>
+				<string>Apple T2 Controller</string>
+			</dict>
+			<key>SCNetworkInterfaceType</key>
+			<string>Ethernet</string>
+		</dict>
+	</array>
+	<key>Model</key>
+	<string>MacBookPro15,1</string>
+	<key>__VERSION__</key>
+	<integer>20191120</integer>
+</dict>
+</plist>
