@@ -1,0 +1,270 @@
+;;;;;; Common system sandbox rules
+;;;;;;
+;;;;;; Copyright (c) 2008-2020 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+
+(version 3)
+
+(unless *import-path*
+  (allow mach-bootstrap)
+  (allow mach-kernel-endpoint)
+  (allow syscall*))
+
+;;; Allow registration of per-pid services.
+(allow mach-register (local-name-prefix ""))
+
+(when (sbpl-version-compatible? 1)
+  ;;; Allow lookup of XPC services for backward-compatibility.
+  (allow mach-lookup (xpc-service-name-prefix "")))
+
+;;; Allow system processes to trigger auto-mounting of filesystems.
+(allow system-automount
+       (process-attribute is-platform-binary))
+
+;;; Allow mapping of system frameworks + dylibs
+(allow file-map-executable
+       (subpath "/Library/Apple/System/Library/Frameworks")
+       (subpath "/Library/Apple/System/Library/PrivateFrameworks")
+       (subpath "/System/Library/Frameworks")
+       (subpath "/System/Library/PrivateFrameworks")
+       (subpath "/System/iOSSupport/System/Library/Frameworks")
+       (subpath "/System/iOSSupport/System/Library/PrivateFrameworks")
+       (subpath "/usr/lib"))
+(with-filter (system-attribute apple-internal)
+  (allow file-map-executable
+         (subpath "/AppleInternal/Library/Frameworks")))
+
+;;; Allow basic fcntls required by dyld
+(allow system-fcntl
+       (fcntl-command F_GETPATH
+                      F_ADDFILESIGS_RETURN
+                      F_CHECK_LV))
+
+;;; Allow guarded vnodes.
+(allow system-mac-syscall (mac-policy-name "vnguard"))
+
+;;; Allow resolution of standard system symlinks.
+(allow file-read-metadata file-test-existence
+       (literal "/etc")
+       (literal "/tmp")
+       (literal "/var")
+       (literal "/private/etc/localtime"))
+
+;;; Always allow stat'ing of path components of firmlink targets.
+(allow file-read-metadata file-test-existence
+       (path-ancestors "/System/Volumes/Data/private"))
+
+;;; Allow processes to get their current working directory.
+;;; Every process inherits their cwd from launchd, which uses "/".
+(allow file-read* file-test-existence (literal "/"))
+
+;;; Allow FSIOC_CAS_BSDFLAGS as an alternate chflags(2); used by copyfile(3).
+(allow system-fsctl (fsctl-command FSIOC_CAS_BSDFLAGS))
+
+;;; Allow read access to standard system paths.
+(allow file-read*
+       (subpath "/Library/Apple/System")
+       (subpath "/Library/Filesystems/NetFSPlugins")
+       (subpath "/Library/Preferences/Logging")      ; Logging Rethink
+       (subpath "/System")
+       (subpath "/private/var/db/dyld")
+       (subpath "/private/var/db/timezone")
+       (subpath "/usr/lib")
+       (subpath "/usr/share"))
+(with-filter (system-attribute apple-internal)
+  (allow file-read*
+         (subpath "/AppleInternal/Library/Frameworks")))
+
+;;; Allow access to standard special files.
+(allow file-read*
+       (literal "/dev/autofs_nowait")
+       (literal "/dev/random")
+       (literal "/dev/urandom")
+       (literal "/private/etc/master.passwd")
+       (literal "/private/etc/passwd")
+       (literal "/private/etc/protocols")
+       (literal "/private/etc/services"))
+
+(allow file-read*
+       file-write-data
+       (literal "/dev/null")
+       (literal "/dev/zero"))
+
+(allow file-read*
+       file-write-data
+       file-ioctl
+       (literal "/dev/dtracehelper"))
+
+;;; Allow loading of Apple-internal sanitizer dylibs.
+;;; TODO: rdar://problem/57925123
+(with-filter (system-attribute apple-internal)
+  (allow file-read* file-map-executable
+         (subpath "/usr/local/lib/sanitizers")
+         (subpath "/usr/appleinternal/lib/sanitizers")))
+
+;;; posix_spawn filtering
+(with-filter (system-attribute apple-internal)
+  (allow file-read* (literal "/usr/local/share/posix_spawn_filtering_rules")))
+
+;;; Allow creation of core dumps.
+(allow file-write-create
+       (require-all (prefix "/cores/")
+                    (vnode-type REGULAR-FILE)))
+
+;;; Logging
+(with-filter (system-attribute apple-internal)
+  (allow file-read* (subpath "/AppleInternal/Library/Preferences/Logging"))
+  (allow file-read* file-map-executable (subpath "/usr/local/lib/log")))
+
+;;; Rosetta
+(allow file-read-metadata file-test-existence
+       (literal "/Library/Apple/usr/libexec/oah/libRosettaRuntime"))
+
+;;; Allow IPC to standard system agents.
+(allow network-outbound
+       (literal "/private/var/run/syslog"))
+
+(allow ipc-posix-shm-read*
+       (ipc-posix-name "apple.shm.notification_center")
+       (ipc-posix-name-prefix "apple.cfprefs."))
+
+(allow mach-lookup
+       (global-name "com.apple.analyticsd")
+       (global-name "com.apple.analyticsd.messagetracer")
+       (global-name "com.apple.appsleep")
+       (global-name "com.apple.bsd.dirhelper")
+       (global-name "com.apple.cfprefsd.agent")
+       (global-name "com.apple.cfprefsd.daemon")
+       (global-name "com.apple.diagnosticd")
+       (global-name "com.apple.dt.automationmode.reader")
+       (global-name "com.apple.espd")
+       (global-name "com.apple.logd")
+       (global-name "com.apple.logd.events")
+       (global-name "com.apple.runningboard")
+       (global-name "com.apple.secinitd")
+       (global-name "com.apple.system.DirectoryService.libinfo_v1")
+       (global-name "com.apple.system.logger")
+       (global-name "com.apple.system.notification_center")
+       (global-name "com.apple.system.opendirectoryd.libinfo")
+       (global-name "com.apple.system.opendirectoryd.membership")
+       (global-name "com.apple.trustd")
+       (global-name "com.apple.trustd.agent")
+       (global-name "com.apple.xpc.activity.unmanaged")
+       (local-name "com.apple.cfprefsd.agent"))
+
+(with-filter (system-attribute apple-internal)
+  (allow mach-lookup (global-name "com.apple.internal.objc_trace")))
+
+(when (defined? 'SYS_debug_syscall_reject)
+  (allow syscall-unix (syscall-number SYS_debug_syscall_reject)))
+
+;;; Allow mostly harmless operations.
+(allow sysctl-read)
+(allow sysctl-write
+       (sysctl-name "kern.grade_cputype"
+                    "kern.wq_limit_cooperative_threads"))
+
+;;; (system-graphics) - Allow access to graphics hardware.
+(define (system-graphics)
+  ;; Preferences
+  (allow user-preference-read
+         (preference-domain "com.apple.gpu")
+         (preference-domain "com.apple.opengl")
+         (preference-domain "com.nvidia.OpenGL"))
+  ;; OpenGL memory debugging
+  (allow mach-lookup
+         (global-name "com.apple.gpumemd.source"))
+  ;; LaunchServices required for IOSurfaceClient eGPU selection.
+  (allow mach-lookup
+         (global-name "com.apple.lsd.mapdb"))
+  ;; CoreAnimation & CoreDisplay
+  (allow mach-lookup
+         (global-name "com.apple.CARenderServer")
+         (global-name "com.apple.CoreDisplay.master")
+         (global-name "com.apple.CoreDisplay.Notification"))
+  ;; CVMS
+  (allow mach-lookup
+         (global-name "com.apple.cvmsServ"))
+  (allow file-read*
+         (subpath "/private/var/db/CVMS"))
+  ;; OpenCL, VideoToolbox
+  (allow iokit-open-service
+         (iokit-registry-entry-class "IOAccelerator"
+                                     "IOSurfaceRoot"))
+  (allow iokit-open-user-client
+         (iokit-connection "IOAccelerator")
+         (iokit-user-client-class "IOAccelerationUserClient"
+                                  "IOSurfaceAcceleratorClient"
+                                  "IOSurfaceRootUserClient"
+                                  "IOSurfaceSendRight"))
+  ;; CoreVideo CVCGDisplayLink
+  (allow iokit-open-service
+         (iokit-registry-entry-class "IOFramebuffer"))
+  (allow iokit-open-user-client
+         (iokit-user-client-class "IOFramebufferSharedUserClient"))
+  ;; H.264 Acceleration
+  (allow iokit-open-service
+         (iokit-connection "AppleGraphicsDeviceControl"))
+  (allow iokit-open-user-client
+         (iokit-user-client-class "AppleIntelMEUserClient"
+                                  "AppleSNBFBUserClient"))
+  ;; QuartzCore
+  (allow iokit-open-service
+         (iokit-registry-entry-class "AGPM"
+                                     "AppleGraphicsControl"
+                                     "AppleGraphicsPolicy"))
+  (allow iokit-open-user-client
+         (iokit-user-client-class "AGPMClient"
+                                  "AppleGraphicsControlClient"
+                                  "AppleGraphicsPolicyClient"))
+  ;; OpenGL
+  (allow iokit-open-user-client
+         (iokit-user-client-class "AppleMGPUPowerControlClient"))
+  ;; GPU bundles
+  (allow file-read*
+         (subpath "/Library/GPUBundles"))
+  ;; DisplayServices
+  (allow iokit-set-properties
+         (require-all
+           (iokit-connection "IODisplay")
+           (require-any
+             (iokit-property "brightness"
+                             "linear-brightness"
+                             "commit"
+                             "rgcs"
+                             "ggcs"
+                             "bgcs")))))
+
+;;; (system-network) - Allow access to the network.
+(define (system-network)
+  (allow file-read*
+         (literal "/Library/Preferences/com.apple.networkd.plist")
+         (literal "/private/var/db/com.apple.networkextension.tracker-info")
+         (literal "/private/var/db/nsurlstoraged/dafsaData.bin"))
+  (allow mach-lookup
+         (global-name "com.apple.SystemConfiguration.PPPController")
+         (global-name "com.apple.SystemConfiguration.SCNetworkReachability")
+         (global-name "com.apple.dnssd.service")
+         (global-name "com.apple.nehelper")
+         (global-name "com.apple.nesessionmanager")
+         (global-name "com.apple.networkd")
+         (global-name "com.apple.symptomsd")
+         (global-name "com.apple.usymptomsd"))
+  (allow network-outbound
+         (control-name "com.apple.netsrc")
+         (control-name "com.apple.network.statistics"))
+  (allow system-socket
+         (require-all (socket-domain AF_SYSTEM)
+                      (socket-protocol 2)) ; SYSPROTO_CONTROL
+         (socket-domain AF_ROUTE))
+  ;; AppSSO support
+  (allow mach-lookup
+         (global-name "com.apple.AppSSO.service-xpc"))
+  (allow ipc-posix-shm-read-data
+         (ipc-posix-name "/com.apple.AppSSO.version"))
+  (allow user-preference-read
+         (preference-domain "com.apple.CFNetwork")))

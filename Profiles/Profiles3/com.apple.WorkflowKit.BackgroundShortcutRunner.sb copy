@@ -1,0 +1,376 @@
+(version 1)
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(import "contacts.sb")
+(define (var-quote-if-string obj)
+  (if (and obj (string? obj)) (variable-quote obj) obj))
+(let ((orig-param param))
+  (set! param (lambda (key) (var-quote-if-string (orig-param key)))))
+(define (home-literal relative)
+  (literal (string-append (param "HOME") relative)))
+(define (home-prefix relative)
+  (prefix (string-append (param "HOME") relative)))
+(define (home-subpath relative)
+  (subpath (string-append (param "HOME") relative)))
+(define (home-regex relative-regex)
+  (regex (string-append "^" (regex-quote (param "HOME")) relative-regex)))
+(define group-container-root
+  (string-append "/Library/Group Containers/" "group.is.workflow.my.app"))
+(define (group-container-literal relative)
+  (home-literal (string-append group-container-root relative)))
+(define (group-container-subpath relative)
+  (home-subpath (string-append group-container-root relative)))
+(define (group-container-regex relative-regex)
+  (home-regex
+    (string-append (regex-quote group-container-root) relative-regex)))
+(define (apply-read-and-issue-extensions filters)
+  (allow file-read* (apply require-any filters))
+  (allow file-issue-extension
+         (require-all
+           (extension-class "com.apple.app-sandbox.read")
+           (apply require-any filters))))
+(define (apply-write-and-issue-extensions filters)
+  (allow file-write* (apply require-any filters))
+  (allow file-issue-extension
+         (require-all
+           (extension-class "com.apple.app-sandbox.read-write")
+           (apply require-any filters))))
+(define (read-and-issue-extensions . filters)
+  (apply-read-and-issue-extensions filters))
+(define (read-write-and-issue-extensions . filters)
+  (apply-read-and-issue-extensions filters)
+  (apply-write-and-issue-extensions filters))
+(define (allow-create-directory . filters)
+  (allow file-read-metadata (apply require-any filters))
+  (allow file-read-metadata
+         file-write-create
+         (require-all (vnode-type DIRECTORY) (apply require-any filters))))
+(define (rw-apple-cache-folder bundle-id)
+  (let* ((cache-root-filter (home-literal "/Library/Caches/"))
+         (cache-filter
+           (home-subpath (string-append "/Library/Caches/" bundle-id))))
+    (allow-create-directory cache-root-filter)
+    (read-write-and-issue-extensions cache-filter)))
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(corefoundation)
+(allow process-info* (target self))
+(allow mach-task-name (target self))
+(allow file-read-metadata)
+(allow process-info-codesignature)
+(allow iokit-get-properties)
+(allow distributed-notification-post)
+(allow lsopen)
+(allow job-creation)
+(allow system-audit)
+(allow appleevent-send)
+(allow sysctl-read (sysctl-name-prefix "net.routetable."))
+(system-graphics)
+(allow iokit-open
+       (iokit-user-client-class "AGXDeviceUserClient")
+       (iokit-user-client-class "AppleAVE2UserClient")
+       (iokit-user-client-class "H11ANEInDirectPathClient")
+       (iokit-user-client-class "H1xANELoadBalancerDirectPathClient")
+       (iokit-user-client-class "IOFramebufferSharedUserClient")
+       (iokit-user-client-class "IOSurfaceRootUserClient")
+       (iokit-user-client-class "RootDomainUserClient"))
+(with-filter
+  (extension "com.apple.app-sandbox.read")
+  (allow file-read*)
+  (allow file-issue-extension (extension-class "com.apple.app-sandbox.read")))
+(with-filter
+  (extension "com.apple.app-sandbox.read-write")
+  (allow file-read* file-write*)
+  (allow file-issue-extension
+         (extension-class
+           "com.apple.app-sandbox.read"
+           "com.apple.app-sandbox.read-write")))
+(read-and-issue-extensions
+  (subpath "/System/Library/PrivateFrameworks/VoiceShortcuts.framework")
+  (home-subpath
+    "/Library/Containers/com.apple.podcasts/Data/Documents/PodcastsDB.plist"))
+(read-write-and-issue-extensions
+  (subpath (param "DARWIN_CACHE_DIR"))
+  (subpath (param "TMPDIR"))
+  (group-container-subpath ""))
+(allow user-preference-read
+       user-preference-write
+       (preference-domain "com.apple.WorkflowKit.BackgroundShortcutRunner"))
+(let ((cache-path-filter
+        (home-subpath
+          "/Library/Caches/com.apple.WorkflowKit.BackgroundShortcutRunner")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+         (require-all
+           (extension-class
+             "com.apple.app-sandbox.read"
+             "com.apple.app-sandbox.read-write")
+           cache-path-filter)))
+(allow file-read*
+       (home-subpath "/Library/Caches/com.apple.Pasteboard")
+       (home-subpath "/Library/UserConfigurationProfiles")
+       (home-subpath "/.CFUserTextEncoding"))
+(allow file-read*
+       file-write*
+       (home-subpath "/Library/Caches/com.apple.proactive.eventtracker")
+       (home-subpath "/Library/VoiceShortcuts")
+       (home-subpath
+         "/Library/Mobile Documents/iCloud~is~workflow~my~workflows"))
+(allow file-read*
+       file-write*
+       (mount-relative-regex "^/\\.Trashes(/|$)")
+       (home-subpath "/.Trash"))
+(allow file-read*
+       file-write*
+       (require-all
+         (home-subpath "/Library/Keychains")
+         (require-not (home-prefix "/Library/Keychains/${ANY_UUID}"))))
+(allow file-read* (subpath "/Library/Keychains"))
+(allow file-read* (subpath "/private/var/db/mds/system"))
+(allow file-read* (subpath "/private/etc/shells"))
+(allow file-read-metadata
+       (home-literal "")
+       (home-literal "/Library/Preferences"))
+(allow file-map-executable (subpath "/System/Library"))
+(with-filter
+  (extension-class "com.apple.app-sandbox.read")
+  (allow file-issue-extension
+         (subpath
+           "/System/Library/PrivateFrameworks/WorkflowKit.framework/XPCServices/BackgroundShortcutRunner.xpc")))
+(rw-apple-cache-folder "com.apple.HomeKit.configurations")
+(rw-apple-cache-folder "com.apple.HomeKit/com.apple.siriactionsd")
+(allow appleevent-send
+       (appleevent-destination "com.apple.Mail")
+       (appleevent-destination "com.apple.Safari")
+       (appleevent-destination "com.apple.finder")
+       (appleevent-destination "com.apple.iCal"))
+(allow authorization-right-obtain
+       (right-name-regex
+         "^system\\.volume\\.(external|optical|removable)\\.unmount$"))
+(allow mach-lookup
+       (global-name
+         "com.apple.AppSSO.service-xpc"
+         "com.apple.BTServer.le"
+         "com.apple.CARenderServer"
+         "com.apple.CarPlayApp.non-launching-service"
+         "com.apple.DiskArbitration.diskarbitrationd"
+         "com.apple.FileCoordination"
+         "com.apple.FileProvider"
+         "com.apple.MapKit.SnapshotService"
+         "com.apple.PowerManagement.control"
+         "com.apple.ProgressReporting"
+         "com.apple.SecurityServer"
+         "com.apple.SharingServices"
+         "com.apple.SystemConfiguration.NetworkInformation"
+         "com.apple.SystemConfiguration.configd"
+         "com.apple.WorkflowKit.MacHelper"
+         "com.apple.accountsd.accountmanager"
+         "com.apple.ak.authorizationservices.xpc"
+         "com.apple.amp.library.framework"
+         "com.apple.amsaccountsd.multiuser"
+         "com.apple.appleneuralengine"
+         "com.apple.assistant.analytics"
+         "com.apple.assistant.dictation"
+         "com.apple.audio.AURemoteIOServer"
+         "com.apple.audio.AudioComponentPrefs"
+         "com.apple.audio.AudioComponentRegistrar"
+         "com.apple.audio.AudioQueueServer"
+         "com.apple.audio.audiohald"
+         "com.apple.awdd"
+         "com.apple.backlightd"
+         "com.apple.backupd.sandbox.xpc"
+         "com.apple.bird"
+         "com.apple.bird.token"
+         "com.apple.chronoservices"
+         "com.apple.commcenter.coretelephony.xpc"
+         "com.apple.containermanagerd"
+         "com.apple.coremedia.mutablemovie.xpc"
+         "com.apple.coremedia.mutablecomposition.xpc"
+         "com.apple.corerecents.recentsd"
+         "com.apple.coreservices.appleevents"
+         "com.apple.coreservices.launchservicesd"
+         "com.apple.coreservices.lsuseractivitymanager.xpc"
+         "com.apple.coreservices.quarantine-resolver"
+         "com.apple.cvmsServ"
+         "com.apple.dock.server"
+         "com.apple.donotdisturb.service"
+         "com.apple.donotdisturb.service.non-launching"
+         "com.apple.email.maild"
+         "com.apple.fairplayd"
+         "com.apple.fairplayd.versioned"
+         "com.apple.finder.ServiceProvider"
+         "com.apple.fonts"
+         "com.apple.frontboard.systemappservices"
+         "com.apple.iconservices.store"
+         "com.apple.iconservices"
+         "com.apple.kvsd"
+         "com.apple.linkd.registry"
+         "com.apple.locationd.desktop.registration"
+         "com.apple.lsd.mapdb"
+         "com.apple.lsd.modifydb"
+         "com.apple.mediaremoted.xpc"
+         "com.apple.metadata.mds"
+         "com.apple.mobilemail.services.xpc"
+         "com.apple.pasteboard.1"
+         "com.apple.pbs.fetch_services"
+         "com.apple.pluginkit.pkd"
+         "com.apple.private.corewifi-xpc"
+         "com.apple.scopedbookmarksagent.xpc"
+         "com.apple.securityd.xpc"
+         "com.apple.server.bluetooth.general.xpc"
+         "com.apple.shazamd"
+         "com.apple.shortcuts.dialogpresentation"
+         "com.apple.siri.VoiceShortcuts.xpc"
+         "com.apple.siri.tts.TTSAsset.TrialProxy"
+         "com.apple.speech.synthesis.console"
+         "com.apple.spotlight.IndexAgent"
+         "com.apple.system.opendirectoryd.api"
+         "com.apple.tccd"
+         "com.apple.tccd.system"
+         "com.apple.translationd"
+         "com.apple.usernotifications.usernotificationservice"
+         "com.apple.voiceservices.keepalive"
+         "com.apple.voiceservices.tts"
+         "com.apple.webinspector"
+         "com.apple.windowserver.active"
+         "com.apple.xpc.amsaccountsd")
+       (global-name-prefix
+         "com.apple.WorkflowKit.MacHelper.privileged."
+         "com.apple.usernotifications."
+         "com.apple.speech.speechsynthesisd")
+       (local-name "com.apple.axserver")
+       (xpc-service-name
+         "com.apple.coremedia.compressionsession.xpc"
+         "com.apple.coremedia.decompressionsession.xpc"))
+(allow user-preference-read
+       (preference-domain "com.apple.CoreGraphics")
+       (preference-domain "com.apple.SpeakSelection")
+       (preference-domain "com.apple.assistant")
+       (preference-domain "com.apple.assistant.backedup")
+       (preference-domain "com.apple.assistant.support")
+       (preference-domain "com.apple.security")
+       (preference-domain "com.apple.universalaccess")
+       (preference-domain "com.apple.voiceservices")
+       (preference-domain "kCFPreferencesAnyApplication"))
+(allow user-preference-read
+       user-preference-write
+       (preference-domain "com.apple.WorkflowKit.BackgroundShortcutRunner")
+       (preference-domain "com.apple.preferences.extensions.ServicesWithUI")
+       (preference-domain "com.apple.shortcuts")
+       (preference-domain "com.apple.siri.shortcuts")
+       (preference-domain "com.apple.weather.internal")
+       (preference-domain "com.apple.siriactionsd"))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-data
+       (ipc-posix-name-prefix "AudioIO"))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-create
+       ipc-posix-shm-write-data
+       (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+(with-filter
+  (extension "com.apple.shortcuts.access.calendar")
+  (allow mach-lookup
+         (global-name
+           "com.apple.CalendarAgent.database"
+           "com.apple.CalendarAgent.proxy"
+           "com.apple.calaccessd"
+           "com.apple.calaccessd.xpc"
+           "com.apple.remindd"))
+  (allow user-preference-read
+         user-preference-write
+         (preference-domain "com.apple.iCal"))
+  (allow file-read* file-write* (home-subpath "/Library/Calendars")))
+(with-filter
+  (extension "com.apple.shortcuts.access.contacts")
+  (contacts-client (param "HOME") (param "TMPDIR")))
+(with-filter
+  (extension "com.apple.shortcuts.access.health")
+  (allow mach-lookup
+         (global-name
+           "com.apple.healthd.restriction"
+           "com.apple.healthd.server")))
+(with-filter
+  (extension "com.apple.shortcuts.access.home")
+  (allow mach-lookup (global-name "com.apple.homed.xpc")))
+(with-filter
+  (extension "com.apple.shortcuts.access.internet")
+  (system-network)
+  (allow network-outbound (remote ip))
+  (allow mach-lookup
+         (global-name "com.apple.NetworkDiagnostic.agent")
+         (global-name "com.apple.Safari.SafeBrowsing.Service")
+         (global-name "com.apple.WebKit.PluginAgent")
+         (global-name "com.apple.airportd")
+         (global-name "com.apple.cfnetwork.AuthBrokerAgent")
+         (global-name "com.apple.cfnetwork.cfnetworkagent")
+         (global-name "com.apple.nesessionmanager.content-filter")
+         (global-name "com.apple.nsurlsessiond")
+         (global-name "com.apple.secinitd")
+         (global-name "com.apple.webinspectord"))
+  (allow iokit-issue-extension
+         (extension-class "com.apple.webkit.extension.iokit"))
+  (allow mach-issue-extension
+         (extension-class "com.apple.webkit.extension.mach"))
+  (allow user-preference-read
+         (preference-domain
+           "com.apple.Safari.SandboxBroker"
+           "com.apple.webinspectord"))
+  (allow file-read*
+         (home-subpath
+           "/Library/WebKit/com.apple.WorkflowKit.BackgroundShortcutRunner/WebsiteData")
+         (literal "/Library/Preferences/com.apple.security.plist")
+         (literal "/private/var/db/mds/system/mdsDirectory.db")
+         (literal "/private/var/db/mds/system/mdsObject.db")
+         (literal "/private/var/run/mDNSResponder")
+         (literal (param "_SECURITY_MESSAGES_FILE")))
+  (allow file-read*
+         file-write*
+         (home-subpath "/Library/HTTPStorages")
+         (home-subpath
+           "/Library/WebKit/com.apple.WorkflowKit.BackgroundShortcutRunner"))
+  (allow network-outbound (literal "/private/var/run/mDNSResponder"))
+  (with-filter
+    (extension-class "com.apple.app-sandbox.read-write")
+    (allow file-issue-extension
+           (home-subpath
+             "/Library/WebKit/com.apple.WorkflowKit.BackgroundShortcutRunner"))))
+(with-filter
+  (extension "com.apple.shortcuts.access.location")
+  (allow mach-lookup
+         (global-name "com.apple.CoreLocation.agent")
+         (global-name "com.apple.locationd.desktop.spi")
+         (global-name "com.apple.locationd.desktop.synchronous")
+         (global-name "com.apple.locationd.desktop.registration")
+         (xpc-service-name "com.apple.geod"))
+  (allow file-read* (home-subpath "/Library/Caches/GeoServices"))
+  (allow user-preference-read (preference-domain "com.apple.GEO")))
+(with-filter
+  (extension "com.apple.shortcuts.access.music-library")
+  (allow mach-lookup
+         (global-name
+           "com.apple.Music.MPMusicPlayerControllerInternal"
+           "com.apple.amp.artworkd")))
+(with-filter
+  (extension "com.apple.shortcuts.access.photos")
+  (allow mach-lookup
+         (global-name
+           "com.apple.Photos.MultiLibrary"
+           "com.apple.photos.service"))
+  (allow user-preference-read
+         (preference-domain "com.apple.photos.shareddefaults"))
+  (allow file-read*
+         file-write*
+         (subpath
+           (string-append
+             (param "_USER_PICTURE_DIRECTORY_PATH")
+             "/"
+             (param "_SHORTCUTS_WALLPAPER_DIRECTORY_NAME")))))
+(with-filter
+  (extension "com.apple.shortcuts.access.reminder")
+  (allow mach-lookup (global-name "com.apple.remindd")))
+(with-filter
+  (extension "com.apple.shortcuts.access.screenshot")
+  (allow mach-lookup
+         (global-name
+           "com.apple.CARenderServer"
+           "com.apple.springboard.services")))

@@ -1,0 +1,59 @@
+;;;;;; Spotlight importer extension - AppSandbox profile
+;;;;;; [extension point identifier: com.apple.spotlight.import]
+;;;;;; Copyright (c) 2021 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+(version 1)
+(deny default (with telemetry) (with message "spotlight-import.sb"))
+(import "system.sb")
+(import "appsandbox-common.sb")
+(allow mach-lookup
+       (global-name
+         "com.apple.FileCoordination"
+         "com.apple.SystemConfiguration.configd"
+         "com.apple.assertiond.processassertionconnection"
+         "com.apple.ocspd"))
+(allow-read-directory-contents (param "application_bundle"))
+(allow file-read* (literal "/Library/Preferences/.GlobalPreferences.plist"))
+(appsandbox-container-common)
+(appsandbox-container-macos)
+(allow file-read* (extension "com.apple.spotlight.importer.readonly"))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.iokit-user-client-class"
+  (lambda (name)
+    (allow iokit-open-user-client (iokit-user-client-class name))
+    (allow iokit-set-properties (iokit-user-client-class name))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.files.home-relative-path.read-only"
+  (lambda (path)
+    (let ((filter (select-filter path home-subpath home-literal)))
+      (read-only-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all (extension-class "com.apple.aned.read-only") filter))
+      (allow process-exec filter))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.files.absolute-path.read-only"
+  (lambda (path)
+    (let ((filter (select-filter path safe-subpath literal)))
+      (allow process-exec filter)
+      (read-only-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all
+               (extension-class "com.apple.aned.read-only")
+               filter)))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.shared-preference.read-only"
+  (lambda (domain) (allow user-preference-read (preference-domain domain))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.sbpl"
+  (lambda (string)
+    (let* ((port (open-input-string string)) (sbpl (read port)))
+      (with-transparent-redirection
+        (with-filter
+          (process-attribute "is-apple-signed-executable")
+          (eval sbpl))))))
+(protect-redirected-paths)
+(protect-redirectable-paths)

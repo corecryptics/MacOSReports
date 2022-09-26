@@ -1,0 +1,47 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 2)
+
+(deny default)
+(deny dynamic-code-generation)
+(deny file-map-executable process-info* nvram*)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(import "darwin-container-base.sb")
+
+(corefoundation)
+(darwin-container)
+
+;; Filesystem read-write access
+(allow file-read* file-write*
+	(path "/dev/tty")
+	(path "/dev/random")
+	(path "/dev/urandom")
+	(path "/dev/null")
+	(path "/dev/random")
+	(path "/dev/stdin")
+	(path "/dev/stdout")
+	(path "/dev/stderr")
+	(path "/dev/zero")
+)
+
+
+;; Preferences (read-only)
+(allow user-preference-read)
+
+;; IOKit properties
+(allow iokit-get-properties)
+
+;; Process exec
+(allow process-exec*)
+(allow process-fork)
+
+;; Network
+(allow network-bind)
+(allow network-inbound)
+(allow network-outbound)

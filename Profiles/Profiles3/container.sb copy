@@ -1,0 +1,1010 @@
+;;;;;; macOS container.sb
+;;;;;;
+;;;;;; Copyright (c) 2011-2019 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+(version 1)
+(deny default)
+(import "system.sb")
+(import "appsandbox-common.sb")
+(allow system-audit system-sched mach-task-name lsopen)
+(appsandbox-process-common)
+(deny nvram*)
+(allow nvram-get
+       (nvram-variable "4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14:ROM")
+       (nvram-variable "4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14:MLB"))
+(allow mach-lookup (xpc-service-name-prefix "") (with report) (with telemetry))
+(allow mach-lookup
+       (xpc-service-name
+         "com.apple.AuthKitUI.AKAuthorizationRemoteViewService"
+         "com.apple.CallKit.CallDirectory"
+         "com.apple.ContactsUI.ContactViewViewService.apple-extension-service"
+         "com.apple.ContactsUI.ContactViewViewService.viewbridge"
+         "com.apple.ContactsUI.ContactViewViewService.viewservice"
+         "com.apple.MTLCompilerService"
+         "com.apple.RAQLPreviewExtension.apple-extension-service"
+         "com.apple.SafariFoundation.CredentialProviderExtensionHelper"
+         "com.apple.SafariPlatformSupport.Helper"
+         "com.apple.SafariServices.ExtensionHelper"
+         "com.apple.StoreKit.UIService"
+         "com.apple.ViewBridgeAuxiliary"
+         "com.apple.appkit.xpc.openAndSavePanelService"
+         "com.apple.audio.ComponentTagHelper"
+         "com.apple.audio.SandboxHelper"
+         "com.apple.audio.toolbox.reporting.service"
+         "com.apple.carboncore.csnameddata"
+         "com.apple.cmio.registerassistantservice"
+         "com.apple.coremedia.videodecoder"
+         "com.apple.coremedia.videoencoder"
+         "com.apple.gamecenter.GameCenterUIService"
+         "com.apple.geod"
+         "com.apple.hiservices-xpcservice"
+         "com.apple.intents.intents-helper"
+         "com.apple.messages.ShareExtension.apple-extension-service"
+         "com.apple.messages.ShareExtension.viewbridge"
+         "com.apple.messages.ShareExtension.viewservice"
+         "com.apple.mobileslideshow.photo-picker.apple-extension-service"
+         "com.apple.mobileslideshow.photo-picker.viewbridge"
+         "com.apple.mobileslideshow.photo-picker.viewservice"
+         "com.apple.security.XPCKeychainSandboxCheck"
+         "com.apple.share.AirDrop.send.apple-extension-service"
+         "com.apple.share.AirDrop.send.viewbridge"
+         "com.apple.share.AirDrop.send.viewservice"
+         "com.apple.share.Mail.compose.apple-extension-service"
+         "com.apple.siri.context.service"
+         "com.apple.textkit.nsattributedstringagent"))
+(deny sysctl-read (with telemetry))
+(allow sysctl-read
+       (sysctl-name
+         "hw.activecpu"
+         "hw.busfrequency"
+         "hw.busfrequency_compat"
+         "hw.byteorder"
+         "hw.cacheconfig"
+         "hw.cachelinesize"
+         "hw.cachelinesize_compat"
+         "hw.cachesize"
+         "hw.cpu64bit_capable"
+         "hw.cpufamily"
+         "hw.cpufrequency"
+         "hw.cpufrequency_compat"
+         "hw.cpufrequency_max"
+         "hw.cpusubfamily"
+         "hw.cpusubtype"
+         "hw.cputype"
+         "hw.l1dcachesize"
+         "hw.l1dcachesize_compat"
+         "hw.l1icachesize"
+         "hw.l1icachesize_compat"
+         "hw.l2cachesize"
+         "hw.l2cachesize_compat"
+         "hw.l2settings"
+         "hw.l3cachesize"
+         "hw.l3cachesize_compat"
+         "hw.l3settings"
+         "hw.logicalcpu"
+         "hw.logicalcpu_max"
+         "hw.machine"
+         "hw.memsize"
+         "hw.model"
+         "hw.ncpu"
+         "hw.nperflevels")
+       (sysctl-name-prefix "hw.optional.")
+       (sysctl-name "hw.pagesize" "hw.pagesize_compat")
+       (sysctl-name-prefix "hw.perflevel")
+       (sysctl-name
+         "hw.physicalcpu"
+         "hw.physicalcpu_max"
+         "hw.physmem"
+         "hw.product"
+         "hw.target"
+         "hw.tbfrequency"
+         "hw.tbfrequency_compat"
+         "hw.usermem"
+         "hw.vectorunit"
+         "machdep.virtual_address_size"
+         "kern.boottime"
+         "kern.clockrate"
+         "kern.hostid"
+         "kern.hostname"
+         "kern.iossupportversion"
+         "kern.maxfilesperproc"
+         "kern.maxproc"
+         "kern.maxvnodes"
+         "kern.memorystatus_level")
+       (sysctl-name-prefix "kern.monotonicclock")
+       (sysctl-name
+         "kern.monotoniclock_offset_usecs"
+         "kern.ngroups"
+         "kern.osproductversion"
+         "kern.osrelease"
+         "kern.ostype"
+         "kern.osvariant_status"
+         "kern.osversion"
+         "kern.safeboot"
+         "kern.saved_ids"
+         "kern.secure_kernel"
+         "kern.system_version_compat"
+         "kern.usrstack64"
+         "kern.version"
+         "kern.waketime"
+         "security.mac.sandbox.sentinel"
+         "vm.loadavg"))
+(allow sysctl-read
+       (sysctl-name "sysctl.name2oid")
+       (sysctl-name-prefix "sysctl.oidfmt.")
+       (sysctl-name "sysctl.proc_native"))
+(with-filter
+  (process-attribute is-apple-signed-executable)
+  (allow sysctl-read
+         (sysctl-name-prefix "kern.argmax")
+         (sysctl-name "kern.bootargs")
+         (sysctl-name-prefix "kern.proc.pid.")))
+(with-filter
+  (system-attribute apple-internal)
+  (allow sysctl-read (sysctl-name "kern.dtrace.dof_mode"))
+  (allow sysctl-read sysctl-write (sysctl-name "vm.footprint_suspend")))
+(allow (with telemetry) iokit-get-properties)
+(allow iokit-get-properties
+       (iokit-property
+         "IOClass"
+         "IOClassNameOverride"
+         "IOCFPlugInTypes"
+         "IOMatchCategory"
+         "IONameMatch"
+         "IOProviderClass"
+         "name"))
+(with-filter
+  (iokit-registry-entry-class "AppleAPFSVolume")
+  (allow iokit-get-properties (iokit-property "Role")))
+(allow iokit-get-properties (iokit-property "IOConsoleUsers"))
+(with-filter
+  (iokit-registry-entry-class "IOPCIDevice")
+  (allow iokit-get-properties (iokit-property "IOClassNameOverride")))
+(with-filter
+  (iokit-registry-entry-class "IOService")
+  (allow iokit-get-properties (iokit-property "IORegistryEntryPropertyKeys")))
+(with-filter
+  (iokit-registry-entry-class "AGXFamilyAccelerator")
+  (allow iokit-get-properties
+         (iokit-property
+           "AAPL,slot-name"
+           "AGCInfo"
+           "AGXParameterBufferMaxSize"
+           "AGXParameterBufferMaxSizeEverMemless"
+           "AGXParameterBufferMaxSizeNeverMemless"
+           "AGXTraceCodeVersion"
+           "CFBundleIdentifier"
+           "CFBundleIdentifierKernel"
+           "GPUConfigurationVariable"
+           "GPURawCounterBundleName"
+           "GPURawCounterPluginClassName"
+           "IOAVEHEVCEncode"
+           "IOGLBundleName"
+           "IOGLESMetalBundleName"
+           "IOGVAHEVCDecode"
+           "IOGVAHEVCEncode"
+           "IOGVAHEVCEncodeCapabilities"
+           "IOGeneralInterest"
+           "IONameMatch"
+           "IONameMatched"
+           "IOPersonalityPublisher"
+           "IOPowerManagement"
+           "IOProbeScore"
+           "IOReportLegend"
+           "IOReportLegendPublic"
+           "IOSourceVersion"
+           "KDebugVersion"
+           "MetalLimitersName"
+           "MetalPluginClassName"
+           "MetalPluginName"
+           "MetalStatisticsName"
+           "model"
+           "PerformanceStatistics"
+           "Removable"
+           "SCMBuildTime"
+           "SCMVersionNumber"
+           "SafeEjectRequested"
+           "SurfaceList"
+           "vendor-id")))
+(with-filter
+  (iokit-registry-entry-class "AppleARMIICDevice" "AppleSPUHIDInterface")
+  (allow iokit-get-properties
+         (iokit-property "als-colorCfg" "noMultiColorSupport")))
+(with-filter
+  (iokit-registry-entry-class "AppleARMIODevice")
+  (allow iokit-get-properties (iokit-property "canvas-height" "canvas-width")))
+(with-filter
+  (iokit-registry-entry-class "AppleARMIODevice")
+  (allow iokit-get-properties (iokit-property "ane-type")))
+(with-filter
+  (iokit-registry-entry-class "AppleARMSPIDevice")
+  (allow iokit-get-properties (iokit-property "force-supported")))
+(with-filter
+  (iokit-registry-entry-class "AppleAVD")
+  (allow iokit-get-properties
+         (iokit-property "ADSSupported" "IOAVDHEVCDecodeCapabilities")))
+(with-filter
+  (iokit-registry-entry-class "AppleCLCD" "AppleCLCD2")
+  (allow iokit-get-properties
+         (iokit-property
+           "APTDevice"
+           "AppleTV"
+           "DisplayPipePlaneBaseAlignment"
+           "DisplayPipeStrideRequirements"
+           "dfr"
+           "external"
+           "hdcp-hoover-protocol")))
+(with-filter
+  (iokit-registry-entry-class "AppleDiagnosticDataAccess")
+  (allow iokit-get-properties (iokit-property "AppleDiagnosticDataSysCfg")))
+(with-filter
+  (iokit-registry-entry-class "AppleJPEGDriver")
+  (allow iokit-get-properties
+         (iokit-property
+           "AppleJPEGNumCores"
+           "AppleJPEGSupportsAppleInterchangeFormats"
+           "AppleJPEGSupportsRSTLogging")))
+(with-filter
+  (iokit-registry-entry-class "AppleM2ScalerCSCDriver")
+  (allow iokit-get-properties
+         (iokit-property "IOSurfaceAcceleratorCapabilitiesDict")))
+(with-filter
+  (iokit-registry-entry-class "AppleMultitouchDevice")
+  (allow iokit-get-properties
+         (iokit-property
+           "AccurateMaxDigitizerPressureValue"
+           "ActivationThresholds"
+           "ActuationSupported"
+           "AlwaysNeedsVelocityCalculated"
+           "AnimationThresholds"
+           "ContextualPower"
+           "Driver is Ready"
+           "Endianness"
+           "ExpectedVersion"
+           "ExtendedMaxDigitizerPressureValue"
+           "ExternalMessageIDs"
+           "Family ID"
+           "ForceSupported"
+           "MaintainPowerInUILock"
+           "MTHIDDevice"
+           "MT Built-In"
+           "MinDigitizerPressureValue"
+           "Multitouch ID"
+           "PowerControlSupported"
+           "ResetOnLockMs"
+           "ResetOnUnlockMs"
+           "Sensor Columns"
+           "Sensor Region Descriptor"
+           "Sensor Region Param"
+           "Sensor Rows"
+           "Sensor Surface Descriptor"
+           "Sensor Surface Height"
+           "Sensor Surface Width"
+           "ShouldDispatchNormalizedVelocity"
+           "ShouldResetOnButton"
+           "SupportTapToWake"
+           "SupportTouchReadyNotification"
+           "SupportsSilentClick"
+           "USBChargingNotificationSupported"
+           "WANTS_FRAMES_IGNORED"
+           "WirelessChargingNotificationSupported"
+           "bcdVersion"
+           "parser-options"
+           "parser-type"
+           "touch-size-id")
+         (iokit-property "Multitouch Subdevice ID" "Transport"))
+  (iokit-property "mt-device-id")
+  (deny (with no-report)
+        iokit-get-properties
+        (iokit-property "Multitouch Serial Number")))
+(with-filter
+  (iokit-registry-entry-class "IOPlatformDevice")
+  (allow iokit-get-properties
+         (iokit-property "iommu-present" "soc-generation")))
+(with-filter
+  (iokit-registry-entry-class "IOPlatformDevice")
+  (allow iokit-get-properties (iokit-property "home-button-type")))
+(with-filter
+  (iokit-registry-entry-class "IOService")
+  (allow iokit-get-properties
+         (iokit-property
+           "chip-id"
+           "display-rotation"
+           "display-scale"
+           "syscfg-erly-kbgs-allow-load"
+           "syscfg-erly-kbgs-data-class"
+           "syscfg-erly-kbgs-allow-unsealed")))
+(with-filter
+  (iokit-registry-entry-class "IOPlatformDevice")
+  (allow iokit-get-properties (iokit-property "ean-storage-present")))
+(with-filter
+  (iokit-registry-entry-class "IOPlatformDevice")
+  (allow iokit-get-properties
+         (iokit-property
+           "artwork-display-gamut"
+           "artwork-dynamic-displaymode"
+           "artwork-scale-factor"
+           "compatible-device-fallback"
+           "device-colors"
+           "device-perf-memory-class"
+           "display-corner-radius"
+           "external-hdr"
+           "graphics-featureset-class"
+           "graphics-featureset-fallbacks"
+           "product-description"
+           "product-id"
+           "thin-bezel")))
+(with-filter
+  (iokit-registry-entry-class "IOPlatformExpertDevice")
+  (allow iokit-get-properties
+         (iokit-property
+           "model"
+           "model-number"
+           "platform-name"
+           "region-info"
+           "regulatory-model-number")))
+(with-filter
+  (iokit-registry-entry-class "IOPMrootDomain")
+  (allow iokit-get-properties (iokit-property "IOSleepSupported")))
+(allow iokit-get-properties
+       (iokit-property
+         "IOAVDHEVCDecodeCapabilities"
+         "IOGVAHEVCDecodeCapabilities"))
+(with-filter
+  (iokit-registry-entry-class "IOService")
+  (allow iokit-get-properties (iokit-property "acoustic-id")))
+(deny file-link (home-subpath "/Library"))
+(with-filter
+  (extension "com.apple.app-sandbox.read-write")
+  (allow file-link (home-subpath "/Library/Mobile Documents")))
+(allow file-read* (subpath "/Library"))
+(deny file-read*
+      (subpath "/Library/Application Support/AppStoreContent")
+      (subpath "/Library/Application Support/AppStore")
+      (subpath "/Library/Caches")
+      (subpath "/Library/Logs")
+      (subpath "/Library/Managed Preferences")
+      (subpath "/Library/Preferences"))
+(allow file-issue-extension
+       (require-all
+         (extension-class "com.apple.app-sandbox.read")
+         (subpath "/Library/User Pictures")))
+(allow file-read* (subpath "/Library/Preferences/Logging"))
+(when (param "application_bundle")
+      (allow-read-directory-contents (param "application_bundle")))
+(allow-read-write-directory-contents (param "application_darwin_user_dir"))
+(let ((tmpdir (param "application_darwin_temp_dir")))
+  (apply-read-and-issue-extension allow (subpath tmpdir))
+  (apply-write-and-issue-extension allow (subpath tmpdir))
+  (allow file-write-create
+         file-write-data
+         (require-all (vnode-type DIRECTORY) (literal tmpdir)))
+  (allow network-inbound network-outbound (subpath tmpdir)))
+(allow-read-write-directory-contents (param "application_darwin_cache_dir"))
+(when (param "application_dyld_paths")
+      (let ((dyld_subpaths
+              (apply subpath
+                     (split-string (param "application_dyld_paths") ":"))))
+        (allow file-read* dyld_subpaths)
+        (with-filter
+          (extension-class
+            "com.apple.app-sandbox.read"
+            "com.apple.aned.read-only")
+          (allow file-issue-extension dyld_subpaths))))
+(appsandbox-container-common)
+(allow file-link (container-subpath ""))
+(allow network-inbound
+       network-outbound
+       (container-subpath "/tmp")
+       (container-subpath "/Library")
+       (container-subpath "/Documents"))
+(define (%protect-preference-symlink domain)
+  (deny file-unlink
+        (container-literal
+          (string-append "/Library/Preferences/" domain ".plist"))
+        (container-regex
+          (string-append
+            "/Library/Preferences/ByHost/"
+            (regex-quote domain)
+            "\\..*\\.plist$"))))
+(optical-media)
+(network-client)
+(network-server)
+(allow sysctl-read
+       (sysctl-name "kern.ipc.maxsockbuf")
+       (sysctl-name "kern.nisdomainname")
+       (sysctl-name-prefix "net.routetable.")
+       (sysctl-name "net.statistics"))
+(camera)
+(bluetooth)
+(allow mach-lookup
+       (global-name "com.apple.accessories.externalaccessory-server"))
+(locationservices)
+(addressbook)
+(calendar)
+(sandbox-array-entitlement
+  "com.apple.developer.ubiquity-container-identifiers"
+  (lambda (id)
+    (allow file-link (ubiquity-filter id))
+    (read-write-and-issue-extensions (ubiquity-filter id))))
+(sandbox-array-entitlement
+  "com.apple.developer.icloud-container-identifiers"
+  (lambda (id)
+    (allow file-link (ubiquity-filter id))
+    (read-write-and-issue-extensions (ubiquity-filter id))))
+(clouddocs)
+(gamecenter)
+(when (or (entitlement "com.apple.private.logging.admin")
+          (entitlement "com.apple.private.logging.diagnostic"))
+      (allow mach-lookup (global-name "com.apple.logd.admin")))
+(when (entitlement "com.apple.private.logging.diagnostic")
+      (with-filter
+        (extension "com.apple.logd.read-only")
+        (allow file-read*
+               (subpath "/private/var/db/diagnostics")
+               (subpath "/private/var/db/uuidtext"))))
+(printing)
+(allow mach-lookup (global-name "com.apple.scopedbookmarksagent.xpc"))
+(allow qtn-user (extension "com.apple.app-sandbox.read-write"))
+(sandbox-array-entitlement
+  "com.apple.security.application-groups"
+  (lambda (suite)
+    (allow file-read-data (application-group-literal suite ""))
+    (allow file-link
+           network-bind
+           network-outbound
+           (application-group-regex suite "/"))
+    (read-write-and-issue-extensions (application-group-regex suite "/"))
+    (allow file-issue-extension
+           (require-all
+             (extension-class "com.apple.aned.read-only")
+             (application-group-regex suite "/")))
+    (allow file-read*
+           (subpath
+             (string-append
+               "/Library/Application Support/AppStore/GroupContent/"
+               suite)))
+    (deny file-write-create
+          (require-all
+            (require-not (vnode-type DIRECTORY))
+            (application-group-literal suite "/Library")))
+    (allow mach-lookup
+           mach-register
+           (global-name-prefix (string-append suite ".")))
+    (allow ipc-posix* (ipc-posix-name-prefix (string-append suite "/")))))
+(appsandbox-extensions)
+(webkit-support)
+(webkit-camera-support)
+(webkit-microphone-support)
+(webkit-xpc-services)
+(allow file-read*
+       file-write*
+       (require-all
+         (require-not (vnode-type SYMLINK))
+         (require-any
+           (home-subpath "/Library/Colors")
+           (home-subpath "/Library/FontCollections")
+           (home-subpath "/Library/Spelling"))))
+(read-only-and-issue-extensions
+  (require-all (file-mode 4) (require-any (subpath "/System"))))
+(allow file-read*
+       (home-literal "/.CFUserTextEncoding")
+       (home-subpath "/Library/Audio")
+       (home-subpath "/Library/ColorPickers")
+       (home-subpath "/Library/Compositions")
+       (home-subpath "/Library/Filters")
+       (home-subpath "/Library/Fonts")
+       (home-subpath "/Library/Input Methods")
+       (home-subpath "/Library/KeyBindings")
+       (home-subpath "/Library/Keyboard Layouts")
+       (home-subpath "/Library/PDF Services")
+       (home-literal "/Library/Preferences/com.apple.DownloadAssessment.plist")
+       (home-subpath "/Library/QuickLook")
+       (home-subpath "/Library/Sounds"))
+(deny file-map-executable (home-subpath "/Library/ColorPickers"))
+(allow user-preference-read
+       (preference-domain
+         "com.apple.AdLib"
+         "com.apple.AppleMultitouchTrackpad"
+         "com.apple.airplay"
+         "com.apple.assistant.support"
+         "com.apple.avfoundation"
+         "com.apple.avfoundation.videoperformancehud"
+         "com.apple.cmio"
+         "com.apple.coreanimation"
+         "com.apple.CoreGraphics"
+         "com.apple.coremedia"
+         "com.apple.coremediaio.support"
+         "com.apple.corevideo"
+         "com.apple.DictionaryServices"
+         "com.apple.driver.AppleBluetoothMultitouch.mouse"
+         "com.apple.driver.AppleBluetoothMultitouch.trackpad"
+         "com.apple.driver.AppleHIDMouse"
+         "com.apple.HIToolbox"
+         "com.apple.inputmethodkit"
+         "com.apple.inputsources"
+         "com.apple.LaunchServices"
+         "com.apple.lookup.shared"
+         "com.apple.MultitouchSupport"
+         "com.apple.security_common"
+         "com.apple.security"
+         "com.apple.ServicesMenu.Services"
+         "com.apple.speech.synthesis.general.prefs"
+         "com.apple.speech.voice.prefs"
+         "com.apple.systemsound"
+         "com.apple.TelephonyUtilities"
+         "com.apple.universalaccess"
+         "kCFPreferencesAnyApplication"
+         "pbs"))
+(allow user-preference-read
+       user-preference-write
+       (preference-domain "com.apple.AppKit.TextFavorites"))
+(allow file-read*
+       (home-literal "/Library/Preferences/com.apple.security_common.plist")
+       (home-literal "/Library/Preferences/com.apple.security.plist"))
+(%protect-preference-symlink "com.apple.security_common")
+(%protect-preference-symlink "com.apple.security")
+(allow user-preference-read
+       user-preference-write
+       (preference-domain
+         "com.apple.preferences.extensions.ServicesWithUI"
+         "com.apple.preferences.extensions.ShareMenu"))
+(allow user-preference-read
+       (preference-domain "com.apple.Accessibility" "com.apple.AdLib"))
+(when (param "application_bundle_id")
+      (allow file-read*
+             (literal
+               (string-append
+                 "/Library/Managed Preferences/"
+                 (param "application_bundle_id")
+                 ".plist"))
+             (literal
+               (string-append
+                 "/Library/Managed Preferences/"
+                 (param "_USER")
+                 "/"
+                 (param "application_bundle_id")
+                 ".plist"))
+             (literal
+               (string-append
+                 "/Library/Preferences/"
+                 (param "application_bundle_id")
+                 ".plist"))
+             (subpath
+               (string-append
+                 "/Library/Application Support/AppStore/Content/"
+                 (param "application_bundle_id"))))
+      (allow mach-register
+             (global-name (param "application_bundle_id"))
+             (global-name
+               (string-append
+                 (param "application_bundle_id")
+                 ".ServiceProvider"))))
+(allow file-read-metadata)
+(allow file-read*
+       (literal "/Library/Caches/com.apple.DiagnosticReporting.Networks.plist")
+       (subpath "/Library/PDF Services")
+       (literal "/Library/Preferences/.GlobalPreferences.plist")
+       (literal "/Library/Preferences/com.apple.AppleShareClient.plist")
+       (literal "/Library/Preferences/com.apple.HIToolbox.plist")
+       (literal "/Library/Preferences/com.apple.loginwindow.plist")
+       (prefix "/Library/Preferences/com.apple.security.")
+       (subpath "/Library/Preferences/Logging/Subsystems")
+       (prefix "/Library/Preferences/com.apple.PowerManagement.")
+       (literal "/Library/Preferences/SystemConfiguration/preferences.plist")
+       (subpath "/Users/Shared/SC Info")
+       (literal "/Volumes")
+       (literal "/private/etc/group")
+       (literal "/private/etc/hosts")
+       (literal "/private/etc/openldap/ldap.conf")
+       (literal "/private/etc/passwd")
+       (literal "/private/etc/protocols")
+       (literal "/private/etc/resolv.conf")
+       (literal "/private/etc/services")
+       (literal "/private/etc/ssl/cert.pem")
+       (literal "/private/etc/ssl/openssl.cnf")
+       (literal "/private/var/run/resolv.conf"))
+(allow file-read*
+       (subpath
+         (string-append
+           "/Library/Application Support/AppStoreContent/"
+           (param "application_container_id")))
+       (require-all (file-mode 4) (subpath "/Applications")))
+(allow file-issue-extension
+       (require-all
+         (extension-class "com.apple.app-sandbox.read")
+         (file-mode 4)
+         (subpath "/Applications")))
+(allow mach-lookup (global-name "com.apple.ocspd"))
+(allow file-read* file-write* (home-prefix "/Library/Keychains/"))
+(deny file-read* file-write* (home-subpath "/Library/Keychains/${ANY_UUID}"))
+(allow file-read* (subpath "/private/var/db/mds"))
+(when (equal? (param "_UID") "0")
+      (allow file-write* (subpath "/private/var/db/mds")))
+(allow file-read* (literal "/private/var/db/DetachedSignatures"))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-create
+       ipc-posix-shm-write-data
+       (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+(allow mach-lookup
+       (local-name "com.apple.CFPasteboardClient")
+       (local-name "com.apple.coredrag")
+       (global-name "com.apple.ap.adprivacyd.trackingtransparency")
+       (global-name "com.apple.apsd")
+       (global-name "com.apple.assistant.analytics")
+       (global-name "com.apple.assistant.dictation")
+       (global-name "com.apple.audio.AudioComponentPrefs")
+       (global-name "com.apple.audio.AudioComponentRegistrar")
+       (global-name "com.apple.audio.audiohald")
+       (global-name "com.apple.audio.coreaudiod")
+       (global-name
+         "com.apple.AuthenticationServicesCore.AuthenticationServicesAgent")
+       (global-name "com.apple.backupd.sandbox.xpc")
+       (global-name "com.apple.bird")
+       (global-name "com.apple.bird.token")
+       (global-name "com.apple.BluetoothServices")
+       (global-name "com.apple.cache_delete.public")
+       (global-name "com.apple.callkit.callcontrollerhost")
+       (global-name "com.apple.callkit.callsourcehost")
+       (global-name "com.apple.chrono.widgetcenterconnection")
+       (global-name "com.apple.colorsyncd")
+       (global-name "com.apple.colorsync.useragent")
+       (global-name "com.apple.commcenter.xpc")
+       (global-name "com.apple.containermanagerd")
+       (global-name "com.apple.controlcenter.toggle")
+       (global-name "com.apple.coremedia.endpoint.xpc")
+       (global-name "com.apple.coremedia.endpointpicker.xpc")
+       (global-name "com.apple.coremedia.endpointplaybacksession.xpc")
+       (global-name "com.apple.coremedia.endpointremotecontrolsession.xpc")
+       (global-name "com.apple.coremedia.endpointstream.xpc")
+       (global-name "com.apple.coremedia.endpointstreamaudioengine.xpc")
+       (global-name "com.apple.coremedia.routediscoverer.xpc")
+       (global-name "com.apple.coremedia.routingcontext.xpc")
+       (global-name "com.apple.coremedia.volumecontroller.xpc")
+       (global-name "com.apple.coreservices.appleevents")
+       (global-name "com.apple.CoreServices.coreservicesd")
+       (global-name "com.apple.coreservices.launcherror-handler")
+       (global-name "com.apple.coreservices.quarantine-resolver")
+       (global-name "com.apple.coreservices.sharedfilelistd.async-mig")
+       (global-name "com.apple.coreservices.sharedfilelistd.mig")
+       (global-name "com.apple.coreservices.sharedfilelistd.xpc")
+       (global-name "com.apple.cvmsServ")
+       (global-name "com.apple.devicecheckd")
+       (global-name "com.apple.DiskArbitration.diskarbitrationd")
+       (global-name "com.apple.distributed_notifications@1v3")
+       (global-name "com.apple.distributed_notifications@Uv3")
+       (global-name "com.apple.dock.fullscreen")
+       (global-name "com.apple.dock.server")
+       (global-name "com.apple.donotdisturb.availability.service")
+       (global-name "com.apple.ensemble.dragserver")
+       (global-name "com.apple.FileCoordination")
+       (global-name "com.apple.FileProvider")
+       (global-name "com.apple.FontObjectsServer")
+       (global-name "com.apple.FontRegistry.FontRegistryUIAgent")
+       (global-name "com.apple.fonts")
+       (global-name "com.apple.FSEvents")
+       (global-name "com.apple.GSSCred")
+       (global-name "com.apple.helpd")
+       (global-name "com.apple.icdd")
+       (global-name "com.apple.iconservices")
+       (global-name "com.apple.iconservices.store")
+       (global-name "com.apple.iiod")
+       (global-name "com.apple.ImageCaptureExtension2.presence")
+       (global-name "com.apple.ink.private")
+       (global-name "com.apple.inputmethodkit.getxpcendpoint")
+       (global-name "com.apple.inputmethodkit.launchagent")
+       (global-name "com.apple.inputmethodkit.launcher")
+       (global-name "com.apple.inputmethodkit.setxpcendpoint")
+       (global-name "com.apple.iohideventsystem")
+       (global-name "com.apple.itunescloudd.tcchelper")
+       (global-name "com.apple.itunescloudd.xpc")
+       (global-name "com.apple.KerberosHelper.LKDCHelper")
+       (global-name "com.apple.KeyboardServices.TextReplacementService")
+       (global-name "com.apple.kvsd")
+       (global-name "com.apple.lookupd")
+       (global-name "com.apple.ls.boxd")
+       (global-name "com.apple.mediaremoted.xpc")
+       (global-name "com.apple.metadata.mds")
+       (global-name "com.apple.midiserver")
+       (global-name "com.apple.midiserver.io")
+       (global-name "com.apple.netauth.user.auth")
+       (global-name "com.apple.pasteboard.1")
+       (global-name "com.apple.pbs.fetch_services")
+       (global-name "com.apple.pluginkit.pkd")
+       (global-name "com.apple.ProgressReporting")
+       (global-name "com.apple.quicklook")
+       (global-name "com.apple.quicklook.config")
+       (global-name "com.apple.quicklook.ThumbnailsAgent")
+       (global-name "com.apple.quicklook.ui.helper")
+       (global-name "com.apple.quicklook.ui.helper.active")
+       (global-name "com.apple.revisiond")
+       (global-name "com.apple.rtcreportingd")
+       (global-name "com.apple.security.pboxd")
+       (global-name "com.apple.securityd.xpc")
+       (global-name "com.apple.SecurityServer")
+       (global-name "com.apple.sharingd.nsxpc")
+       (global-name "com.apple.SleepServices")
+       (global-name "com.apple.speech.recognitionserver")
+       (global-name "com.apple.speech.synthesis.console")
+       (global-name "com.apple.speechArbitrationServer")
+       (global-name "com.apple.spindump")
+       (global-name "com.apple.storeagent.storekit")
+       (global-name "com.apple.storeagent.storekit.receiptrenewal")
+       (global-name "com.apple.storekit.configuration.xpc")
+       (global-name "com.apple.storekitservice")
+       (global-name "com.apple.syncdefaultsd")
+       (global-name "com.apple.system.DirectoryService.membership_v1")
+       (global-name "com.apple.system.opendirectoryd.api")
+       (global-name "com.apple.SystemConfiguration.configd")
+       (global-name "com.apple.SystemConfiguration.DNSConfiguration")
+       (global-name "com.apple.SystemConfiguration.NetworkInformation")
+       (global-name "com.apple.tailspind")
+       (global-name "com.apple.tccd")
+       (global-name "com.apple.tccd.system")
+       (global-name
+         "com.apple.telephonyutilities.callservicesdaemon.callcapabilities")
+       (global-name
+         "com.apple.telephonyutilities.callservicesdaemon.voip.push.development")
+       (global-name
+         "com.apple.telephonyutilities.callservicesdaemon.voip.push")
+       (global-name "com.apple.telephonyutilities.callservicesdaemon.voip")
+       (global-name "com.apple.TrustEvaluationAgent")
+       (global-name "com.apple.tsm.uiserver")
+       (global-name "com.apple.UNCUserNotification")
+       (global-name "com.apple.usernotifications.remotenotificationservice")
+       (global-name "com.apple.usernotifications.usernotificationservice")
+       (global-name "com.apple.VoiceOver.running")
+       (global-name "com.apple.window_proxies")
+       (global-name "com.apple.windowserver.active")
+       (global-name "com.apple.WorkflowServiceRunner")
+       (global-name "com.apple.xpc.loginitemregisterd")
+       (global-name "com.apple.xpc.smd")
+       (global-name-regex "_OpenStep$"))
+(passkit-services)
+(allow mach-lookup
+       (global-name "com.apple.assertiond.processassertionconnection"))
+(allow mach-lookup
+       (global-name "PurplePPTServer")
+       (global-name "com.apple.awdd")
+       (global-name "com.apple.corerecents.recentsd")
+       (global-name "com.apple.devicecheckd")
+       (global-name "com.apple.homed.xpc")
+       (global-name "com.apple.itunesstored.xpc")
+       (global-name "com.apple.lskdd")
+       (global-name "com.apple.testmanagerd"))
+(with-filter
+  (require-not (process-is-plugin))
+  (allow mach-lookup (global-name "com.apple.replayd")))
+(when (or (entitlement "com.apple.smoot.subscriptionservice")
+          (entitlement "com.apple.private.subscriptionservice.internal")
+          (entitlement "com.apple.developer.video-subscription-registration")
+          (entitlement
+            "com.apple.private.subscriptionservice.all-sources.read-only")
+          (entitlement
+            "com.apple.private.subscriptionservice.web-sources.read-write"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.VideoSubscriberAccount.videosubscriptionsd")))
+(allow mach-lookup
+       (global-name "com.apple.CARenderServer")
+       (global-name "com.apple.TextInput.preferences")
+       (global-name "com.apple.assertiond.processinfoservice")
+       (global-name "com.apple.frontboard.systemappservices")
+       (global-name "com.apple.frontboard.workspace")
+       (global-name "com.apple.iphone.axserver-systemwide")
+       (global-name "com.apple.powerlog.plxpclogger.xpc")
+       (global-name "com.apple.remote-text-editing")
+       (global-name "com.apple.remote-text-editing-legacy")
+       (global-name "com.apple.runningboard")
+       (global-name "com.apple.sharing.remote-text-editing"))
+(allow user-preference-read (preference-domain "com.apple.UIKit"))
+(allow user-preference-read (preference-domain "com.apple.mediaaccessibility"))
+(allow mach-lookup
+       (xpc-service-name "com.apple.accessibility.mediaaccessibilityd"))
+(allow mach-lookup (global-name "com.apple.metrickit.xpc"))
+(allow mach-lookup (global-name "com.apple.ondemandd.client"))
+(with-filter
+  (require-all
+    (home-subpath "/Library/Caches/OnDemandResources/AssetPacks")
+    (extension "com.apple.odr-assets"))
+  (allow file-read*)
+  (allow file-issue-extension
+         (extension-class
+           "com.apple.app-sandbox.read"
+           "com.apple.mediaserverd.read")))
+(siri-actions)
+(allow mach-lookup
+       (with report)
+       (with telemetry)
+       (global-name "com.apple.iosmac.remote-text-editing")
+       (global-name "com.apple.logind")
+       (global-name "com.apple.rapport.remote-text-input")
+       (global-name "com.apple.statskit")
+       (global-name "com.apple.uikitsystemapp.services"))
+(allow file-read-data
+       (literal "/Library/Preferences/com.apple.ViewBridge.plist"))
+(allow mach-lookup (xpc-service-name "com.apple.ViewBridgeAuxiliary"))
+(deny file-read-data
+      (with no-report)
+      (literal
+        "/bin/bash"
+        "/usr/libexec/sftp-server"
+        "/usr/local/lib"
+        "/usr/bin/ssh"
+        "/usr/sbin/sshd"))
+(deny file-write-create
+      (with no-report)
+      (literal "/private/jailbreak.txt" "/private/umTest_Jailbreak.txt"))
+(deny process-fork (with no-report))
+(deny file-issue-extension
+      (with no-report)
+      (require-all
+        (literal "/")
+        (require-not
+          (extension
+            "com.apple.app-sandbox.read"
+            "com.apple.app-sandbox.read-write"))
+        (extension-class "com.apple.app-sandbox.read")))
+(deny file-write-data
+      (with no-report)
+      (home-literal "/Library/Preferences/com.apple.Accessibility.plist"))
+(power-assertions)
+(with-filter
+  (iokit-registry-entry-class "IODisplayWrangler")
+  (allow iokit-set-properties (iokit-property "IORequestIdle")))
+(allow iokit-open-user-client (iokit-user-client-class "IOHIDParamUserClient"))
+(system-graphics)
+(with-filter
+  (iokit-registry-entry-class "IOHIDEventDriver")
+  (allow iokit-set-properties (iokit-property "CapsLockDelayOverride")))
+(allow appleevent-send
+       (appleevent-destination "com.apple.imagecaptureextension2"))
+(allow network-outbound (subpath "/private/var/run"))
+(deny network-outbound (literal "/private/var/run/usbmuxd"))
+(allow network-bind
+       network-outbound
+       (resolving-subpath (param "application_container")))
+(deny network-outbound (remote ip "localhost:631"))
+(unless
+  (entitlement "com.apple.private.app-sandbox.unquarantine")
+  (deny file-write-xattr (xattr "com.apple.quarantine") (with no-log)))
+(deny file-read-xattr
+      file-write-xattr
+      (xattr-prefix "com.apple.security.private."))
+(notification-center)
+(allow network* (extension "com.apple.OpenGLProfiler"))
+(allow file-read*
+       file-write*
+       (mount-relative-regex "^/\\.Trashes(/|$)")
+       (home-subpath "/.Trash"))
+(audio-input)
+(audio-output)
+(allow iokit-open-user-client
+       (iokit-user-client-class "AppleUpstreamUserClient" "AudioAUUC"))
+(allow iokit-open-user-client
+       (iokit-user-client-class
+         "AppleAVDUserClient"
+         "AppleAVE2UserClient"
+         "AppleJPEGDriverUserClient"
+         "IOMobileFramebufferUserClient"))
+(ane-client)
+(with-filter
+  (system-attribute apple-internal)
+  (allow file-read*
+         file-map-executable
+         (literal "/usr/local/lib/libAudioDiagnostics.dylib")))
+(read-write-and-issue-extensions
+  (mount-relative-regex "^/\\.TemporaryItems(/|$)"))
+(allow authorization-right-obtain (right-name "com.apple.trust-settings.user"))
+(allow file-read* (home-subpath "/Library/Caches/GeoServices"))
+(allow user-preference-read (preference-domain "com.apple.GEO"))
+(appsandbox-fsctl)
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-data
+       (ipc-posix-name-prefix "CFPBS:"))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-data
+       (ipc-posix-name-prefix "AudioIO"))
+(allow ipc-posix-shm*
+       (ipc-posix-name "com.apple.ColorSync.Gen.lock")
+       (ipc-posix-name "com.apple.ColorSync.Disp.lock")
+       (ipc-posix-name "com.apple.ColorSync.Gray2.2")
+       (ipc-posix-name "com.apple.ColorSync.sRGB")
+       (ipc-posix-name "com.apple.ColorSync.GenGray")
+       (ipc-posix-name "com.apple.ColorSync.GenRGB")
+       (ipc-posix-name-prefix "com.apple.cs."))
+(allow file-read*
+       (subpath "/Library/ColorSync/Profiles")
+       (home-subpath "/Library/ColorSync"))
+(allow authorization-right-obtain
+       (right-name "system.colorsync.install.profile"))
+(allow ipc-posix-shm-read*
+       (ipc-posix-name "apple.shm.notification_center")
+       (ipc-posix-name-prefix "/tmp/com.apple.csseed.")
+       (ipc-posix-name-prefix "ls."))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-data
+       ipc-posix-shm-write-unlink
+       (ipc-posix-name-regex "^gdt-[A-Za-z0-9]+-(c|s)$"))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-data
+       (ipc-posix-name-regex "^Apple MIDI (in|out) [0-9]+$"))
+(allow ipc-posix-sem (semaphore-owner self))
+(datadetectors)
+(foundation)
+(mobileasset)
+(allow file-read*
+       (home-subpath "/Library/Dictionaries")
+       (subpath "/Library/Dictionaries")
+       (subpath "/Network/Library/Dictionaries"))
+(sandbox-array-entitlement
+  "com.apple.security.exception.iokit-user-client-class"
+  (lambda (name)
+    (allow iokit-open-user-client
+           iokit-set-properties
+           (iokit-user-client-class name))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.mach-lookup.global-name"
+  (lambda (name) (allow mach-lookup (global-name name))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.mach-lookup.local-name"
+  (lambda (name) (allow mach-lookup (local-name name))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.mach-register.global-name"
+  (lambda (name) (allow mach-register (global-name name))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.mach-register.local-name"
+  (lambda (name) (allow mach-register (local-name name))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.files.home-relative-path.read-only"
+  (lambda (path)
+    (let ((filter (select-filter path home-subpath home-literal)))
+      (read-only-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all
+               (extension-class "com.apple.aned.read-only")
+               filter)))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.files.home-relative-path.read-write"
+  (lambda (path)
+    (let ((filter (select-filter path home-subpath home-literal)))
+      (allow file-link filter)
+      (read-write-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all
+               (extension-class "com.apple.aned.read-only")
+               filter)))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.files.absolute-path.read-only"
+  (lambda (path)
+    (let ((filter (select-filter path safe-subpath literal)))
+      (read-only-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all
+               (extension-class "com.apple.aned.read-only")
+               filter)))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.files.absolute-path.read-write"
+  (lambda (path)
+    (let ((filter (select-filter path safe-subpath literal)))
+      (allow file-link filter)
+      (read-write-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all
+               (extension-class "com.apple.aned.read-only")
+               filter)))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.shared-preference.read-only"
+  (lambda (domain) (allow user-preference-read (preference-domain domain))))
+(sandbox-array-entitlement
+  "com.apple.security.exception.shared-preference.read-write"
+  (lambda (domain)
+    (allow user-preference-read
+           user-preference-write
+           (preference-domain domain))))
+(protect-redirected-paths)
+(protect-redirectable-paths)

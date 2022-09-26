@@ -1,0 +1,93 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 2)
+
+(deny default)
+(deny dynamic-code-generation)
+(deny file-map-executable process-info* nvram*)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (darwin-container . args)
+	;;; Homedir-relative path filters
+	(define (home-regex home-relative-regex)
+		(regex (string-append "^" (regex-quote (param "_HOME")) home-relative-regex)))
+
+	(define (home-subpath home-relative-subpath)
+		(subpath (string-append (param "_HOME") home-relative-subpath)))
+
+	(define (home-prefix home-relative-prefix)
+		(prefix (string-append (param "_HOME") home-relative-prefix)))
+
+	(define (home-literal home-relative-literal)
+		(literal (string-append (param "_HOME") home-relative-literal)))
+
+	;; Filesystem read-write access
+	(allow file-read* file-write*
+		(home-subpath "")
+	)
+
+	;; confstr related paths
+	(allow file-read* file-write* file-write-create
+		(subpath (param "_CONFSTR_USER"))
+		(subpath (param "_CONFSTR_USER_TMP"))
+		(subpath (param "_CONFSTR_USER_CACHE"))
+	)
+
+	;; For resolving symlinks, realpath(3), and equivalents.
+	(allow file-read-metadata)
+
+	;; process info / communication
+	(allow process-info*
+		(target self)
+		(target children)
+	)
+	(allow process-info-codesignature)
+	(allow darwin-notification-post)
+	(allow signal
+		(target self)
+		(target children)
+	)
+
+	;; Mach services
+	(allow mach-lookup)
+
+	;; Basic file system read
+	(allow file-read*
+		(path "/private/tmp")
+		(path "/private/var/tmp")
+		(subpath "/private/var/run/com.apple.security.cryptexd/mnt")
+	)
+
+	(allow file-map-executable
+		(subpath "/private/var/run/com.apple.security.cryptexd/mnt")
+	)
+
+	(allow file-test-existence)
+
+	;; Allow syscalls
+	(allow syscall*)
+	(allow system-fcntl)
+	(allow system-socket)
+	(allow socket-option*)
+	(allow ipc-posix*)
+	(allow system-mac-syscall)
+	(allow system-fcntl)
+
+	(if (defined? 'system-mac-syscall)
+		(begin
+			(allow system-mac-syscall
+				 (mac-policy-name
+					"AMFI"
+					"Sandbox"
+				)
+			)
+		)
+	)
+)
