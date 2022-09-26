@@ -1,0 +1,83 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow iokit-open
+        (iokit-user-client-class "AppleNVMeUpdateUC"
+                                 "AppleNVMeEANUC"
+                                 "AppleNVMeSMARTUserClient"))
+
+(allow mach-lookup
+        (global-name "com.apple.cache_delete"
+                     "com.apple.diagnosticpipeline.service"
+                     "com.apple.windowserver.active"))
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+        (preference-domain "com.apple.ASPCarryLog"
+                           "com.apple.nandCarryLogs"))
+
+(allow user-preference-read
+        (preference-domain "kCFPreferencesAnyApplication")
+        (preference-domain "com.apple.da"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+        (subpath "/private/var/log/iolog_unsent")
+        (subpath "/private/var/db/NANDTelemetryServices")
+        (subpath (param "TMPDIR")))
+
+(allow file-read*
+        (literal "/usr/libexec")
+        (literal "/usr/libexec/ASPCarryLog"))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.ASPCarryLog")))
+    (allow file-read* file-write* cache-path-filter)
+    (allow file-issue-extension
+        (require-all
+            (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+            cache-path-filter)))
+
+;; Customization
+(allow file-map-executable
+        (subpath "/System/Library/Extensions/NVMeSMARTLib.plugin/Contents/MacOS/NVMeSMARTLib"))
+
+(allow file-issue-extension
+    (require-all
+        (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+        (subpath "/private/var/log/iolog_unsent")))

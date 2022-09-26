@@ -1,0 +1,697 @@
+;;;;;; Common rules, functions and definitions for Application Sandboxing
+;;;;;;
+;;;;;; Copyright (c) 2021 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+(version 1)
+(deny default)
+(define (var-quote-if-string obj)
+  (if (and obj (string? obj)) (variable-quote obj) obj))
+(let ((orig-param param))
+  (set! param (lambda (key) (var-quote-if-string (orig-param key)))))
+(unless (defined? '*entitlements*) (define *entitlements* '()))
+(when (defined? 'entitlement-legacy-names)
+      (define (legacy-entitlement ls)
+        (let loop ((ls ls))
+          (if (null? ls)
+            #f
+            (let ((entry (assoc (car ls) *entitlements*)))
+              (if entry (var-quote-if-string (cdr entry)) (loop (cdr ls)))))))
+      (define (entitlement key)
+        (let ((entry (assoc key *entitlements*)))
+          (if entry
+            (var-quote-if-string (cdr entry))
+            (let ((legacy (assoc key entitlement-legacy-names)))
+              (and legacy (legacy-entitlement legacy)))))))
+(unless
+  (defined? 'entitlement-legacy-names)
+  (define (entitlement key)
+    (let ((entry (assoc key *entitlements*)))
+      (if entry (var-quote-if-string (cdr entry))))))
+(define (sandbox-array-entitlement name fun)
+  (let ((ls (entitlement name)))
+    (cond ((list? ls)
+           (for-each
+             (lambda (x) (if (string? x) (fun (variable-quote x))))
+             ls))
+          ((string? ls) (fun (variable-quote ls))))))
+(define (%string-prefix? pattern str)
+  (let loop ((i 0))
+    (cond ((>= i (string-length pattern)) #t)
+          ((>= i (string-length str)) #f)
+          ((char=? (string-ref pattern i) (string-ref str i)) (loop (+ i 1)))
+          (else #f))))
+(define (end-with-slash? s) (eqv? (string-ref s (- (string-length s) 1)) #\/))
+(define (end-with-star? string)
+  (eqv? (string-ref string (- (string-length string) 1)) #\*))
+(define (strip-last-char s) (substring s 0 (- (string-length s) 1)))
+(define (HEX-pattern-match-generator pattern-descriptor)
+  (letrec ((pattern-string ""))
+    (for-each
+      (lambda (repeat-count)
+        (if (zero? repeat-count)
+          (set! pattern-string (string-append pattern-string "-"))
+          (let appender ((count repeat-count))
+            (if (> count 0)
+              (begin
+                (set! pattern-string (string-append pattern-string "[0-9A-F]"))
+                (appender (- count 1)))))))
+      pattern-descriptor)
+    pattern-string))
+(define (uuid-HEX-pattern-match-string)
+  (HEX-pattern-match-generator '(8 0 4 0 4 0 4 0 12)))
+(define *uuid-pattern* "")
+(define (uuid-regex-string)
+  (if (zero? (string-length *uuid-pattern*))
+    (set! *uuid-pattern* (uuid-HEX-pattern-match-string)))
+  *uuid-pattern*)
+(define (apply-read-and-issue-extension op path-filter)
+  (op file-read* path-filter)
+  (op file-issue-extension
+      (require-all
+        (extension-class "com.apple.app-sandbox.read")
+        path-filter)))
+(define (apply-write-and-issue-extension op path-filter)
+  (op file-write* path-filter)
+  (op file-issue-extension
+      (require-all
+        (extension-class "com.apple.app-sandbox.read-write")
+        path-filter)))
+(define (read-only-and-issue-extensions path-filter)
+  (apply-read-and-issue-extension allow path-filter))
+(define (read-write-and-issue-extensions path-filter)
+  (apply-read-and-issue-extension allow path-filter)
+  (apply-write-and-issue-extension allow path-filter))
+(define (allow-read-directory-contents path)
+  (if path (apply-read-and-issue-extension allow (subpath path))))
+(define (allow-read-write-directory-contents path)
+  (when path
+        (apply-read-and-issue-extension allow (subpath path))
+        (apply-write-and-issue-extension
+          allow
+          (regex (string-append "^" (regex-quote path) "/")))
+        (allow file-write-create
+               file-write-data
+               (require-all (vnode-type DIRECTORY) (literal path)))))
+(define resolving-literal literal)
+(define resolving-subpath subpath)
+(define resolving-prefix prefix)
+(define resolving-regex regex)
+(define (protect-redirected-paths))
+(define (protect-redirectable-paths))
+(let* ((*path-aliases*
+         (or (entitlement "com.apple.private.app-sandbox.redirected-paths")
+             '()))
+       (*redirectable-paths*
+         (or (entitlement "com.apple.private.app-sandbox.redirectable-paths")
+             '()))
+       (path-ancestor?
+         (lambda (short long)
+           (cond ((< (string-length long) (string-length short)) #f)
+                 ((string=? short long) #t)
+                 ((%string-prefix? short long)
+                  (or (end-with-slash? short)
+                      (char=? #\/ (string-ref long (string-length short)))))
+                 (else #f))))
+       (path-list-ancestor?
+         (lambda (shortlist long)
+           (member
+             #t
+             (map (lambda (short) (path-ancestor? short long)) shortlist))))
+       (path-alias-resolve
+         (lambda (path)
+           (let loop ((mapping *path-aliases*))
+             (if (null? mapping)
+               path
+               (let ((key (caar mapping)) (realpath (cadar mapping)))
+                 (if (path-ancestor? key path)
+                   (string-append
+                     realpath
+                     (substring path (string-length key)))
+                   (loop (cdr mapping))))))))
+       (path-ancestor-regex?
+         (lambda (short long)
+           (cond ((< (string-length long) (string-length short)) #f)
+                 ((string=? short long) #f)
+                 ((%string-prefix? short long)
+                  (let ((c (string-ref long (string-length short))))
+                    (or (char=? c #\/) (char=? c #\$))))
+                 (else #f))))
+       (path-alias-resolve-regex
+         (lambda (path-regex)
+           (let loop ((mapping *path-aliases*))
+             (if (null? mapping)
+               path-regex
+               (let ((key (string-append "^" (regex-quote (caar mapping))))
+                     (realpath
+                       (string-append "^" (regex-quote (cadar mapping)))))
+                 (if (path-ancestor-regex? key path-regex)
+                   (string-append
+                     realpath
+                     (substring path-regex (string-length key)))
+                   (loop (cdr mapping))))))))
+       (subpath-aliases
+         (lambda (path)
+           (let ((x (list path)))
+             (for-each
+               (lambda (mapping)
+                 (if (and (not (string=? path (car mapping)))
+                          (path-ancestor? path (car mapping)))
+                   (set! x (append x (car mapping)))))
+               *path-aliases*)
+             x)))
+       (prefix-aliases
+         (lambda (path)
+           (let ((x (list path)))
+             (for-each
+               (lambda (mapping)
+                 (if (and (not (string=? path (car mapping)))
+                          (%string-prefix? path (car mapping)))
+                   (set! x (append x (car mapping)))))
+               *path-aliases*)
+             x)))
+       (flatten
+         (lambda (l accum)
+           (cond ((null? l) accum)
+                 ((atom? l) (cons l accum))
+                 (else (flatten (car l) (flatten (cdr l) accum))))))
+       (orig-regex regex)
+       (orig-literal literal)
+       (orig-subpath subpath)
+       (orig-prefix prefix)
+       (%resolving-literal
+         (lambda paths (apply orig-literal (map path-alias-resolve paths))))
+       (%resolving-subpath
+         (lambda paths
+           (apply orig-subpath
+                  (map path-alias-resolve
+                       (flatten (map subpath-aliases paths) '())))))
+       (%resolving-prefix
+         (lambda prefixes
+           (apply orig-prefix
+                  (map path-alias-resolve
+                       (flatten (map prefix-aliases prefixes) '())))))
+       (%resolving-regex
+         (lambda patterns
+           (apply orig-regex (map path-alias-resolve-regex patterns))))
+       (remove-trailing-slash
+         (lambda (path) (if (end-with-slash? (strip-last-char path) path))))
+       (ensure-trailing-slash
+         (lambda (path)
+           (if (end-with-slash? path) path (string-append path "/"))))
+       (force-list
+         (lambda (ls) (cond ((list? ls) ls) ((string? ls) (list ls)))))
+       (find-all-pos-of-char
+         (lambda (str char pos)
+           (cond ((>= pos (string-length str)) '())
+                 ((char=? char (string-ref str pos))
+                  (cons pos (find-all-pos-of-char str char (+ pos 1))))
+                 (else (find-all-pos-of-char str char (+ pos 1))))))
+       (dirhierarchy-list
+         (lambda (short long)
+           (map (lambda (pos)
+                  (cond ((= pos 0) "/") (else (substring long 0 pos))))
+                (find-all-pos-of-char
+                  (ensure-trailing-slash long)
+                  #\/
+                  (- (string-length short) 1)))))
+       (parentdirs-list (lambda (path) (dirhierarchy-list "/" path)))
+       (dangerous-paths
+         (append
+           *redirectable-paths*
+           (map cadr *path-aliases*)
+           (force-list
+             (entitlement
+               "com.apple.security.temporary-exception.files.absolute-path.read-write"))
+           (map (lambda (relpath) (string-append (param "_HOME") relpath))
+                (force-list
+                  (entitlement
+                    "com.apple.security.temporary-exception.files.home-relative-path.read-write")))))
+       (protect
+         (lambda (path)
+           (deny file-write-create
+                 (require-all (orig-literal path) (vnode-type SYMLINK)))))
+       (protect-ancestors-of-path
+         (lambda (path)
+           (when (not (null? dangerous-paths))
+                 (for-each
+                   (lambda (dir)
+                     (if (path-list-ancestor? dangerous-paths dir)
+                       (protect dir)))
+                   (parentdirs-list path)))))
+       (%protect-redirected-paths
+         (lambda ()
+           (for-each
+             (lambda (mapping)
+               (let ((symlink-path (car mapping)) (target-path (cadr mapping)))
+                 (allow file-read-metadata (orig-literal symlink-path))
+                 (protect-ancestors-of-path symlink-path)
+                 (protect-ancestors-of-path target-path)))
+             *path-aliases*)))
+       (%protect-redirectable-paths
+         (lambda ()
+           (for-each
+             (lambda (path) (protect-ancestors-of-path path))
+             *redirectable-paths*))))
+  (if *path-aliases*
+    (begin
+      (set! resolving-literal %resolving-literal)
+      (set! resolving-subpath %resolving-subpath)
+      (set! resolving-prefix %resolving-prefix)
+      (set! resolving-regex %resolving-regex)
+      (set! protect-redirected-paths %protect-redirected-paths)))
+  (if *redirectable-paths*
+    (set! protect-redirectable-paths %protect-redirectable-paths)))
+(macro (with-transparent-redirection rules)
+       `(let ((literal resolving-literal)
+              (subpath resolving-subpath)
+              (prefix resolving-prefix)
+              (regex resolving-regex))
+          ,@rules))
+(define (home-regex home-relative-regex)
+  (resolving-regex
+    (string-append "^" (regex-quote (param "_HOME")) home-relative-regex)))
+(define regex-home home-regex)
+(define (home-subpath home-relative-subpath)
+  (resolving-subpath (string-append (param "_HOME") home-relative-subpath)))
+(define (home-prefix home-relative-subpath)
+  (resolving-prefix (string-append (param "_HOME") home-relative-subpath)))
+(define (home-literal home-relative-literal)
+  (resolving-literal (string-append (param "_HOME") home-relative-literal)))
+(define (home-path-ancestors home-relative-path)
+  (with-transparent-redirection
+    (path-ancestors (string-append (param "_HOME") home-relative-path))))
+(define (enterprise-container-regex relative-regex))
+(define (enterprise-application-group-regex relative-regex))
+(letrec ((enterprise-volume-regex
+           (lambda (relative-regex)
+             (require-all
+               (subpath "/Volumes/${ANY_UUID}")
+               (regex (string-append "^/[^/]+/[^/]+" relative-regex))))))
+  (set! enterprise-container-regex
+    (lambda (relative-regex)
+      (require-all
+        (container)
+        (enterprise-volume-regex
+          (string-append "/Library/Containers/[^/]+/Data" relative-regex)))))
+  (set! enterprise-application-group-regex
+    (lambda (suite relative-regex)
+      (require-all
+        (application-group)
+        (enterprise-volume-regex
+          (string-append
+            "/Library/Group Containers/"
+            (regex-quote suite)
+            relative-regex))))))
+(define (container-regex relative-regex)
+  (require-any
+    (resolving-regex
+      (string-append
+        "^"
+        (regex-quote (param "application_container"))
+        relative-regex))
+    (enterprise-container-regex relative-regex)))
+(define (container-subpath relative-subpath)
+  (require-any
+    (resolving-subpath
+      (string-append (param "application_container") relative-subpath))
+    (enterprise-container-regex
+      (string-append (regex-quote relative-subpath) "(/|$)"))))
+(define (container-literal relative-literal)
+  (require-any
+    (resolving-literal
+      (string-append (param "application_container") relative-literal))
+    (enterprise-container-regex
+      (string-append (regex-quote relative-literal) "$"))))
+(define (application-group-regex suite relative-regex)
+  (require-any
+    (home-regex
+      (string-append
+        "/Library/Group Containers/"
+        (regex-quote suite)
+        relative-regex))
+    (enterprise-application-group-regex suite relative-regex)))
+(define (application-group-subpath suite relative-subpath)
+  (require-any
+    (home-subpath
+      (string-append "/Library/Group Containers/" suite relative-subpath))
+    (enterprise-application-group-regex
+      suite
+      (string-append (regex-quote relative-subpath) "(/|$)"))))
+(define (application-group-literal suite relative-literal)
+  (require-any
+    (home-literal
+      (string-append "/Library/Group Containers/" suite relative-literal))
+    (enterprise-application-group-regex
+      suite
+      (string-append (regex-quote relative-literal) "$"))))
+(define (appsandbox-container-common)
+  (apply-read-and-issue-extension allow (container-subpath ""))
+  (apply-write-and-issue-extension allow (container-regex "/"))
+  (allow file-write-create
+         file-write-data
+         (require-all (vnode-type DIRECTORY) (container-literal "")))
+  (deny file-write-create
+        (require-all
+          (vnode-type SYMLINK)
+          (require-any
+            (container-literal "/Library")
+            (container-subpath "/Library/Preferences")
+            (container-subpath "/Library/SyncedPreferences")))))
+(define (appsandbox-container-macos)
+  (allow file-ioctl
+         file-link
+         file-mknod
+         file-revoke
+         file-search
+         file-mount
+         file-unmount
+         (container-subpath "")))
+(define (appsandbox-process-common)
+  (deny process-info*)
+  (allow process-info-pidinfo)
+  (allow process-info-pidfdinfo
+         process-info-pidfileportinfo
+         process-info-setcontrol
+         process-info-dirtycontrol
+         process-info-rusage
+         process-info-ledger
+         (target self))
+  (allow process-codesigning-status* (target self)))
+(define (%protect-preference-symlink domain)
+  (deny file-unlink
+        (container-literal
+          (string-append "/Library/Preferences/" domain ".plist"))
+        (container-regex
+          (string-append
+            "/Library/Preferences/ByHost/"
+            (regex-quote domain)
+            "\\..*\\.plist$"))))
+(define (optical-media)
+  (allow file-read*
+         file-ioctl
+         (require-all
+           (regex "^/dev/r?disk[0-9]+")
+           (require-any
+             (device-conforms-to "IOBDMedia")
+             (device-conforms-to "IODVDMedia")
+             (device-conforms-to "IOCDMedia")))))
+(define (network-client)
+  (system-network)
+  (allow network-outbound (remote ip))
+  (allow mach-lookup
+         (global-name "com.apple.airportd")
+         (global-name "com.apple.cfnetwork.AuthBrokerAgent")
+         (global-name "com.apple.cfnetwork.cfnetworkagent")
+         (global-name "com.apple.nesessionmanager.content-filter")
+         (global-name "com.apple.nsurlsessiond")
+         (global-name "com.apple.NetworkDiagnostic.agent")
+         (global-name "com.apple.WebKit.PluginAgent")))
+(define (network-server) (system-network) (allow network-inbound (local ip)))
+(define (camera)
+  (allow iokit-open-user-client
+         (require-all
+           (iokit-usb-interface-class kUSBVideoInterfaceClass)
+           (require-any
+             (iokit-user-client-class "IOUSBDeviceUserClientV2")
+             (iokit-user-client-class "IOUSBInterfaceUserClientV2"))))
+  (allow device-camera)
+  (allow mach-lookup
+         (global-name
+           "com.apple.applecamerad"
+           "com.apple.appleh13camerad"
+           "com.apple.cmio.registerassistantservice"
+           "com.apple.cmio.registerassistantservice.system-extensions")))
+(define (bluetooth)
+  (allow user-preference-read (preference-domain "com.apple.Bluetooth"))
+  (allow file-read* (literal "/Library/Preferences/com.apple.Bluetooth.plist"))
+  (allow mach-lookup
+         (global-name
+           "com.apple.BluetoothDOServer"
+           "com.apple.bluetoothd"
+           "com.apple.server.bluetooth.classic.xpc"
+           "com.apple.server.bluetooth.le.att.xpc"))
+  (with-filter
+    (system-attribute apple-internal)
+    (allow mach-lookup (global-name "com.apple.server.bluetooth.le.pipe.xpc")))
+  (allow iokit-open-user-client
+         (iokit-user-client-class
+           "IOBluetoothRFCOMMConnectionUserClient"
+           "IOBluetoothRFCOMMChannelUserClient"
+           "IOBluetoothL2CAPChannelUserClient"
+           "IOBluetoothDeviceUserClient"
+           "IOBluetoothHCIUserClient"))
+  (allow iokit-set-properties
+         (iokit-property
+           "AuthenticationAttempted"
+           "ClassOfDevice"
+           "OpenConnectionAuthenticationRequired")))
+(define (locationservices)
+  (allow mach-lookup
+         (global-name "com.apple.CoreLocation.agent")
+         (global-name "com.apple.locationd.desktop.spi")
+         (global-name "com.apple.locationd.desktop.synchronous")
+         (global-name "com.apple.locationd.desktop.registration")
+         (xpc-service-name "com.apple.geod")))
+(define (addressbook)
+  (with-filter
+    (extension "com.apple.tcc.kTCCServiceAddressBook")
+    (allow mach-lookup
+           (global-name
+             "com.apple.AddressBook.abd"
+             "com.apple.AddressBook.AddressBookApplicationFrameworkIPC"
+             "com.apple.AddressBook.AssistantService"
+             "com.apple.AddressBook.ContactsAccountsService"
+             "com.apple.AddressBook.SourceSync"
+             "com.apple.ContactsAgent.addressbook"
+             "com.apple.contactsd.persistence"
+             "com.apple.contactsd.bookkeeping"))
+    (allow user-preference-read
+           user-preference-write
+           (preference-domain "com.apple.AddressBook"))
+    (allow file-read*
+           file-write*
+           (home-subpath "/Library/Application Support/AddressBook"))
+    (allow-read-write-directory-contents
+      (param "application_addressbook_lock_dir"))
+    (read-write-and-issue-extensions (home-subpath "/Library/Images/People"))
+    (read-only-and-issue-extensions
+      (require-any
+        (subpath "/Library/Images/People")
+        (subpath "/System/Library/Images/People")
+        (subpath "/Network/Library/Images/People"))))
+  (deny file-link
+        (subpath "/Library/Images/People")
+        (subpath "/System/Library/Images/People")
+        (subpath "/Network/Library/Images/People")))
+(define (calendar)
+  (allow file-read* file-write* (home-subpath "/Library/Calendars"))
+  (deny file-read*
+        file-write*
+        (home-literal "/Library/Calendars/Calendar Cache")
+        (home-literal "/Library/Calendars/Calendar Cache-journal")
+        (home-literal "/Library/Calendars/Calendar Cache-shm")
+        (home-literal "/Library/Calendars/Calendar Cache-wal")
+        (home-literal "/Library/Calendars/.Calendar Cache-conch"))
+  (read-write-and-issue-extensions
+    (require-any
+      (home-subpath "/Library/Calendars/Attachments")
+      (home-regex "/Library/Calendars/[0-9A-Z-]+\\.[^/]+/Attachments(/|$)")
+      (home-subpath "/Library/Calendars/Temporary Files")))
+  (allow-read-write-directory-contents
+    (param "application_calendars_lock_dir"))
+  (allow mach-lookup
+         (global-name-prefix "com.apple.CalendarStore.lock.")
+         (global-name "com.apple.accountsd.accountmanager")
+         (global-name "com.apple.CalendarAgent")
+         (global-name "com.apple.CalendarAgent.database")
+         (global-name "com.apple.CalendarAgent.proxy")
+         (global-name "com.apple.CalendarAgent.store")))
+(define (clouddocs)
+  (with-filter
+    (extension "com.apple.librarian.ubiquity-container")
+    (allow file-link
+           (home-subpath "/Library/Mobile Documents")
+           (home-subpath "/Library/Group Containers"))
+    (read-write-and-issue-extensions
+      (require-any
+        (home-subpath "/Library/Mobile Documents")
+        (home-subpath "/Library/Group Containers")))))
+(define (ubiquity-filter s)
+  (let ((s (list->string
+             (let loop ((orig (string->list s)) (ls '()))
+               (if (null? orig)
+                 (reverse ls)
+                 (loop (cdr orig)
+                       (let ((ch (car orig)))
+                         (cons (if (char=? #\. ch) #\~ ch) ls))))))))
+    (let ((path (string-append "/Library/Mobile Documents/" s)))
+      (let ((n (string-length path)))
+        (if (and (char=? #\* (string-ref path (- n 1)))
+                 (char=? #\~ (string-ref path (- n 2))))
+          (let ((sub (substring path 0 (- n 2))))
+            (home-regex (string-append (regex-quote sub) ".*")))
+          (home-subpath path))))))
+(define (gamecenter)
+  (allow mach-lookup
+         (global-name "com.apple.gamed")
+         (global-name "com.apple.gamed.osx")
+         (global-name "com.apple.gamed.xpc"))
+  (allow user-preference-read (preference-domain "com.apple.gamekit")))
+(define (power-assertions)
+  (allow mach-lookup
+         (global-name
+           "com.apple.PowerManagement.control"
+           "com.apple.iokit.powerdxpc"))
+  (allow iokit-open-service (iokit-registry-entry-class "IOPMrootDomain"))
+  (allow iokit-open-user-client
+         (iokit-user-client-class "RootDomainUserClient")))
+(define (printing)
+  (allow authorization-right-obtain
+         (right-name "system.print.operator")
+         (right-name "system.printingmanager"))
+  (allow mach-lookup
+         (global-name "com.apple.printuitool.agent")
+         (global-name "com.apple.printtool.agent")
+         (global-name "com.apple.printtool.daemon"))
+  (allow file-read*
+         (home-literal "/.cups/lpoptions")
+         (home-literal "/.cups/client.conf")
+         (literal "/private/etc/cups/client.conf")
+         (literal "/private/etc/cups/lpoptions")
+         (subpath "/private/etc/cups/ppd")
+         (literal "/private/var/run/cupsd"))
+  (allow user-preference-read (preference-domain "org.cups.PrintingPrefs")))
+(define (appsandbox-extensions)
+  (read-only-and-issue-extensions (extension "com.apple.app-sandbox.read"))
+  (read-write-and-issue-extensions
+    (extension "com.apple.app-sandbox.read-write"))
+  (allow mach-lookup (extension "com.apple.app-sandbox.mach"))
+  (allow iokit-open-user-client
+         (extension "com.apple.app-sandbox.iokit-client")))
+(define (notification-center)
+  (allow mach-lookup
+         (global-name
+           "com.apple.notificationcenterui.widgetcontent"
+           "com.apple.usernoted.client"
+           "com.apple.usernoted.daemon_client"
+           "com.apple.usernoted.push")))
+(define (audio-input)
+  (allow device-microphone)
+  (allow iokit-open-user-client
+         (require-all
+           (iokit-connection "AppleHDAEngineInput")
+           (iokit-user-client-class
+             "IOAudioControlUserClient"
+             "IOAudioEngineUserClient"))))
+(define (audio-output)
+  (allow iokit-open-user-client
+         (require-all
+           (iokit-connection "AppleHDAEngineOutput")
+           (iokit-user-client-class
+             "IOAudioControlUserClient"
+             "IOAudioEngineUserClient")))
+  (allow mach-lookup (global-name "com.apple.relatived.tempest")))
+(define (ane-client)
+  (allow iokit-open-user-client
+         (iokit-user-client-class
+           "H11ANEInDirectPathClient"
+           "H1xANELoadBalancerDirectPathClient"))
+  (allow mach-lookup (global-name "com.apple.appleneuralengine"))
+  (with-filter
+    (extension-class "com.apple.aned.read-only")
+    (allow file-issue-extension
+           (subpath (param "application_bundle"))
+           (container-subpath "/Documents")
+           (container-subpath "/Library")
+           (container-subpath "/tmp")
+           (extension
+             "com.apple.app-sandbox.read"
+             "com.apple.app-sandbox.read-write")))
+  (when (entitlement "com.apple.appleneuralengine.private.allow")
+        (allow mach-lookup
+               (global-name "com.apple.appleneuralengine.private"))))
+(define (afterburner)
+  (allow iokit-open-user-client
+         (iokit-user-client-class
+           "AppleAfterburnerUserClient"
+           "com_apple_AthenaUserClient")))
+(define (appsandbox-fsctl)
+  (allow system-fsctl
+         (fsctl-command APFSIOC_DOC_ID_TO_FILE_ID)
+         (fsctl-command APFSIOC_GET_CLONE_INFO)
+         (fsctl-command HFSIOC_SET_HOTFILE_STATE)
+         (fsctl-command HFSIOC_TRANSFER_DOCUMENT_ID)
+         (fsctl-command HFSIOC_VOLUME_STATUS)
+         (fsctl-command afpfsByteRangeLock2FSCTL)
+         (fsctl-command afpfsGetMountInfoFSCTL)
+         (fsctl-command afpfsSubMountFSCTL)
+         (fsctl-command smbfsUniqueShareIDFSCTL)))
+(define (datadetectors)
+  (allow file-read* (subpath "/private/var/db/datadetectors/sys"))
+  (allow mach-lookup (global-name "com.apple.DataDetectorsSourceAccess")))
+(define (foundation)
+  (allow user-preference-read
+         (preference-domain "com.apple.morphology")
+         (require-all
+           (process-attribute is-apple-signed-executable)
+           (preference-domain "com.apple.morphology.internal"))))
+(define (mobileasset)
+  (allow user-preference-read (preference-domain "com.apple.MobileAsset"))
+  (allow mach-lookup
+         (global-name "com.apple.mobileassetd")
+         (global-name "com.apple.mobileassetd.v2"))
+  (with-filter
+    (extension "com.apple.assets.read")
+    (allow file-read*
+           (subpath "/System/Library/Assets")
+           (subpath "/Library/Assets")
+           (home-subpath "/Library/Assets"))))
+(define (privileged-file-operations)
+  (allow mach-lookup (global-name "com.apple.secinitd.fileoperations"))
+  (allow authorization-right-obtain
+         (right-name "com.apple.app-sandbox.create-symlink")
+         (right-name "com.apple.app-sandbox.set-attributes")
+         (right-name "com.apple.app-sandbox.replace-file")))
+(define (select-sysctl-filter handle with-star without-star)
+  (if (end-with-star? handle)
+    (with-star (strip-last-char handle))
+    (without-star handle)))
+(define (safe-subpath path) (subpath (if (string=? path "") "/" path)))
+(define (select-filter path with-slash without-slash)
+  (if (end-with-slash? path)
+    (with-slash (strip-last-char path))
+    (without-slash path)))
+(define (passkit-services)
+  (allow mach-lookup
+         (global-name
+           "com.apple.passd.assertions"
+           "com.apple.passd.in-app-payment"
+           "com.apple.passd.library"
+           "com.apple.passd.payment-continuity")))
+(define (siri-actions)
+  (allow mach-lookup (global-name "com.apple.siri.VoiceShortcuts.xpc")))
+(define (webkit-support)
+  (allow iokit-issue-extension
+         (extension-class "com.apple.webkit.extension.iokit"))
+  (allow mach-issue-extension
+         (extension-class "com.apple.webkit.extension.mach"))
+  (allow mach-lookup (global-name "com.apple.webinspectord"))
+  (allow user-preference-read
+         (preference-domain
+           "com.apple.Safari.SandboxBroker"
+           "com.apple.webinspectord")))
+(define (webkit-camera-support)
+  (allow generic-issue-extension (extension-class "com.apple.webkit.camera")))
+(define (webkit-microphone-support)
+  (allow generic-issue-extension
+         (extension-class "com.apple.webkit.microphone")))
+(define (webkit-xpc-services)
+  (allow mach-lookup
+         (xpc-service-name
+           "com.apple.WebKit.GPU"
+           "com.apple.WebKit.Networking"
+           "com.apple.WebKit.WebContent")))
