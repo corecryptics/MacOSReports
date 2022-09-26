@@ -1,0 +1,484 @@
+;;; This profile contains the rules necessary to make BlastDoor as close to
+;;; compute-only as possible, while still remaining functional.
+;;;
+;;; For macOS: /System/Library/PrivateFrameworks/MessagesBlastDoorSupport.framework/XPCServices/MessagesBlastDoorService.xpc/MessagesBlastDoorService
+
+(version 1)
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; Basic Rules
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; Deny all default rules.
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+;; Rules copied from system.sb. Ones that we've deemed overly permissive
+;; or unnecessary for BlastDoor have been removed.
+
+;; Allow read access to standard system paths.
+(allow file-read*
+       (require-all (file-mode #o0004)
+                    (require-any (subpath "/System")
+                                 (subpath "/usr/lib")
+                                 (subpath "/usr/share")
+                                 (subpath "/private/var/db/dyld"))))
+
+;; Allow loading dylibs from system locations.
+(allow file-map-executable
+       (subpath "/System/Library")
+       (subpath "/usr/lib"))
+
+(allow file-test-existence (subpath "/System"))
+
+(allow file-read-metadata
+       (literal "/etc")
+       (literal "/tmp")
+       (literal "/var")
+       (literal "/private/etc/localtime"))
+
+;; Allow access to standard special files.
+(allow file-read*
+       (literal "/dev/random")
+       (literal "/dev/urandom"))
+
+(allow file-read* file-write-data
+       (literal "/dev/null")
+       (literal "/dev/zero"))
+
+(with-filter (system-attribute apple-internal)
+    (allow file-read* file-write-data file-ioctl
+        (literal "/dev/dtracehelper")))
+
+;; TODO: Don't allow core dumps to be written out unless this is on a dev
+;; fused device?
+(allow file-write*
+       (require-all (regex #"^/cores/")
+                    (require-not (file-mode 0))))
+
+;; Allow IPC to standard system agents.
+(allow mach-lookup
+       (global-name "com.apple.logd")
+       (global-name "com.apple.system.logger")
+       (global-name "com.apple.system.notification_center"))
+
+;; Only allow streaming logs on internal installs.
+(with-filter (system-attribute apple-internal)
+             (allow mach-lookup (global-name "com.apple.diagnosticd")))
+
+;; Allow mostly harmless operations.
+(allow signal process-info-dirtycontrol process-info-pidinfo
+       (target self))
+
+;; Temporarily allow sysctl-read with reporting to see if this is
+;; used for anything.
+(allow (with report) sysctl-read)
+
+;; We don't need to post any darwin notifications.
+(deny darwin-notification-post)
+
+;; We shouldn't allow any other file operations not covered under
+;; the default of deny above.
+(deny file-clone file-link)
+
+;; Don't deny file-test-existence: <rdar://problem/59611011>
+;; (deny file-test-existence)
+
+(deny mach-cross-domain-lookup)
+
+;; Don't allow BlastDoor to spawn any other XPC services other than
+;; ones that we can intentionally allowlist later.
+(deny mach-lookup (xpc-service-name-regex #".*"))
+
+;; Don't allow any commands on sockets.
+(deny socket-ioctl)
+
+;; Denying this should have no ill effects for our use case.
+(deny system-privilege)
+
+;; To be uncommented once the system call allowlist is complete...
+(deny syscall-unix (with send-signal SIGKILL) (with telemetry) (with message "73669976"))
+(allow syscall-unix
+       (syscall-group-bsdthread)
+       (syscall-group-close)
+       (syscall-group-fcntl)
+       (syscall-group-getfsstat)
+       (syscall-group-kevent)
+       (syscall-group-mkdir)
+       (syscall-group-pthread)
+       (syscall-group-read)
+       (syscall-group-rlimit)
+       (syscall-group-send)
+       (syscall-group-signal)
+       (syscall-group-stat)
+       (syscall-group-statfs)
+       (syscall-group-ulock)
+       (syscall-number SYS___disable_threadsignal
+                       SYS___mac_syscall
+                       SYS___semwait_signal_nocancel
+                       SYS_abort_with_payload
+                       SYS_access
+                       SYS_connect
+                       SYS_csops_audittoken
+                       SYS_csrctl
+                       SYS_dup
+                       SYS_exit
+                       SYS_faccessat
+                       SYS_fgetattrlist
+                       SYS_fgetxattr
+                       SYS_fsgetpath
+                       SYS_getattrlist
+                       SYS_getattrlistbulk
+                       SYS_getdirentries64
+                       SYS_getentropy
+                       SYS_geteuid
+                       SYS_getgid
+                       SYS_gethostuuid
+                       SYS_getrusage
+                       SYS_gettimeofday
+                       SYS_getuid
+                       SYS_getxattr
+                       SYS_ioctl
+                       SYS_issetugid
+                       SYS_kdebug_trace
+                       SYS_kdebug_trace64
+                       SYS_kdebug_trace_string
+                       SYS_kdebug_typefilter
+                       SYS_listxattr
+                       SYS_lseek
+                       SYS_madvise
+                       SYS_mmap
+                       SYS_mprotect
+                       SYS_mremap_encrypted
+                       SYS_munmap
+                       SYS_open
+                       SYS_open_nocancel
+                       SYS_openat
+                       SYS_pathconf
+                       SYS_proc_info
+                       SYS_readlink
+                       SYS_rename
+                       SYS_rmdir
+                       SYS_shm_open
+                       SYS_socket
+                       SYS_sysctl
+                       SYS_sysctlbyname
+                       SYS_thread_selfid
+                       SYS_umask
+                       SYS_workq_kernreturn
+                       SYS_workq_open))
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; Syscall subcommand filtering
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; fcntl filtering
+(when (defined? 'system-fcntl)
+    (deny system-fcntl)
+    (allow system-fcntl
+           (fcntl-command F_ADDFILESIGS_RETURN
+                          F_CHECK_LV
+                          F_GETFD
+                          F_GETPATH
+                          F_GETPROTECTIONCLASS
+                          F_NOCACHE
+                          F_SETFD
+                          F_SPECULATIVE_READ)))
+
+;; For validating the entitlements of clients. This is so only entitled
+;; clients can pass data into a BlastDoor instance.
+;; csops/csops_audittoken filtering
+(if (defined? 'process-codesigning*)
+    (begin
+        (allow process-codesigning-entitlements-blob-get)
+        (allow process-codesigning-status-get)
+        (deny process-codesigning-blob-get
+              process-codesigning-cdhash-get
+              process-codesigning-identity-get
+              process-codesigning-status-set
+              process-codesigning-text-offset-get
+              process-codesigning-teamid-get)
+        (deny process-info-codesignature (with no-report)))
+    (allow process-info-codesignature))
+
+;; ioctl filtering
+(deny file-ioctl)
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; Reading Files
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; Support for BlastDoor receiving sandbox extensions from clients to read files from a target location.
+(allow file-read*
+       (extension "com.apple.app-sandbox.read"))
+
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; Writing Files
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; Support for BlastDoor receiving sandbox extensions from clients to write files to a target location.
+(allow file-read* file-write*
+       (extension "com.apple.app-sandbox.read-write"))
+
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; The items below were copied from iOS's built-in "blastdoor-messages.sb"
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; The root cause of this violation is
+;; rdar://20117923 (setting the dirty bit on self calls out to 4 mac policy hooks, should be 0)
+;; rdar://72366475 The xnu team to optimize the attempt to check this for self PID
+(deny system-privilege (privilege-id PRIV_GLOBAL_PROC_INFO) (with no-report))
+
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;; Some of items below were copied from "system.sb"
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; Required services.
+;; These were found by trial-and-error:
+;; - If trustd is not specified, making the connection to the decoder service/bundle fails verification
+(allow mach-lookup
+        (global-name "com.apple.coremedia.videodecoder")         ;; Images (HEIF/live-photos) and videos.
+        (global-name "com.apple.trustd.agent")                   ;; Certificate validation.
+        (global-name "com.apple.audio.AudioComponentRegistrar")  ;; Audio message previews.
+        (global-name "com.apple.audio.SandboxHelper"))           ;; Audio message previews.
+
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; IOKIT: All I/O Kit rules
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; iokit-get-properties: To get properties on an I/O Kit device
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; Don't allow access to any I/O Kit properties
+(deny iokit-get-properties (with telemetry) (with message "75105696-iokit-properties"))
+
+;; Below is the list of exceptions to allow iokit-get-properties filtered for each
+;; iokit-registry-entry-class.
+;;
+;; Tips:
+;; 1. When adding new iokit-property into the allow list, use `ioreg -w0 -l -i` and
+;; `ioreg -w0 -l -i -p IODeviceTree` to audit, for the device with the appropriate hardware.
+;; Clownfish/Stash search can also reveal this hierarchy for most cases.
+;; Whenever applicable, use a common ancestor class to filter the rules.
+;;
+;; 2. The list of iokit-property in some blocks may contain properties looked up by APIs
+;; (e.g., CoreMedia) that do not exist in the class inheritence tree.
+;; Audit those case-by-case. It is useful to keep those segregated for maintenance.
+;;
+;; 3. Keep the list of blocks, and their respective iokit-properties sorted.
+
+(with-filter (iokit-registry-entry-class "AGXFamilyAccelerator")
+    (allow iokit-get-properties
+        (iokit-property "MetalPluginClassName"
+                        "MetalPluginName"
+                        ;; Nonexistent properties
+                        "AAPL,slot-name"
+                        "IOAVDHEVCDecodeCapabilities"
+                        "IOGVAHEVCDecode"
+                        "SafeEjectRequested")))
+
+(with-filter (iokit-registry-entry-class "AppleAVD")
+    (allow iokit-get-properties
+        (iokit-property "IOAVDHEVCDecodeCapabilities"
+                        ;; Nonexistent properties
+                        "AppleJPEGNumCores"
+                        "IOGVAHEVCDecode")))
+
+(with-filter (iokit-registry-entry-class "AppleDiskImageDevice")
+    (allow iokit-get-properties
+        (iokit-property "DiskImageURL")))
+
+(with-filter (iokit-registry-entry-class "AppleJPEGDriver")
+    (allow iokit-get-properties
+        (iokit-property "AppleJPEGNumCores"
+                        "AppleJPEGSupportsAppleInterchangeFormats"
+                        ;; Nonexistent properties
+                        "IOAVDHEVCDecodeCapabilities"
+                        "IOGVAHEVCDecode")))
+
+(with-filter (iokit-registry-entry-class "AppleM2ScalerCSCDriver")
+    (allow iokit-get-properties
+        (iokit-property "IOSurfaceAcceleratorCapabilitiesDict")))
+
+(with-filter (iokit-registry-entry-class "IOBlockStorageDevice"
+                                         "IOStorage")
+    (allow iokit-get-properties
+        (iokit-property "IOMediaIcon"
+                        "Protocol Characteristics")))
+
+(with-filter (iokit-registry-entry-class "IOBufferCopyEngine")
+    (allow iokit-get-properties
+        (iokit-property ;; Nonexistent properties
+                        "AppleJPEGNumCores"
+                        "IOAVDHEVCDecodeCapabilities"
+                        "IOGVACodec"
+                        "IOGVAHEVCDecode")))
+
+(with-filter (iokit-registry-entry-class "IOGraphicsAccelerator2")
+    (allow iokit-get-properties
+        (iokit-property "IODVDBundleName"
+                        "IOGVACodec"
+                        "IOGVAHEVCDecode"
+                        "IOVARendererID"
+                        "MetalPluginClassName"
+                        "MetalPluginName"
+                        ;; Nonexistent properties
+                        "AAPL,slot-name"
+                        "IOAVDHEVCDecodeCapabilities"
+                        "IOPCIExpressLinkStatus"
+                        "SafeEjectRequested")))
+
+(with-filter (iokit-registry-entry-class "IOHDIXHDDrive")
+    (allow iokit-get-properties
+        (iokit-property "image-path")))
+        
+(with-filter (iokit-registry-entry-class "IOMedia")
+    (allow iokit-get-properties
+        (iokit-property "Ejectable")
+        (iokit-property "Removable")))
+
+(with-filter (iokit-registry-entry-class "IOPCIDevice")
+    (allow iokit-get-properties
+        (iokit-property "AAPL,slot-name"
+                        "ATY,DeviceName"
+                        "ATY,FamilyName"
+                        "IOPCIExpressLinkStatus"
+                        "Thunderbolt Path"
+                        "built-in")))
+
+(with-filter (iokit-registry-entry-class "IOPlatformDevice")
+    (allow iokit-get-properties
+        (iokit-property "soc-generation")))
+
+(with-filter (iokit-registry-entry-class "IOSCSIProtocolInterface")
+    (allow iokit-get-properties
+        (iokit-property "Product Identification"
+                        "IOMediaIcon")))
+
+(with-filter (iokit-registry-entry-class "IOThunderboltPort")
+    (allow iokit-get-properties
+        (iokit-property "Socket ID"
+                        "Supported Link Speed"
+                        "Supported Link Width")))
+
+;; board-id is present on multiple nodes:
+;; 1. [IODeviceTree:/] IOPlatformExpertDevice
+;; 2. [IODeviceTree:/platform] IOService
+(allow iokit-get-properties
+    (iokit-property "board-id"))
+
+(allow iokit-get-properties
+    (iokit-property "IOClassNameOverride"))
+
+;;; -------------------------------------------------------------------------------------------- ;;;
+;;; iokit-open: access to I/O Kit device via IOServiceOpen
+;;; -------------------------------------------------------------------------------------------- ;;;
+
+;; Don't allow access to any I/O Kit device
+;; Note: "iokit-open" is obsolete
+(deny iokit-open-user-client)
+
+;; Don't allow this iokit usage as we never had it before and it causes crashes on Apple Silicon with HEIC/HEIF images: rdar://77462714 (Remove com.apple.MTLCompilerService from blastdoor macOS sandbox)
+;;(allow iokit-open-user-client
+;;       (iokit-user-client-class "AGXDeviceUserClient")
+;;       (apply-message-filter
+;;            (deny iokit-async-external-method)
+;;            (allow iokit-async-external-method
+;;                   (iokit-method-number 47))
+;;            (deny iokit-external-method)
+;;            (allow iokit-external-method
+;;                   (iokit-method-number 0 2 5 6 7 8 9 10 11 13 15 16 17 18 29 30 31 40 42 48))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IOAccelCommandQueue")
+       (apply-message-filter
+            (deny iokit-async-external-method)
+            (allow iokit-async-external-method
+                   (iokit-method-number 0))
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 1 2 5))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IOAccelDevice2")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 0 2 7 8 9 256))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IOAccelSharedUserClient2")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 0 1 4 7 8 9 10 12 259 268))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "AppleJPEGDriverUserClient")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 1))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IGAccelCommandQueue")
+       (apply-message-filter
+            (deny iokit-async-external-method)
+            (allow iokit-async-external-method
+                   (iokit-method-number 0))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IGAccelDevice")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 0 2 7 8 9 10 11 12 24))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IGAccelSharedUserClient")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 0 1 4 7 8 9 10 21 22))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IGAccelVideoContextMain")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 2 5 256 257 258))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IGAccelVideoContextMedia")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 2 5))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IGAccelVideoContextVEBox")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 2))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IOSurfaceAcceleratorClient")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 1))))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "IOSurfaceRootUserClient")
+       (apply-message-filter
+            (deny iokit-external-method)
+            (allow iokit-external-method
+                   (iokit-method-number 11 20                  ;; HEIF image preview only, still required for Hubble for flows going through LargeImageUnpacker
+                                        0 1 2 3 9 10 12 13 14 15 23 27 32 34 35 44))))

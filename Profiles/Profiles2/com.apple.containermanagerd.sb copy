@@ -1,0 +1,149 @@
+;;;;;; Sandbox profile for containermanagerd(8)
+;;;;;;
+;;;;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice.
+
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+(deny mach-priv-host-port)
+
+;; Standard imports
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; Helper
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+(define (root-owned?)
+    (equal? (param "UID") "0"))
+(define (data-container-subpath)
+    (require-any
+        (home-subpath "/Library/Containers")
+        (home-subpath "/Library/Daemon Containers")))
+(define (unusual-container-subpath)
+    (require-any
+        (home-subpath "/Library/VPN Containers")
+        (home-subpath "/Library/Temporary Containers")
+        (home-subpath "/Library/TempDir Containers")
+        (home-subpath "/Library/XPCService Containers")))
+(define (group-container-subpath)
+    (require-any
+        (home-subpath "/Library/Group Containers")
+        (home-literal "/Library/GroupContainersAlias")))
+
+;; CFPrefs tries to read our "bundle" to resolve preferences (seems to come through CSBackupSetItemExcluded())
+(deny file-read-data
+    (require-any
+        (subpath "/usr/libexec")
+        (subpath "/Library/Preferences")
+        (home-subpath "/Library/Preferences"))
+    (with no-report))
+(deny user-preference* (with no-report))
+
+;; Allow file handling in container and cache directories for current user
+(allow file-read* file-write*
+    (data-container-subpath)
+    (group-container-subpath)
+    (unusual-container-subpath)
+    (home-literal "/Library")
+    (home-literal "/Library/Caches")
+    (home-subpath "/Library/ContainerManager")
+    (home-subpath "/Library/Staging")
+    (home-subpath "/Library/Caches/com.apple.containermanagerd")
+    (home-subpath "/Library/Saved Application State") ;; We try to fix permissions on this path, and also move files out of it as part of container schema inherited from AppSandbox (v3)
+    (home-literal "/Library/Mail") ;; We try to create this as part of container schema inherited from AppSandbox (v20)
+    (home-literal "/Library/Audio") ;; We try to create this as part of container schema inherited from AppSandbox (v28)
+    (home-subpath "/Library/Application Scripts") ;; We try to create this as part of container schema inherited from AppSandbox (v38)
+    (home-literal "/Library/Keychains") ;; We try to create this as part of container schema inherited from AppSandbox (v39)
+    (extension "com.apple.usermanagement.persona-volume")
+)
+
+;; getattrlist(2) requires being able to read metadata up the hierarchy and containermanagerd makes extensive use of it
+(allow file-read-metadata)
+
+;; Allow codesign, entitlement, and platform inspection of incoming XPC clients
+(allow process-info* (target self))
+(allow process-info-codesignature)
+(allow process-info-pidinfo)
+
+;; containermanagerd will create/read the value of system semaphores
+(allow ipc-posix-sem* (ipc-posix-name (param "SEMAPHORE_NAME")))
+
+;; MKBGetDeviceLockState() requires talking to AKS
+(allow iokit-open (iokit-user-client-class "AppleKeyStoreUserClient"))
+
+(allow mach-lookup
+    (global-name (param "MACH_LISTENER_NAME")) ;; LaunchAgent must be able to communicate with the LaunchDaemon
+    (global-name "com.apple.mobile.usermanagerd.xpc") ;; UserManagement
+    (global-name "com.apple.mobile.keybagd.UserManager.xpc") ;; UserManagement, but not yet supported
+    (global-name "com.apple.mobile.keybagd.xpc")) ;; UserManagement, but not yet supported
+
+;; Allow file handling for global containers
+(when (root-owned?)
+    (allow file-read* file-write* (subpath "/private/var/containers")))
+
+;; Allow repairing user home permissions when granted an extension to do so
+(when (root-owned?)
+    (allow file-read-data file-write-acl file-write-flags file-write-mode file-write-owner (extension "com.apple.containermanagerd.home-repair")))
+
+;; Enabling fast disk usage
+(allow system-fsctl
+       (fsctl-command APFSIOC_MAINTAIN_DIR_STATS)
+       (fsctl-command APFSIOC_GET_DIR_STATS_EXT))
+
+;; Issuing container sandbox extensions
+(allow file-issue-extension
+       (require-all
+           (require-any
+                (data-container-subpath)
+                (extension "com.apple.usermanagement.persona-volume"))
+           (extension-class "com.apple.sandbox.container")))
+(allow file-issue-extension
+       (require-all
+           (require-any
+                (group-container-subpath)
+                (extension "com.apple.usermanagement.persona-volume"))
+           (extension-class "com.apple.sandbox.application-group")))
+(when (not (root-owned?))
+    (allow file-issue-extension
+            (require-all
+                (require-any
+                    (literal (param "HOME"))
+                    (extension "com.apple.usermanagement.persona-volume"))
+                (extension-class "com.apple.containermanagerd.home-repair"))))
+
+;; These are all necessary to do SecStaticCodeCreateWithPathAndAttributes() --> SecStaticCodeCheckValidityWithErrors() --> SecCodeCopySigningInformation()
+(allow file-read* file-write* (subpath "/private/var/folders")) ;; writes an mds lock file here
+(allow file-read* file-write* (subpath "/private/var/db/mds/system"))
+(allow file-read*
+    (home-subpath "/Library/Keychains")
+    (subpath "/System/Library/Keychains")
+    (literal "/Library/Preferences/com.apple.security.plist")
+    (subpath "/Library/Security/Trust Settings")
+    (subpath (string-append "/private/var/db/mds/messages/" (param "UID"))))
+
+(allow mach-lookup (global-name "com.apple.SecurityServer")
+                   (global-name "com.apple.securityd.xpc")
+                   (global-name "com.apple.ocspd"))
+(allow ipc-posix-shm-read* ipc-posix-shm-write-create ipc-posix-shm-write-data
+                   (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+(allow file-read*
+    (extension "com.apple.app-sandbox.read"))
+
+;; Disk Arbitration
+(allow mach-lookup (global-name "com.apple.DiskArbitration.diskarbitrationd"))
+
+;; Temporarily, while we chase down libsystem_secinit crashers
+(allow process-fork)
+(allow mach-lookup (global-name "com.apple.logd.admin"))
+(allow file-read* (subpath "/private/var/db/diagnostics")
+                  (subpath "/private/var/db/uuidtext")) ;; reading back log archive

@@ -1,0 +1,61 @@
+;;; Copyright (c) 2020-2021 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(allow process-info*)
+(allow file-read*)
+(allow process-info* (target self))
+
+(allow mach-lookup
+       (global-name "com.apple.cmio.registerassistantservice")
+       (global-name "com.apple.cmio.registerassistantservice.system-extensions")
+       (global-name "com.apple.CoreServices.coreservicesd")
+       (global-name "com.apple.coreservices.launchservicesd")
+       (global-name "com.apple.analyticsd")
+       (global-name "com.apple.sysextd")
+       (global-name "com.apple.xpc.smd")
+       (global-name "com.apple.tccd.system")
+       (global-name "com.apple.tccd")
+       (global-name "com.apple.containermanagerd")
+)
+
+(allow mach-issue-extension
+       (require-all
+           (extension-class "com.apple.app-sandbox.mach"))
+       (require-any
+           (global-name "com.apple.cmio.registerassistantservice"))
+)
+(allow mach-lookup (extension "com.apple.app-sandbox.mach"))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow user-preference-read
+       (preference-domain "com.apple.cmio")
+       (preference-domain "com.apple.cmio.registerassistantservice")
+       (preference-domain "kCFPreferencesAnyApplication")
+       (preference-domain "group.com.apple.secure-control-center-preferences.av")
+)
+
+(allow user-preference-write
+       (preference-domain "group.com.apple.secure-control-center-preferences.av")
+)
+
+(allow file-read* file-write*
+       (extension "com.apple.sandbox.application-group")
+)

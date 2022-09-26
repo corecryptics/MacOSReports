@@ -1,0 +1,90 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+
+;; Uncomment the following rules to report violations when testing a change and
+;;   set 'sysctl security.mac.sandbox.debug_mode=544' to see verbose violation reporting.
+;;
+;; (allow (with report) default)
+;; (allow (with report) file-map-executable process-info* nvram*)
+;; (allow (with report) dynamic-code-generation)
+
+;; (deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(allow process-info* (target self))
+
+(allow process-info-pidinfo)
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+(allow file*
+    (subpath "/private/var/containers/Bundle")
+    (subpath "/private/var/containers/Temp/Bundle"))
+
+;; MIS's db is protected by datavault and requires "com.apple.private.security.storage.MobileIdentityService" entitlement
+(allow file-read-data
+    (subpath "/private/var/db/MobileIdentityService"))
+    
+;; Needed by Security framework as part of call to MISValidateSignatureAndCopyInfoWithProgress()
+(allow file-read*
+    (subpath "/private/var/db/mds"))
+    
+(allow file-read* file-write*
+    (subpath "/private/var/db/appinstalld"))
+    
+(allow file-read*
+    (subpath "/private/var/db/installcoordinationd"))
+
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.appinstalld"))
+
+(allow mach-lookup
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.misagent")
+    (global-name "com.apple.online-auth-agent.xpc")
+    (global-name "com.apple.fpsd")
+    (global-name "com.apple.containermanagerd"))
+
+;; NSFileManager uses the following for creating temporary items
+(allow file-read* file-write*
+    (regex #"^/private/var/folders/[^/]+/[^/]+/T")
+    (mount-relative-literal "/.TemporaryItems")
+    (mount-relative-regex #"^/\.TemporaryItems/folders.[0-9]+(/|$)"))
+
+;; Read/write access to a temporary directory and a cache directory.
+(allow file-read* file-write*
+    (subpath (param "TMPDIR"))
+    (subpath (param "DARWIN_CACHE_DIR")))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+;; Required for use of CFPreferences
+(allow user-preference-read user-preference-write
+       (preference-domain "kCFPreferencesAnyApplication"))
+(allow file-read-metadata
+    ;; __CFXPreferencesCreatePreferencesDirectoryURLForTriplet stats the user's home directory.
+    (home-literal "")
+    ;; CFPreferencesCopyAppValue stats Preferences' parent directory.
+    (home-literal "/Library/Preferences"))
+
+;; Called by MIS signature validation
+(allow ipc-posix-shm-write* ipc-posix-shm-read*
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+    
+;; Allow use of NSDistributedNotificationCenter
+(allow distributed-notification-post)
+
+(allow sysctl-read sysctl-write
+       (sysctl-name "kern.grade_cputype"))

@@ -1,0 +1,149 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; Training wheels ON...
+(allow (with report) default)
+(allow (with report) file-map-executable iokit-get-properties process-info* nvram*)
+(allow (with report) dynamic-code-generation)
+
+;;; Training wheels OFF...
+;;; (deny default)
+;;; (deny file-map-executable iokit-get-properties process-info* nvram*)
+;;; (deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define
+	(home-regex home-relative-regex)
+	(regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define
+	(home-subpath home-relative-subpath)
+	(subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define
+	(home-prefix home-relative-prefix)
+	(prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define
+	(home-literal home-relative-literal)
+	(literal (string-append (param "HOME") home-relative-literal))
+)
+
+
+(allow process-info* (target self))
+
+(allow file-read-metadata)
+
+(allow process-info-codesignature)
+
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.auearlyboot")
+    (preference-domain "com.apple.accessoryupdaterd")
+ )
+
+(allow file-read* file-write*
+	(subpath (param "TMPDIR"))
+)
+
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.auearlyboot")))
+	(allow file-read* file-write* cache-path-filter)
+	(allow file-issue-extension
+		(require-all
+			(extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+			cache-path-filter
+		)
+	)
+)
+
+(allow network-outbound (literal "/private/var/run/mDNSResponder"))
+(allow mach-lookup (global-name "com.apple.dnssd.service"))
+(allow network-outbound
+	(remote ip "*:80")
+)
+
+(allow file-read* file-write*
+	(subpath "/private/var/db/fud/")
+	(subpath "/private/var/db/accessoryupdater/")
+	(subpath "/private/var/db/mds/")
+	(subpath "/private/var/tmp/com.apple.auearlyboot/")
+)
+
+(allow file-read-data
+	(subpath "/private/preboot/")
+)
+
+(allow user-preference*
+	(preference-domain "com.apple.mobileaccessoryupdater")
+	(preference-domain "com.apple.MobileAccessoryUpdater")
+    (preference-domain "com.apple.security")
+)
+
+(allow iokit-open
+	(iokit-user-client-class "AppleFirmwareUpdateUserClient")
+	(iokit-user-client-class "IOHIDLibUserClient")
+)
+
+(allow file-read-data
+	(subpath "/Applications/AppleConnect.app/")
+	(subpath "/Library/Frameworks/AppleConnect.framework/")
+	(subpath "/Library/Frameworks/RemoteLogger.framework/")
+)
+
+(allow iokit-get-properties
+	(iokit-property "DeviceUsagePairs")
+	(iokit-property "Transport")
+	(iokit-property "IOCFPlugInTypes")
+	(iokit-property "OSKernelCPUType")
+	(iokit-property "OSKernelCPUSubtype")
+	(iokit-property "RequiresTCCAuthorization")
+	(iokit-property "IOConsoleUsers")
+    (iokit-property "Content")
+    (iokit-property "IOClassNameOverride")
+    (iokit-property "Protocol Characteristics")
+    (iokit-property "boot-objects-path")
+    (iokit-property "IOUserClientClass")
+    (iokit-property "AIDStartMs")
+    (iokit-property "AHTLoaderName")
+    (iokit-property "Image Tag")
+    (iokit-property "Need FUD Download")
+    (iokit-property "FDR Classes")
+)
+
+(allow network-outbound
+	(remote ip "*:443")
+)
+
+(allow process-fork)
+(allow process-exec* (with no-sandbox)
+    (literal "/usr/sbin/bless")
+)
+(allow file-read* file-write*
+    (literal "/private/var/run/fudBlessRequestsList")
+)
+
+(allow process-exec* (with no-sandbox)
+    (literal "/sbin/mount")
+    (literal "/sbin/mount_msdos")
+)
+
+(allow system-info
+    (info-type "net.link.addr")
+)
+
+(allow file-read*
+	(subpath "/private/var/hardware/FactoryData/")
+)
+
+(allow nvram-get
+    (nvram-variable "aud-early-boot-critical")
+)
