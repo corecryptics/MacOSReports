@@ -1,0 +1,141 @@
+(version 1)
+(deny default)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(allow mach-register
+    (global-name "com.apple.appstored.xpc"))
+
+(allow mach-lookup
+    (global-name "com.apple.adid")
+    (global-name "com.apple.ak.anisette.xpc")
+    (global-name "com.apple.AppSSO.service-xpc")
+    (global-name "com.apple.appinstalld")
+    (global-name "com.apple.AssetCacheLocatorService")
+    (global-name "com.apple.cache_delete")
+    (global-name "com.apple.cfnetwork.cfnetworkagent")
+    (global-name "com.apple.containermanagerd")
+    (global-name "com.apple.CrashReporterSupportHelper")
+    (global-name "com.apple.dnssd.service")
+    (global-name "com.apple.fpsd")
+    (global-name "com.apple.installcoordinationd")
+    (global-name "com.apple.installd")
+    (global-name "com.apple.lsd.advertisingidentifiers")
+    (global-name "com.apple.lsd.encryption")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb")
+    (global-name "com.apple.mdmclient.daemon.unrestricted")
+    (global-name "com.apple.metadata.mds")
+    (global-name "com.apple.mobileactivationd")
+    (global-name "com.apple.nesessionmanager.content-filter")
+    (global-name "com.apple.nfcd.hwmanager")
+    (global-name "com.apple.nsurlsessiond")
+    (global-name "com.apple.ocspd")
+    (global-name "com.apple.runningboard")
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.system_installd")
+    (global-name "com.apple.SystemConfiguration.DNSConfiguration")
+    (global-name "com.apple.UNCUserNotification")
+    (global-name "com.apple.usymptomsd"))
+
+;; The following mach-lookups are not actually reachable because they are for agents and this is a daemon.
+;; But they are here in an attempt to lessen the sandbox violations we have. And in at least some of these cases, they have checks that gracefully recover or fail when the service cannot be reached.
+(deny (with no-report) mach-lookup
+    (global-name "com.apple.accountsd.accountmanager")
+    (global-name "com.apple.cfnetwork.AuthBrokerAgent")
+    (global-name "com.apple.coreservices.quarantine-resolver")
+    (global-name "com.apple.securityd.xpc")
+    (global-name "com.apple.xpc.amsaccountsd")
+    (global-name "com.apple.xpc.amsengagementd")
+    (global-name "com.apple.xpc.amstoold"))
+
+(allow file-read-metadata)
+
+(allow user-preference-read
+    (preference-domain "com.apple.AppleMediaServices")
+    (preference-domain "com.apple.appstored"))
+
+(allow user-preference-write
+    (preference-domain "com.apple.AppleMediaServices")
+    (preference-domain "com.apple.appstored"))
+
+(allow file-read*
+    (literal "/Applications")
+    (literal "/Library/Application Support/CrashReporter/DiagnosticMessagesHistory.plist")
+    (literal "/private/var/db/mds/messages/se_SecurityMessages")
+    (literal "/private/var/db/mds/system/mdsDirectory.db")
+    (literal "/private/var/db/mds/system/mdsObject.db")
+    (literal "/usr/libexec")
+    (literal "/usr/libexec/mdmclient")
+    (regex #"\.app(/|$)")
+    (regex #"/Library/Preferences/.GlobalPreferences.plist$")
+    (regex #"/Library/Preferences/ByHost/\.GlobalPreferences\..*\.plist$")
+    (regex #"/Library/Preferences/com\.apple\.security\.plist")
+    (subpath "/Library/InstallerSandboxes")
+    (subpath "/private/var/run")
+    (subpath "/Users/Shared")
+    (subpath "/usr/local/bin"))
+
+(allow file-read* file-write*
+    (literal "/Library/Logs/ManagedClient/ManagedClient.log")
+    (literal "/Library/Logs/MCXTools.log")
+    (literal "/private/var/tmp/_Error_Occurrences.plist")
+    (subpath "/private/var/db/installcoordinationd")
+    (subpath "/private/var/folders")
+    (subpath "/var/db/appstore")
+    (subpath "/private/var/db/appstore")
+    (regex #"/Library/Caches/com\.apple\.appstored"))
+
+(allow file-read* file-write*
+    (require-all
+        (vnode-type DIRECTORY)
+        (require-any
+            (literal "/Library/Application Support/App Store")
+            (regex #"\.app(download)?(/Contents)?")
+            (regex #"\.app(download)?/Contents/_MASReceipt(\.sb-[a-zA-Z0-9-]+)?")))
+
+    (require-all
+        (vnode-type REGULAR-FILE)
+        (require-any
+            (literal "/Library/Application Support/App Store/adoption.plist")
+            (literal "/Library/Preferences/com.apple.commerce.plist")
+            (regex #"\.appdownload/Contents/placeholderinfo")
+            (regex #"\.appdownload/Icon")
+            (regex #"\.app(download)?/Contents/_MASReceipt((\.sb-[a-zA-Z0-9-]+)?/receipt(\.saved)?)"))) ;covers temporary files the receipt may be named
+)
+
+(allow file-issue-extension
+    (regex #"/Library/Caches/com\.apple\.AppleMediaServices"))
+
+; In-app purchase content removal
+(allow file-read* file-write-unlink
+    (subpath "/Library/Application Support/AppStore/GroupContent")
+    (subpath "/Library/Application Support/AppStoreContent"))
+
+(allow file-issue-extension
+    (subpath "/private/var/db/installcoordinationd")
+    (regex #"/Library/Caches/com\.apple\.appstored"))
+
+(allow ipc-posix-sem)
+
+(allow ipc-posix-shm-read* ipc-posix-shm-write*
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+(allow authorization-right-obtain
+    (right-name "system.install.apple-config-data")
+    (right-name "system.install.apple-software")
+    (right-name "system.install.apple-software.standard-user")
+    (right-name "system.install.app-store-software")
+    (right-name "system.install.app-store-software.standard-user")
+    (right-name "system.install.software")
+    (right-name "system.install.software.iap")
+    (right-name "system.install.software.mdm-provided"))
+
+(allow sysctl-read sysctl-write
+    (sysctl-name "kern.tcsm_enable"))
+
+(allow lsopen)
+(allow network-outbound)
+(allow system-socket)

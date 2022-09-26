@@ -1,0 +1,63 @@
+;;; Copyright (c) 2019 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(import "system.sb")
+
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-regex home-relative-regex)
+       (regex (string-append "^" (regex-quote (param "_HOME")) home-relative-regex)))
+(define (home-literal home-relative-literal)
+       (literal (string-append (param "_HOME") home-relative-literal)))
+
+;;; Allow driver access for DiskImages IO operations
+(allow iokit-open (iokit-user-client-class "DIDeviceIOUserClient"))
+
+;;; cache_size_default is needed to allow reading the cache size override value
+;;; maxfilesperproc is required by [NSFileHandle initialize] that happens as part of XPC protocol setup
+(allow sysctl-read
+	(sysctl-name "debug.didevice_cache_size_default")
+	(sysctl-name "debug.didevice_queue_depth")
+	(sysctl-name "hw.logicalcpu")
+	(sysctl-name "kern.maxfilesperproc"))
+
+;;; DA access is needed
+(allow mach-lookup (global-name "com.apple.DiskArbitration.diskarbitrationd"))
+
+;;; Also required (at least by localtime_r), many metadata reads happen to various files in the system:
+(allow file-read-metadata)
+
+;;; This daemon can unmount the volumes in the disk image during eject of a managed device
+(allow file-unmount)
+
+;; Preferences
+(allow file-read*
+	(literal "/Library/Preferences/.GlobalPreferences.plist")
+	(home-regex #"/Library/Preferences/ByHost/\.GlobalPreferences\.")
+	(home-literal "/Library/Preferences/.GlobalPreferences.plist"))
+
+;;; *** CURL Exceptions Start ***
+
+(allow file-read*
+    (literal "/private/etc/ssl/cert.pem")
+	(literal "/private/etc/ssl/openssl.cnf")
+	(literal "/private/etc/hosts"))
+
+(allow mach-lookup
+    (global-name "com.apple.TrustEvaluationAgent"))
+
+(allow network-outbound)
+
+;;; *** CURL Exceptions End ***
+
+;;; Read/write access to the cache folder:
+(allow file-read* file-write* (subpath (param "DARWIN_CACHE_DIR")))
+
+;;; For localization strings, the daemon's folder must be readable:
+(allow file-read* (literal "/usr/libexec"))

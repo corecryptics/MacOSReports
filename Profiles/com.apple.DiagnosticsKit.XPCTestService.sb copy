@@ -1,0 +1,224 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;
+;; Dev - Swap these in for debugging
+;;
+;(allow (with report) default)
+;(allow (with report) file-map-executable process-info* nvram*)
+;(allow (with report) dynamic-code-generation)
+
+;;
+;; Prod
+;;
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+;;
+;; Constants
+;;
+(define home-directory-path  (param "HOME"))
+(define temp-directory-path  (param "TMPDIR"))
+(define cache-directory-path (param "DARWIN_CACHE_DIR"))
+(define bundle-directory-path (param "XPC_BUNDLE_DIR"))
+(define bundle-id (param "XPC_BUNDLE_ID"))
+(define helper-app-path (param "HELPER_APP_PATH"))
+(define helper-app-bundle-id (param "HELPER_APP_BUNDLE_ID"))
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote home-directory-path) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append home-directory-path home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append home-directory-path home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append home-directory-path home-relative-literal)))
+
+;;
+;; ----- From template -----
+;; https://confluence.sd.apple.com/display/OSSEC/How+To+Sandbox+a+Daemon+on+macOS
+;;
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Preference domain
+;; Read/write userdefaults/prefernces if the process is signed with com.apple prefix.
+(allow user-preference-read
+    (preference-domain "kCFPreferencesAnyApplication")
+    (preference-domain bundle-id))
+       
+;; Read/write access to a temporary directory
+(allow file-read* file-write*
+    (subpath temp-directory-path)
+    (subpath cache-directory-path))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath (string-append "/Library/Caches/" bundle-id))))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;;
+;; ----- Custom Operations -----
+;;
+(allow file-read*
+    (subpath bundle-directory-path))
+
+(allow file-read* file-write*
+    (subpath "/private/tmp"))
+   
+(allow nvram-get
+    (nvram-variable "4D1EDE05-38C7-4a6a-9CC6-4BCCA8B38C14:HW_ICT")
+    (nvram-variable "4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14:MLB")
+    (nvram-variable "735B3B05-2634-4253-9DB8-5A048B418E3D:battery-health")
+    (nvram-variable "aapl,panic-info")
+    (nvram-variable "boot-args"))
+    
+(allow iokit-open
+    (iokit-registry-entry-class "AppleDiagNVRAM")
+    (iokit-registry-entry-class "AppleSmartBatteryManager")
+    (iokit-registry-entry-class "AppleUpstreamUserClientDriver")
+    (iokit-registry-entry-class "AudioAUUCDriver")
+    (iokit-registry-entry-class "IOHIDSystem")
+    (iokit-registry-entry-class "IOHIKeyboard")
+    (iokit-registry-entry-class "IOHIPointing")
+    (iokit-registry-entry-class "IOUserClientClass")
+    (iokit-registry-entry-class "RootDomainUserClient")
+    (iokit-registry-entry-class-prefix "AppleGraphicsControl")
+    (iokit-registry-entry-class-prefix "AppleSMC")
+    (iokit-registry-entry-class-prefix "AppleUSB")
+    (iokit-registry-entry-class-prefix "IOAccessory")
+    (iokit-registry-entry-class-prefix "IOHID"))
+
+;; There are more than 500+ properties to list here.
+;; Instead of listing them, we allow to get all properties.
+(allow iokit-get-properties)
+
+;; Set IOKit properties with IOKit registry class filter
+(with-filter (iokit-registry-entry-class "AppleAHCIDiskDriver")
+    (allow iokit-set-properties
+        (iokit-property "AHCI Debug Data")))
+        
+(with-filter (iokit-registry-entry-class "com_apple_driver_AppleUSBCardReaderUMC")
+    (allow iokit-set-properties
+        (iokit-property "ERPC")))
+
+(with-filter (iokit-registry-entry-class "IODisplayWrangler")
+    (allow iokit-set-properties
+        (iokit-property "IORequestIdle")))
+        
+(with-filter (iokit-registry-entry-class "AppleSDXCBlockStorageDevice")
+    (allow iokit-set-properties
+        (iokit-property "SDON")
+        (iokit-property "SDOFF")))
+
+(with-filter (iokit-registry-entry-class-prefix "AppleUSB")
+    (allow iokit-set-properties
+        (iokit-property "kUSBSimulateInterrupt")))
+
+;;IODeviceTree:/options
+(with-filter (iokit-registry-entry-class "options")
+    (allow iokit-set-properties
+        (iokit-property "rio-colour")))
+        
+(allow system-audit)
+(allow system-kext-load)
+(allow system-kext-unload)
+(allow system-kext-query)
+
+(allow process-codesigning-status-get)
+(allow process-exec
+    (subpath "/System")
+    (literal "/bin/sh")
+    (literal "/bin/bash")
+    (subpath "/usr/bin"))
+(allow process-fork)
+
+;; HTTP/HTTPS
+(allow network-outbound
+    (remote tcp "*:80" "*:443"))
+
+(allow sysctl-read)
+
+(allow hid-control)
+
+;; These operations are for launching an app.
+(allow lsopen)
+
+(allow file-read*
+    (home-subpath "/Library/Input Methods")
+    (home-subpath "/Library/Keyboard Layouts")
+    (literal "/Library/Preferences/com.apple.ViewBridge.plist"))
+
+(allow mach-lookup
+    (global-name "com.apple.coreservices.appleevents")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.coreservices.sharedfilelistd.xpc")
+    (global-name "com.apple.coreservices.quarantine-resolver")
+    (global-name "com.apple.dock.server")
+    (global-name "com.apple.dock.fullscreen")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb")
+    (global-name "com.apple.lsd.xpc")
+    (global-name "com.apple.tccd.system")
+    (global-name "com.apple.fonts")
+    (global-name "com.apple.CARenderServer")
+    (global-name "com.apple.touchbarserver.mig")
+    (global-name "com.apple.pasteboard.1")
+    (global-name "com.apple.DiskArbitration.diskarbitrationd")
+    (global-name "com.apple.iconservices")
+    (global-name "com.apple.iconservices.store")
+    (global-name "com.apple.FileCoordination")
+    (global-name "com.apple.quicklook.ui.helper.active")
+    (global-name "com.apple.tsm.uiserver")
+    (global-name "com.apple.pbs.fetch_services")
+    (global-name "com.apple.inputmethodkit.launchagent")
+    (global-name "com.apple.inputmethodkit.launcher")
+    (global-name "com.apple.inputmethodkit.getxpcendpoint")
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.window_proxies")
+    (global-name "com.apple.windowserver.active"))
+
+(allow user-preference-read
+    (preference-domain "com.apple.gpu")
+    (preference-domain "com.apple.opengl")
+    (preference-domain "com.apple.inputmethodkit")
+    (preference-domain "com.apple.MultitouchSupport")
+    (preference-domain "com.apple.AppleMultitouchTrackpad")
+    (preference-domain "com.apple.driver.AppleBluetoothMultitouch.mouse")
+    (preference-domain "com.apple.driver.AppleBluetoothMultitouch.trackpad")
+    (preference-domain "com.apple.driver.AppleHIDMouse")
+    (preference-domain "com.apple.coreanimation")
+    (preference-domain "com.apple.universalaccess")
+    (preference-domain "com.apple.speech.recognition.AppleSpeechRecognition.prefs")
+    (preference-domain "com.apple.HIToolbox")
+    (preference-domain "com.apple.coreanimation")
+    (preference-domain "com.apple.CoreServicesInternal")
+    (preference-domain helper-app-bundle-id))
+
+;; Commented out and will further discuss with teams about which path/file/app should be allowed to launch without a sandbox.
+;; The following processes are launched without a sandbox:
+;;(allow process-exec* (with no-sandbox) (subpath helper-app-path))
+    
+(allow signal (target self))
+(allow signal (target children))

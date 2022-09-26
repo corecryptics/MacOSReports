@@ -1,0 +1,84 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;(allow (with report) default)
+;(allow (with report) file-map-executable process-info* nvram*)
+;(allow (with report) dynamic-code-generation)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow user-preference-read
+       (preference-domain "kCFPreferencesAnyApplication"
+                          "com.apple.CoreMLModelSecurityService"
+                          "com.apple.corevideo"
+                          "com.apple.opengl"
+                          "com.apple.Metal"
+                          "com.apple.coremedia"
+                          "com.apple.AppleGVA"
+                          "com.apple.gpu"))
+       
+(allow iokit-open
+    (iokit-user-client-class-regex #"*_AMDAccel*")
+    (iokit-user-client-class-regex #"AccelDevice$")
+    (iokit-user-client-class "IOSurfaceRootUserClient")
+    (iokit-user-client-class "IGAccelCommandQueue")
+    (iokit-user-client-class "IGAccelSharedUserClient"))
+
+(allow iokit-get-properties (iokit-property "SafeEjectRequested")
+                            (iokit-property "AAPL,slot-name")
+                            (iokit-property "ATY,FamilyName")
+                            (iokit-property "ATY,DeviceName")
+                            (iokit-property "built-in")
+                            (iokit-property "board-id")
+                            (iokit-property "MetalPluginClassName")
+                            (iokit-property "MetalPluginName"))
+
+(allow mach-lookup (global-name "com.apple.tccd.system")
+                   (global-name "com.apple.windowserver.active")
+                   (global-name "com.apple.fpsd")
+                   (global-name "com.apple.cloudd"))
+
+(allow file-map-executable
+       (literal "/System/Library/Extensions/AppleIntelGraphicsShared.bundle/Contents/MacOS/libISAProfilerDyn.dylib"))
+
+(allow file-read*
+    (literal "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains"))              ; for CrashReporter
+
+(allow file-read-data file-write-data (home-subpath "/Library/Developer/Xcode/")) ; for unit tests run under Xcode
+(allow file-read* file-write* (subpath "/private/tmp/")) ; for unit tests run under Xcode
+(allow file-read* file-write* (subpath "/private/var/")) ; for unit tests run under Xcode

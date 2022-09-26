@@ -1,0 +1,147 @@
+;;;;;; Copyright (c) 2016 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+
+(version 2)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; deny all top level allows that aren't needed
+(deny default)
+(deny system-privilege)
+(deny mach-derive-port)
+(deny system-memorystatus-control)
+
+;; misc allows
+(allow file-test-existence)
+(allow process-info-dirtycontrol)
+(allow process-info-pidinfo)
+
+(allow process-info* (target self))
+
+;; for AppKit version checking
+(allow sysctl-read
+       (sysctl-name "kern.osversion")
+       (sysctl-name "hw.physicalcpu_max")
+)
+
+;; reading global prefs
+(allow file-read-data
+    (literal "/Library/Preferences/.GlobalPreferences.plist")
+)
+
+;; We call LaunchServices to resolve which app can open a given activity type.  LaunchServices reads the filesystem to make sure that app still exists.  Furthermore, apps can exist anywhere on the filesystem on a Mac.  Hence, this is necessary.
+(allow file-read*)
+
+;; Preferences (cfprefsd)
+(allow user-preference-read
+    (preference-domain "kCFPreferencesAnyApplication")
+    (preference-domain ".GlobalPreferences")
+)
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+ 
+;; for Catalyst
+(with-filter (iokit-registry-entry-class "AppleDiagnosticDataAccess")
+    (allow iokit-get-properties
+           (iokit-property "AppleDiagnosticDataSysCfg")
+    )
+)
+           
+(allow iokit-get-properties
+    (iokit-property "IOPlatformDevice")
+)
+
+(allow mach-lookup
+    (global-name "com.apple.cfprefsd.daemon")
+    (global-name "com.apple.cfprefsd.daemon.system")
+    (global-name "com.apple.cfprefsd.agent")
+    (local-name "com.apple.cfprefsd.agent")
+    (global-name "com.apple.windowserver.active")
+    (global-name "com.apple.tccd.system")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.distributed_notifications@1v3")
+)
+
+    
+;; rdar://72366475 The xnu team to optimize the attempt to check this for self PID
+;; rdar://20117923 (setting the dirty bit on self calls out to 4 mac policy hooks, should be 0)
+;; The root cause of this violation is
+(deny system-privilege (privilege-id PRIV_GLOBAL_PROC_INFO) (with no-report))
+
+;; minimum set of syscall-unix to keep sandbox from complaining
+(allow syscall-unix
+        (syscall-number SYS_access
+                        SYS_bsdthread_create
+                        SYS_bsdthread_ctl
+                        SYS_bsdthread_terminate
+                        SYS_csops_audittoken
+                        SYS_csrctl
+                        SYS_fgetattrlist
+                        SYS_fstat64
+                        SYS_fstatfs64
+                        SYS_getattrlist
+                        SYS_getdirentries64
+                        SYS_geteuid
+                        SYS_getentropy
+                        SYS_getrlimit
+                        SYS_getuid
+                        SYS_issetugid
+                        SYS_kdebug_trace64
+                        SYS_kdebug_trace_string
+                        SYS_kevent_id
+                        SYS_kevent_qos
+                        SYS_lseek
+                        SYS_lstat64
+                        SYS_madvise
+                        SYS_mmap
+                        SYS_mprotect
+                        SYS_pread
+                        SYS_read
+                        SYS_read_nocancel
+                        SYS_sendto
+                        SYS_sigaction
+                        SYS_sigprocmask
+                        SYS_sigsuspend_nocancel
+                        SYS_socket
+                        SYS_stat64
+                        SYS_thread_selfid
+                        SYS_ulock_wait
+                        SYS_ulock_wake
+                        SYS_workq_kernreturn
+                        SYS_workq_open
+                        SYS___disable_threadsignal
+                        SYS___pthread_kill
+                        SYS___pthread_sigmask
+                        SYS___semwait_signal_nocancel))
+
+;; minimum set of syscall-mach to keep sandbox from complaining
+(allow syscall-mach
+       (machtrap-number MSC_host_create_mach_voucher_trap
+                        MSC_host_self_trap
+                        MSC_mach_generate_activity_id
+                        MSC_mach_msg_trap
+                        MSC_mach_reply_port
+                        MSC_mach_voucher_extract_attr_recipe_trap
+                        MSC_thread_get_special_reply_port
+                        MSC__kernelrpc_mach_port_allocate_trap
+                        MSC__kernelrpc_mach_port_construct_trap
+                        MSC__kernelrpc_mach_port_deallocate_trap
+                        MSC__kernelrpc_mach_port_destruct_trap
+                        MSC__kernelrpc_mach_port_guard_trap
+                        MSC__kernelrpc_mach_port_insert_right_trap
+                        MSC__kernelrpc_mach_port_mod_refs_trap
+                        MSC__kernelrpc_mach_port_request_notification_trap
+                        MSC__kernelrpc_mach_port_type_trap
+                        MSC__kernelrpc_mach_vm_allocate_trap
+                        MSC__kernelrpc_mach_vm_deallocate_trap
+                        MSC__kernelrpc_mach_vm_map_trap
+                        MSC__kernelrpc_mach_vm_protect_trap))
+
+

@@ -1,0 +1,32 @@
+;;
+;; CoreFoundation - sandbox import
+;; Copyright (c) 2011-2021 Apple Inc.  All Rights reserved.
+;;
+;; WARNING:
+;; The sandbox rules in this file currently constitute Apple System Private Interface
+;; and are subject to change at any time and without notice. The contents of this file
+;; are also auto-generated and not user editable; it may be overwritten at any time.
+;;
+(version 2)
+
+(define (corefoundation . args)
+  (allow mach-lookup
+         (global-name        "com.apple.appsleep")
+         (global-name        "com.apple.cfprefsd.daemon")
+         (global-name        "com.apple.cfprefsd.agent")
+         (global-name        "com.apple.CoreServices.coreservicesd")
+         (global-name-prefix "com.apple.distributed_notifications")
+         (local-name         "com.apple.cfprefsd.agent")
+         (local-name         "com.apple.CFPasteboardClient"))
+  (allow ipc-posix-shm*
+         (ipc-posix-name-prefix "CFPBS:"))
+  (allow ipc-posix-shm-read*
+         (ipc-posix-name "apple.shm.cfprefsd.daemon"))
+  (allow file-read-data
+         (literal "/dev/autofs_nowait")) ; Used by CF to circumvent automount triggers
+  (allow file-read*
+         (subpath "/Library/Dictionaries")
+         (subpath "/Network/Library/Dictionaries")
+         (subpath "/Library/Managed Preferences"))
+  (allow system-fsctl
+         (fsctl-command HFSIOC_SET_HOTFILE_STATE)))

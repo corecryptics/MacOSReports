@@ -1,0 +1,130 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+(allow file-read-metadata)
+(allow process-info-codesignature)
+(allow distributed-notification-post)
+(allow network-outbound)
+(allow system-socket)
+(allow lsopen)
+
+(allow sysctl-read sysctl-write
+    (sysctl-name "kern.tcsm_enable"))
+
+(allow file-read* file-write*
+        (subpath (param "TMPDIR"))
+        (subpath (param "DARWIN_CACHE_DIR")))
+
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.appstorecomponentsd")))
+    (allow file-read* file-write* cache-path-filter)
+    (allow file-issue-extension
+        (require-all
+            (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+            cache-path-filter)))
+
+(allow mach-register
+    (global-name "com.apple.appstorecomponentsd.xpc"))
+
+(allow mach-lookup
+    (global-name "com.apple.adid")
+    (global-name "com.apple.ak.anisette.xpc")
+    (global-name "com.apple.ak.auth.xpc")
+    (global-name "com.apple.appstoreagent.xpc")
+    (global-name "com.apple.askpermissiond")
+    (global-name "com.apple.CARenderServer")
+    (global-name "com.apple.cmio.registerassistantservice")
+    (global-name "com.apple.commerce")
+    (global-name "com.apple.CoreAuthentication.agent")
+    (global-name "com.apple.corefollowup.agent")
+    (global-name "com.apple.fairplayd.versioned")
+    (global-name "com.apple.fpsd")
+    (global-name "com.apple.storeaccountd")
+    (global-name "com.apple.storeassetd")
+    (global-name "com.apple.storedownloadd")
+    (global-name "com.apple.storeuid")
+    (global-name "com.apple.xpc.amsaccountsd")
+    (global-name "com.apple.AppSSO.service-xpc")
+    (global-name "com.apple.SystemConfiguration.DNSConfiguration")
+    (global-name "com.apple.securityd.xpc")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb")
+    (global-name "com.apple.accountsd.accountmanager")
+    (global-name "com.apple.windowserver.active")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.system.opendirectoryd.api")
+    (global-name "com.apple.dnssd.service")
+    (global-name "com.apple.tccd.system")
+    (global-name "com.apple.dock.server")
+    (global-name "com.apple.logd.admin")
+    (global-name "com.apple.UNCUserNotification")
+    (global-name "com.apple.coreservices.quarantine-resolver"))
+
+(allow user-preference-read
+    (preference-domain "com.apple.appstored")
+    (preference-domain "com.apple.storeagent")
+    (preference-domain "com.apple.appstore")
+    (preference-domain "com.apple.commerce")
+    (preference-domain "com.apple.rtcreportingd")
+    (preference-domain "com.apple.safaridavclient")
+    (preference-domain "com.apple.logind")
+    (preference-domain "com.apple.storeuid")
+    (preference-domain "kCFPreferencesAnyApplication")
+    (preference-domain "com.apple.carrier_1"))
+
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.AppleMediaServices")
+    (preference-domain "com.apple.AppleMediaServices.notbackedup")
+    (preference-domain "com.apple.AppStoreComponents")
+    (preference-domain "com.apple.appstorecomponentsd")
+    (preference-domain "com.apple.storeservices.itfe"))
+
+(allow file-read*
+    (literal "/Library/Preferences/com.apple.storeagent.plist")
+    (literal "/Library/Preferences/com.apple.commerce.plist")
+    (regex #"/Library/Preferences/com\.apple\.LaunchServices/com\.apple\.launchservices\.secure\.plist$")
+    (subpath "/private/var/db/diagnostics")
+    (subpath "/private/var/db/uuidtext")
+    (literal "/private/var/db/mds/messages/se_SecurityMessages")
+    (regex #"/private/var/db/mds/messages/[0-9]*/se_SecurityMessages"))
+
+(allow file-read* file-write*
+    (regex #"/Library/Keychains/")
+    (regex #"/Library/Caches/com\.apple\.AppleMediaServices")
+    (regex #"/Library/Logs/com\.apple\.StoreServices"))
+
+(allow file-issue-extension
+    (regex #"/Library/Caches/com\.apple\.AppleMediaServices"))
+
+(allow iokit-get-properties
+    (iokit-property "IOBuiltin")
+    (iokit-property "IOMACAddress"))
+
+(with-filter (system-attribute apple-internal)
+  (allow file-read*
+         (subpath "/AppleInternal/Library/Jet")))

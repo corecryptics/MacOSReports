@@ -1,0 +1,97 @@
+;;; Copyright (c) 2019 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(import "system.sb")
+
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-regex home-relative-regex)
+       (regex (string-append "^" (regex-quote (param "_HOME")) home-relative-regex)))
+(define (home-literal home-relative-literal)
+       (literal (string-append (param "_HOME") home-relative-literal)))
+(define (home-subpath home-relative-subpath)
+       (subpath (string-append (param "_HOME") home-relative-subpath)))
+
+;;; Allow driver access for creating a DiskImages device
+(allow iokit-open (iokit-user-client-class "DIDeviceCreatorUserClient"))
+
+;;; Allow accessing to DiskImages2, CFUserNotification and security daemons
+(allow mach-lookup
+	(global-name "com.apple.diskimagesiod.xpc")
+	(global-name "com.apple.diskimagesiod.ram.xpc")
+	(global-name "com.apple.diskimagesiod.spb.xpc")
+	(global-name "com.apple.UNCUserNotification")
+	(global-name "com.apple.SecurityServer")
+	(global-name "com.apple.securityd.xpc")
+)
+
+;;; Preferences
+(allow file-read*
+	(literal "/Library/Preferences/.GlobalPreferences.plist")
+	(home-regex #"/Library/Preferences/ByHost/\.GlobalPreferences\.")
+	(home-literal "/Library/Preferences/.GlobalPreferences.plist")
+	(literal "/private/var/root/Library/Preferences/.GlobalPreferences.plist")
+	(literal "/Library/Preferences/com.apple.security.plist")
+)
+
+;;; maxfilesperproc is required by [NSFileHandle initialize] that happens as part of XPC protocol setup
+;;; sse4_2 is required by APFS::crc32c_init as part of MediaKit's MKRecordAPFSRuns
+;;; logicalcpu is needed to calculate queue depth (2 x # CPUs in the system)
+;;; queue_depth is needed to read the queue depth override value
+(allow sysctl-read
+	(sysctl-name "kern.maxfilesperproc")
+	(sysctl-name "hw.optional.sse4_2")
+	(sysctl-name "hw.logicalcpu")
+	(sysctl-name "debug.didevice_queue_depth"))
+
+;;; Required by XPC dispatching (_xpc_bundle_resolve_sync calls getattrlist on our executable)
+(allow file-read-metadata)
+
+;;; Keychain access
+(allow file-write* file-read*
+	(home-subpath	"/Library/Keychains/")
+	(subpath 		"/Library/Keychains/")
+)
+
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged")
+)
+
+;; Security.framework - mds
+;    uid == 0:   /private/var/db/mds/system/
+;    uid != 0:   <DARWIN_CACHE_DIR>/mds/
+(allow file-read* file-write*
+	(subpath (param "MDS_DIR")))
+
+;; Security.framework - securityMessages
+;    uid  < 500: /private/var/db/mds/messages/se_SecurityMessages
+;    uid >= 500: /private/var/db/mds/messages/<uid>/se_SecurityMessages
+(allow file-read*
+	(literal (param "SECURITY_MESSAGES"))
+	(literal "/private/var/db/mds/system/mdsDirectory.db")
+	(literal "/private/var/db/mds/system/mdsObject.db"))
+
+; Allow read access to the app's own executable (see rdar://57296204)
+(allow file-read*
+	(literal "/System/Library/PrivateFrameworks/DiskImages2.framework/Versions/A/XPCServices/diskimagescontroller.xpc/Contents/MacOS/diskimagescontroller")
+	(home-subpath "/Library/Developer/Xcode/DerivedData/")
+)
+
+;;; *** CURL Exceptions Start ***
+
+(allow file-read*
+    (literal "/private/etc/ssl/cert.pem")
+	(literal "/private/etc/ssl/openssl.cnf"))
+
+(allow mach-lookup
+    (global-name "com.apple.TrustEvaluationAgent"))
+
+(allow network-outbound)
+
+;;; *** CURL Exceptions End ***

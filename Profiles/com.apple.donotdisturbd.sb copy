@@ -1,0 +1,133 @@
+;;; Copyright (c) 2021 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;; enable
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+
+(system-network)
+;;; initialize CF sandbox actions
+(corefoundation)
+
+;;; allow all donotdisturbd mach ports
+(allow mach-register
+       (global-name "com.apple.aps.donotdisturb.sync-engine")
+       (global-name "com.apple.donotdisturb.availability.service")
+       (global-name "com.apple.donotdisturb.service")
+       (global-name "com.apple.donotdisturb.service.non-launching"))
+
+(allow mach-lookup
+       (global-name "com.apple.accountsd.accountmanager")
+       (global-name "com.apple.apsd")
+       (global-name "com.apple.biome.PublicStreamAccessService")
+       (global-name "com.apple.biome.compute.source.user")
+       (global-name "com.apple.calaccessd")
+       (global-name "com.apple.carkit.dnd.service")
+       (global-name "com.apple.cloudd")
+       (global-name "com.apple.commcenter.coretelephony.xpc")
+       (global-name "com.apple.corerecents.recentsd")
+       (global-name "com.apple.frontboard.systemappservices")
+       (global-name "com.apple.identityservicesd.desktop.auth")
+       (global-name "com.apple.idsremoteurlconnectionagent.desktop.auth")
+       (global-name "com.apple.locationd.desktop.registration")
+       (global-name "com.apple.locationd.desktop.synchronous")
+       (global-name "com.apple.logind")
+       (global-name "com.apple.lsd.mapdb")
+       (global-name "com.apple.metadata.mds")
+       (global-name "com.apple.nanoprefsync")
+       (global-name "com.apple.pluginkit.pkd")
+       (global-name "com.apple.powerlog.plxpclogger.xpc")
+       (global-name "com.apple.remindd")
+       (global-name "com.apple.sleepd.sleepserver")
+       (global-name "com.apple.system.opendirectoryd.api")
+       (global-name "com.apple.tccd")
+       (global-name "com.apple.windowserver.active")
+       (global-name "com.apple.CalendarAgent")
+       (global-name "com.apple.CalendarAgent.database")
+       (global-name "com.apple.CalendarAgent.proxy")
+       (global-name "com.apple.FileCoordination")
+       (global-name "com.apple.StatusKit.publish")
+       (global-name "com.apple.SystemConfiguration.configd")
+       (global-name "com.apple.coreservices.launchservicesd")
+       (global-name "com.apple.coreservices.quarantine-resolver"))
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For launching app extensions
+(allow file-read-data (regex "/PlugIns/.*\.appex"))
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow iokit-open
+       (iokit-user-client-class "RootDomainUserClient"))
+
+;; preference domains
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.donotdisturbd")
+       (preference-domain "com.apple.facetime.bag")
+       (preference-domain "com.apple.iCal")
+       (preference-domain "com.apple.imessage.bag"))
+
+(allow user-preference-read
+       (preference-domain "kCFPreferencesAnyApplication")
+       (preference-domain "com.apple.ncprefs")
+       (preference-domain "com.apple.CloudKit"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.donotdisturbd")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Read/write access to the DoNotDisturb DB's directory.
+(allow file-read* file-write*
+       (home-subpath "/Library/DoNotDisturb"))
+(allow file-read*
+       (literal "/System/Library/DoNotDisturb/DB")
+       (literal "/System/Library/DoNotDisturb/ClientBundles"))
+
+;; Read/write access to the Biome directory.
+(allow file-read* file-write*
+       (home-subpath "/Library/Biome"))
+
+;; Contacts
+(import "contacts.sb")
+(contacts-client (param "HOME") (param "TMPDIR"))
+
+;; For fetching data from iTunes web API
+(allow network-outbound
+        (remote ip "*:443")
+)
