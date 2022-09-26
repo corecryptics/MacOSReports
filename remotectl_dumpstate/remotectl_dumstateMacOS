@@ -1,0 +1,218 @@
+Local device
+	UUID: EEXXXXXX-14C5-XX19-A929-334XXXXXXXXXX
+	Messaging Protocol Version: 3
+	Product Type: MacBookPro15,1
+	OS Build: 12.5 (21G72)
+	Properties: {
+		AppleInternal => false
+		CPUArchitecture => x86_64h
+		EffectiveProductionStatusSEP => false
+		HWModel => J680AP
+		HasSEP => true
+		IsUIBuild => true
+		RestoreLongVersion => 21.7.72.0.0,0
+		DeviceSupportsLockdown => false
+		EffectiveSecurityModeAp => false
+		SigningFuse => true
+		BuildVersion => 21G72
+		OSVersion => 12.5
+		BridgeVersion => 19.16.16064.0.0,0
+		SensitivePropertiesVisible => true
+		ProductName => macOS
+		ProductType => MacBookPro15,1
+		SerialNumber => XXXXXXXXXXX
+		BootSessionUUID => XXXXXXXX-7171-4E3F-98BE-8XXXXXXXXXXXXXXX
+		DeviceColor => unknown
+		EffectiveProductionStatusAp => false
+		EffectiveSecurityModeSEP => false
+		UniqueChipID =>XXXXXXXXXXXXX
+		UniqueDeviceID => XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+		RemoteXPCVersionFlags => 72057594037927942
+		CertificateProductionStatus => false
+		CertificateSecurityMode => false
+		DeviceClass => Mac
+		DeviceEnclosureColor => unknown
+		SecurityDomain => 1
+		OSInstallEnvironment => false
+		Image4Supported => false
+	}
+	Services:
+		com.apple.mobile.storage_mounter_proxy.bridge.macOS
+		com.apple.mobile.storage_mounter_proxy.bridge
+		com.apple.mobile.notification_proxy.remote
+		com.apple.dt.remoteFetchSymbols
+		com.apple.osanalytics.logRelay
+		com.apple.remote.installcoordination_proxy
+		com.apple.corecaptured.remoteservice
+		com.apple.CSCSupportd
+		com.apple.sysdiagnose.remote
+		com.apple.dt.testmanagerd.remote.automation
+		ssh
+
+Found localbridge (bridge)
+	State: connected (connectable)
+	UUID: XXXXX-XX19-XXXX-B6D0-18XXXXXXXXXXX
+	Product Type: iBridge2,3
+	OS Build: 6.6 (19P6064)
+	Messaging Protocol Version: 3
+	Heartbeat:
+		Last successful heartbeat sent 5.647s ago, received 5.644s ago (took 0.003s)
+		3760 heartbeats sent, 0 received
+	Properties: {
+		AppleInternal => false
+		CPUArchitecture => arm64
+		ChipID => 32786
+		EffectiveProductionStatusSEP => true
+		HWModel => J680AP
+		HasSEP => true
+		LocationID => 2148XXXXX
+		IsUIBuild => true
+		RegionInfo => LL/A
+		DeviceSupportsLockdown => false
+		EffectiveSecurityModeAp => true
+		SigningFuse => true
+		BuildVersion => 19P6064
+		OSVersion => 6.6
+		BridgeVersion => 19.16.16064.0.0,0
+		SensitivePropertiesVisible => true
+		BoardRevision => 1
+		Image4CryptoHashMethod => sha2-384
+		MobileDeviceMinimumVersion => 1351
+		ProductName => Bridge OS
+		ProductType => iBridge2,3
+		SerialNumber => XXXXXXXXXXX
+		BootSessionUUID => XXXXXXXXXX4-XXDE-4426-899B-XXXXXXXXXXXXX
+		BoardId => 11
+		DeviceColor => black
+		EffectiveProductionStatusAp => true
+		EffectiveSecurityModeSEP => true
+		UniqueChipID => 51378XXXXXXXXX
+		UniqueDeviceID => 00008012-00XXXXXXXXXXXX
+		RemoteXPCVersionFlags => 72057594037927942
+		CertificateProductionStatus => true
+		CertificateSecurityMode => true
+		DeviceClass => Bridge
+		DeviceEnclosureColor => black
+		ModelNumber => NQ2Y2
+		RegionCode => LL
+		SecurityDomain => 1
+		OSInstallEnvironment => false
+		InterfaceIndex => 4
+		HardwarePlatform => t8012
+		Image4Supported => true
+	}
+	Services:
+		com.apple.xpc.remote.multiboot
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.CoreKDL.remoteXPC
+		com.apple.osanalytics.logTransfer
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.lskdd
+			Properties: {
+				UsesRemoteXPC => 1
+			}
+		com.apple.eos.BiometricKit
+			Properties: {
+				UsesRemoteXPC => false
+			}
+		com.apple.sysdiagnose.remote
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.icloud.findmydeviced.bridge
+			Version: 1
+			Properties: {
+				ServiceVersion => 1
+				UsesRemoteXPC => true
+			}
+		com.apple.mobileactivationd.bridge
+			Version: 1
+			Properties: {
+				ServiceVersion => 1
+				UsesRemoteXPC => true
+			}
+		com.apple.corespeech.xpc.remote.control
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.bridgeOSUpdated
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.nfcd.relay.control
+			Properties: {
+				UsesBridgeXPC => false
+			}
+		com.apple.RestoreRemoteServices.restoreserviced
+			Version: 2
+			Properties: {
+				ServiceVersion => 2
+				UsesRemoteXPC => true
+			}
+		com.apple.nfcd.relay.uart
+			Properties: {
+				UsesBridgeXPC => false
+			}
+		com.apple.internal.xpc.remote.kext_audit
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.videoprocessingd.encode.remote
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.recoverylogd.bridge
+			Version: 1
+			Properties: {
+				ServiceVersion => 1
+				UsesRemoteXPC => true
+			}
+		com.apple.corecaptured.remoteservice
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.TrustedAccessoryController
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.sysdiagnose.stackshot.remote
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.eos.LASecureIO
+		com.apple.xpc.remote.mobile_obliteration
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.aveservice
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.corespeech.xpc.remote.record
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.multiverse.remote.bridgetime
+		cs
+			Properties: {
+				UsesRemoteXPC => true
+			}
+		com.apple.powerchime.remote
+			Properties: {
+				UsesRemoteXPC => true
+			}
+	Local Services:
+		com.apple.remote.installcoordination_proxy
+		com.apple.dt.testmanagerd.remote.automation
+		com.apple.osanalytics.logRelay
+		com.apple.mobile.notification_proxy.remote
+		com.apple.dt.remoteFetchSymbols
+		com.apple.mobile.storage_mounter_proxy.bridge
+		com.apple.mobile.storage_mounter_proxy.bridge.macOS
+		com.apple.CSCSupportd
+		com.apple.sysdiagnose.remote
+		com.apple.corecaptured.remoteservice
