@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>splunk_topic</key>
+	<string>xp_usb_restricted</string>
+	<key>splunk_allowInsecureCertificate</key>
+	<false/>
+	<key>splunk_bagURL</key>
+	<string>https://xp.apple.com/report/2/xp_usb_restricted</string>
+	<key>SyncManifests</key>
+	<false/>
+	<key>EnforceManifests</key>
+	<false/>
+</dict>
+</plist>
