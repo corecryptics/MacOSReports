@@ -35,7 +35,7 @@
 				<key>Ethernet</key>
 				<dict>
 					<key>MAC Address</key>
-					<string>f0:18:98:25:c7:d3</string>
+					<string>f0:18:98:xx:xx:xx</string>
 					<key>MediaOptions</key>
 					<array/>
 					<key>MediaSubType</key>
@@ -44,7 +44,7 @@
 				<key>IPv4</key>
 				<dict>
 					<key>ARPResolvedHardwareAddress</key>
-					<string>70:df:f7:1b:fd:10</string>
+					<string>70:df:f7:xx:xx:xx</string>
 					<key>ARPResolvedIPAddress</key>
 					<string>192.168.1.254</string>
 					<key>AdditionalRoutes</key>
