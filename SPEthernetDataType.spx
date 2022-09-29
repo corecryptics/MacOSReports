@@ -34,7 +34,7 @@
 				<key>spethernet_driver</key>
 				<string>com.apple.driver.usb.cdc.ncm</string>
 				<key>spethernet_mac_address</key>
-				<string>ac:de:48:00:11:22</string>
+				<string>ac:de:48:XX:XX:XX</string>
 				<key>spethernet_max_link_speed</key>
 				<string>ethernet_speed_2500</string>
 				<key>spethernet_product-id</key>
