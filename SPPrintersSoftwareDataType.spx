@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>_SPCommandLineArguments</key>
+		<array>
+			<string>/usr/sbin/system_profiler</string>
+			<string>-nospawn</string>
+			<string>-xml</string>
+			<string>SPPrintersSoftwareDataType</string>
+			<string>-detailLevel</string>
+			<string>full</string>
+		</array>
+		<key>_SPCompletionInterval</key>
+		<real>3.5516870021820068</real>
+		<key>_SPResponseTime</key>
+		<real>3.70278000831604</real>
+		<key>_dataType</key>
+		<string>SPPrintersSoftwareDataType</string>
+		<key>_detailLevel</key>
+		<string>-2</string>
+		<key>_items</key>
+		<array>
+			<dict>
+				<key>_name</key>
+				<string>ppds</string>
+				<key>ppds</key>
+				<array/>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>printers</string>
+				<key>printers</key>
+				<array/>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>image capture devices</string>
+				<key>image capture devices</key>
+				<array/>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>image capture support</string>
+				<key>image capture support</key>
+				<array>
+					<dict>
+						<key>info path</key>
+						<string>/Library/Image Capture/Support/LegacyDeviceDiscoveryHelpers/AirScanLegacyDiscovery.app/Contents/Info.plist</string>
+						<key>info version</key>
+						<string>17</string>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>extensions</string>
+				<key>extensions</key>
+				<array>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleStorageDrivers.kext/Contents/PlugIns/AppleXserveRAID.kext</string>
+						<key>info version</key>
+						<string>533.120.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleStorageDrivers.kext/Contents/PlugIns/FireWireStorageDeviceSpecifics.kext</string>
+						<key>info version</key>
+						<string>533.120.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleStorageDrivers.kext/Contents/PlugIns/USBStorageDeviceSpecifics.kext</string>
+						<key>info version</key>
+						<string>533.120.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleStorageDrivers.kext/Contents/PlugIns/AppleATAPIStorage.kext</string>
+						<key>info version</key>
+						<string>533.120.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleStorageDrivers.kext/Contents/PlugIns/SCSIDeviceSpecifics.kext</string>
+						<key>info version</key>
+						<string>533.120.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleStorageDrivers.kext/Contents/PlugIns/SonyXDCAMDriver.kext</string>
+						<key>info version</key>
+						<string>533.120.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AFKACIPCKext.kext</string>
+						<key>info version</key>
+						<string>1.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleHIDKeyboardEmbedded.kext</string>
+						<key>info version</key>
+						<string>1.2.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOStreamFamily.kext/Contents/PlugIns/IOStreamUserClient.kext</string>
+						<key>info version</key>
+						<string>1.1.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleBSDKextStarter.kext/Contents/PlugIns/AppleBSDKextStarterVPN.kext</string>
+						<key>info version</key>
+						<string>1.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleBSDKextStarter.kext/Contents/PlugIns/AppleBSDKextStarterTMPFS.kext</string>
+						<key>info version</key>
+						<string>1.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleTopCase.kext</string>
+						<key>info version</key>
+						<string>5450.8</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleTopCase.kext/Contents/PlugIns/AppleTopCaseDriverV2.kext</string>
+						<key>info version</key>
+						<string>5450.8</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleTopCase.kext/Contents/PlugIns/AppleTopCaseActuatorHIDDriver.kext</string>
+						<key>info version</key>
+						<string>5450.8</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOVideoFamily.kext/Contents/PlugIns/IOVideoDeviceUserClient.kext</string>
+						<key>info version</key>
+						<string>1.2.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleGameControllerPersonality.kext</string>
+						<key>info version</key>
+						<string>1.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/AppleUSBTopCase.kext</string>
+						<key>info version</key>
+						<string>256</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOHIDFamily.kext/Contents/PlugIns/IOHIDEventDriver.kext</string>
+						<key>info version</key>
+						<string>2.0.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOHIDFamily.kext/Contents/PlugIns/IOHIDUserClient.kext</string>
+						<key>info version</key>
+						<string>2.0.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOHIDFamily.kext/Contents/PlugIns/IOHIDEventDriverSafeBoot.kext</string>
+						<key>info version</key>
+						<string>2.0.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOUSBFamily.kext/Contents/PlugIns/IOUSBHIDDriverSafeBoot.kext</string>
+						<key>info version</key>
+						<string>900.4.2</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/CellPhoneHelper.kext</string>
+						<key>info version</key>
+						<string>1.4.0</string>
+					</dict>
+					<dict>
+						<key>info path</key>
+						<string>/System/Library/Extensions/IOUSBHostFamily.kext/Contents/PlugIns/IOUSBHostHIDDeviceSafeBoot.kext</string>
+						<key>info version</key>
+						<string>1.2</string>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>libExtensions</string>
+				<key>libExtensions</key>
+				<array/>
+			</dict>
+		</array>
+		<key>_parentDataType</key>
+		<string>SPSoftwareDataType</string>
+		<key>_properties</key>
+		<dict>
+			<key>_name</key>
+			<dict>
+				<key>-order</key>
+				<string>10</string>
+				<key>_isColumn</key>
+				<string>YES</string>
+			</dict>
+			<key>info path</key>
+			<dict>
+				<key>_order</key>
+				<string>12</string>
+			</dict>
+			<key>info version</key>
+			<dict>
+				<key>_order</key>
+				<string>15</string>
+				<key>_suppressLocalization</key>
+				<string>YES</string>
+			</dict>
+			<key>volumes</key>
+			<dict>
+				<key>_detailLevel</key>
+				<string>0</string>
+			</dict>
+		</dict>
+		<key>_timeStamp</key>
+		<date>2022-08-21T00:51:20Z</date>
+		<key>_versionInfo</key>
+		<dict>
+			<key>com.apple.SystemProfiler.SPPrintersSoftwareReporter</key>
+			<string>640.2</string>
+		</dict>
+	</dict>
+</array>
+</plist>

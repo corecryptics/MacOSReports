@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>_SPCommandLineArguments</key>
+		<array>
+			<string>/usr/sbin/system_profiler</string>
+			<string>-nospawn</string>
+			<string>-xml</string>
+			<string>SPAudioReporter</string>
+			<string>-detailLevel</string>
+			<string>full</string>
+		</array>
+		<key>_SPCompletionInterval</key>
+		<real>0.5511469841003418</real>
+		<key>_SPResponseTime</key>
+		<real>0.91538000106811523</real>
+		<key>_dataType</key>
+		<string>SPAudioReporter</string>
+		<key>_items</key>
+		<array/>
+	</dict>
+</array>
+</plist>

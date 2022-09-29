@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>_SPCommandLineArguments</key>
+		<array>
+			<string>/usr/sbin/system_profiler</string>
+			<string>-nospawn</string>
+			<string>-xml</string>
+			<string>SPMemoryDataType</string>
+			<string>-detailLevel</string>
+			<string>full</string>
+		</array>
+		<key>_SPCompletionInterval</key>
+		<real>0.65922892093658447</real>
+		<key>_SPResponseTime</key>
+		<real>0.76696896553039551</real>
+		<key>_dataType</key>
+		<string>SPMemoryDataType</string>
+		<key>_detailLevel</key>
+		<integer>-1</integer>
+		<key>_items</key>
+		<array>
+			<dict>
+				<key>_items</key>
+				<array>
+					<dict>
+						<key>_name</key>
+						<string>BANK 0/ChannelA-DIMM0</string>
+						<key>dimm_manufacturer</key>
+						<string>SK Hynix</string>
+						<key>dimm_part_number</key>
+						<string>H5ANAG8NAMR-UHC</string>
+						<key>dimm_serial_number</key>
+						<string>-</string>
+						<key>dimm_size</key>
+						<string>16 GB</string>
+						<key>dimm_speed</key>
+						<string>2400 MHz</string>
+						<key>dimm_status</key>
+						<string>ok</string>
+						<key>dimm_type</key>
+						<string>DDR4</string>
+					</dict>
+					<dict>
+						<key>_name</key>
+						<string>BANK 2/ChannelB-DIMM0</string>
+						<key>dimm_manufacturer</key>
+						<string>SK Hynix</string>
+						<key>dimm_part_number</key>
+						<string>H5ANAG8NAMR-UHC</string>
+						<key>dimm_serial_number</key>
+						<string>-</string>
+						<key>dimm_size</key>
+						<string>16 GB</string>
+						<key>dimm_speed</key>
+						<string>2400 MHz</string>
+						<key>dimm_status</key>
+						<string>ok</string>
+						<key>dimm_type</key>
+						<string>DDR4</string>
+					</dict>
+				</array>
+				<key>_name</key>
+				<string>global_name</string>
+				<key>global_ecc_state</key>
+				<string>ecc_disabled</string>
+				<key>is_memory_upgradeable</key>
+				<string>No</string>
+			</dict>
+		</array>
+		<key>_parentDataType</key>
+		<string>SPHardwareDataType</string>
+		<key>_properties</key>
+		<dict>
+			<key>SPMemoryDataType</key>
+			<dict>
+				<key>_isColumn</key>
+				<string>YES</string>
+				<key>_order</key>
+				<string>12</string>
+			</dict>
+			<key>_name</key>
+			<dict>
+				<key>_isColumn</key>
+				<string>YES</string>
+				<key>_isOutlineColumn</key>
+				<string>YES</string>
+				<key>_order</key>
+				<string>10</string>
+			</dict>
+			<key>dimm_ecc_errors</key>
+			<dict>
+				<key>_order</key>
+				<string>60</string>
+			</dict>
+			<key>dimm_serial_number</key>
+			<dict>
+				<key>_detailLevel</key>
+				<string>0</string>
+			</dict>
+			<key>dimm_size</key>
+			<dict>
+				<key>_isColumn</key>
+				<string>YES</string>
+				<key>_order</key>
+				<string>20</string>
+			</dict>
+			<key>dimm_speed</key>
+			<dict>
+				<key>_isColumn</key>
+				<string>YES</string>
+				<key>_order</key>
+				<string>40</string>
+			</dict>
+			<key>dimm_status</key>
+			<dict>
+				<key>_isColumn</key>
+				<string>YES</string>
+				<key>_order</key>
+				<string>50</string>
+			</dict>
+			<key>dimm_type</key>
+			<dict>
+				<key>_isColumn</key>
+				<string>YES</string>
+				<key>_order</key>
+				<string>30</string>
+			</dict>
+			<key>volumes</key>
+			<dict>
+				<key>_detailLevel</key>
+				<string>0</string>
+			</dict>
+		</dict>
+		<key>_timeStamp</key>
+		<date>2022-08-21T00:51:20Z</date>
+		<key>_versionInfo</key>
+		<dict>
+			<key>com.apple.SystemProfiler.SPMemoryReporter</key>
+			<string>80</string>
+		</dict>
+	</dict>
+</array>
+</plist>
