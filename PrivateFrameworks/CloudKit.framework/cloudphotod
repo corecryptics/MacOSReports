@@ -1,0 +1,59 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\
+<plist version="1.0">\
+<dict>\
+	<key>aps-connection-initiate</key>\
+	<true/>\
+	<key>com.apple.application-identifier</key>\
+	<string>AAPLPHOTOS.com.apple.cloudphotod</string>\
+	<key>com.apple.authkit.client.private</key>\
+	<true/>\
+	<key>com.apple.coreduetd.allow</key>\
+	<true/>\
+	<key>com.apple.coreduetd.context</key>\
+	<true/>\
+	<key>com.apple.developer.aps-environment</key>\
+	<string>serverPreferred</string>\
+	<key>com.apple.developer.icloud-container-environment</key>\
+	<string>Production</string>\
+	<key>com.apple.developer.icloud-services</key>\
+	<array>\
+		<string>CloudKit</string>\
+	</array>\
+	<key>com.apple.mobile.keybagd.UserManager.sync</key>\
+	<true/>\
+	<key>com.apple.private.aps-connection-initiate</key>\
+	<true/>\
+	<key>com.apple.private.cloudkit.masquerade</key>\
+	<true/>\
+	<key>com.apple.private.cloudkit.setEnvironment</key>\
+	<true/>\
+	<key>com.apple.private.cloudkit.spi</key>\
+	<true/>\
+	<key>com.apple.private.cloudkit.systemService</key>\
+	<true/>\
+	<key>com.apple.private.cloudphotod.cloudkit</key>\
+	<true/>\
+	<key>com.apple.private.cloudphotod.generic</key>\
+	<true/>\
+	<key>com.apple.private.dark-wake-network-reachability</key>\
+	<true/>\
+	<key>com.apple.private.dark-wake-push</key>\
+	<true/>\
+	<key>com.apple.private.push-to-wake</key>\
+	<true/>\
+	<key>com.apple.private.tcc.allow</key>\
+	<array>\
+		<string>kTCCServicePhotos</string>\
+		<string>kTCCServiceLiverpool</string>\
+		<string>kTCCServiceSystemPolicyAllFiles</string>\
+		<string>kTCCServiceSystemPolicyRemovableVolumes</string>\
+	</array>\
+</dict>\
+</plist>}
