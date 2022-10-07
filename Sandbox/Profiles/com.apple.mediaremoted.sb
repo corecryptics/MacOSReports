@@ -1,0 +1,111 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; TODO: Change these to deny before finalizing this profile.
+(allow (with report) default)
+(allow (with report) file-map-executable iokit-get-properties process-info* nvram*)
+(allow (with report) dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.mediaremoted"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.mediaremoted")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+(allow iokit-get-properties
+    (iokit-property "ExternalConnected")
+    (iokit-property "IOConsoleUsers"))
+
+(allow iokit-open
+    (iokit-user-client-class "IOBluetoothDeviceUserClient")
+    (iokit-user-client-class "IOHIDResourceDeviceUserClient")
+    (iokit-user-client-class "IOBluetoothHCIUserClient")
+    (iokit-user-client-class "IOBluetoothL2CAPChannelUserClient")
+    (iokit-user-client-class "IOHIDLibUserClient")
+    (iokit-user-client-class "RootDomainUserClient")
+    (iokit-user-client-class "AppleKeyStoreUserClient"))
+
+(allow file-read*
+    (subpath "/Applications")
+    (home-subpath "/Library/Application Support")
+    (home-literal "/Library/MediaRemote/MediaRemoteTelevisionDeviceInfoIdentifier.plist"))
+
+(allow mach-lookup
+    (global-name "com.apple.audio.audiohald")
+    (global-name "com.apple.AirPlayXPCHelper")
+    (global-name "com.apple.coremedia.routingcontext.xpc")
+    (global-name "com.apple.coremedia.volumecontroller.xpc")
+    (global-name "com.apple.mediaremoted.xpc")
+    (global-name "com.apple.coremedia.routediscoverer.xpc")
+    (global-name "com.apple.coremedia.endpoint.xpc")
+    (global-name "com.apple.CompanionLink")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.BluetoothServices")
+    (global-name "com.apple.PairingManager")
+    (global-name "com.apple.securityd.xpc")
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.SystemConfiguration.configd")
+    (global-name "com.apple.touchbarserver.mig"))
+
+(allow file-read-data
+    (literal "/private/var/db/mds/system/mds.lock")
+    (literal "/private/var/db/mds/system/mdsObject.db")
+    (literal "/private/var/db/mds/system/mdsDirectory.db")
+    (literal "/private/var/db/mds/messages/se_SecurityMessages")
+    (literal "/Library/Keychains/System.keychain"))
+
+(allow file-write-data
+    (literal "/private/var/db/mds/system/mds.lock"))
+
+(allow ipc-posix-shm-read-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+(allow ipc-posix-shm-write-create
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+    
+(allow ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))

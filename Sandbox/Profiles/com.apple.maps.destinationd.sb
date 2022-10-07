@@ -1,0 +1,83 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(allow (with report) (with telemetry) default)
+(allow (with report) (with telemetry) file-map-executable process-info* nvram*)
+(allow (with report) (with telemetry) dynamic-code-generation)
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+    
+(allow process-info* (target self))
+
+(allow file-read* file-write*
+    (home-subpath "/Library/Caches/GeoServices")
+    (home-subpath "/Library/Caches/Configuration")
+    (home-subpath "/Library/Caches/destinationd")
+    (home-subpath "/Library/Caches/com.apple.Maps.Suggestions")
+    (subpath (param "TEMP_DIR"))
+    (subpath (param "CACHE_DIR")))
+
+(allow file-read-metadata
+    (subpath "/Users") ;; Originates from instantiating the EKEventStore
+    (subpath "/usr") ;; Originates from Contacts
+    (subpath (param "HOME"))
+    (home-literal "/Library/"))
+    (home-subpath "/Library/Caches/GeoServices")
+
+(allow mach-lookup
+    (global-name "com.apple.AppSSO.service-xpc")
+    (global-name "com.apple.accountsd.accountmanager")
+    (global-name "com.apple.CalendarAgent")
+    (global-name "com.apple.CalendarAgent.database")
+    (global-name "com.apple.CalendarAgent.proxy")
+    (global-name "com.apple.chronoservices")
+    (global-name "com.apple.corerecents.recentsd")
+    (global-name "com.apple.dnssd.service")
+    (global-name "com.apple.kvsd")
+    (global-name "com.apple.locationd.desktop.registration")
+    (global-name "com.apple.locationd.desktop.synchronous")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.Maps.MapsSync.store")
+    (global-name "com.apple.metadata.mds")
+    (global-name "com.apple.remindd")
+    (global-name "com.apple.SystemConfiguration.configd")
+    (global-name "com.apple.system.opendirectoryd.api")
+    (global-name "com.apple.routined.registration")
+    (global-name "com.apple.tccd"))
+
+(allow file-map-executable (subpath "/System/Library"))
+(allow process-info-pidinfo)
+(allow network-outbound)
+(allow system-socket)
+(allow distributed-notification-post)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow user-preference-read
+    (preference-domain "kCFPreferencesAnyApplication")
+    (preference-domain "com.apple.suggestions")
+    (preference-domain "com.apple.GEO"))
+
+(allow user-preference*
+    (preference-domain "com.apple.weather.internal")
+    (preference-domain "com.apple.iCal"))
+    
+;; Contacts
+(import "contacts.sb")
+(contacts-client (param "HOME") (param "TEMP_DIR"))

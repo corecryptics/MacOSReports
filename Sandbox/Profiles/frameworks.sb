@@ -1,0 +1,918 @@
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+(define (loadframework name)
+  (let ((frameworks
+          (entitlement "com.apple.private.app-sandbox.system-frameworks")))
+    (member name frameworks)))
+(define iOS-App-on-Mac? (lambda () ((equal? (param "iOSAppOnMac") "1"))))
+(when (loadframework
+        "/System/Library/Frameworks/AVKit.framework/Versions/A/AVKit")
+      (allow mach-lookup
+             (global-name
+               "com.apple.mediaremoted.xpc"
+               "com.apple.powerlog.plxpclogger.xpc"))
+      (allow user-preference* (preference-domain "com.apple.avkit")))
+(when (loadframework
+        "/System/Library/Frameworks/Accounts.framework/Versions/A/Accounts")
+      (allow mach-lookup
+             (global-name
+               "com.apple.accountsd.accountmanager"
+               "com.apple.accountsd.oauthsigner")))
+(when (loadframework
+        "/System/Library/Frameworks/AdServices.framework/Versions/A/AdServices")
+      (allow mach-lookup
+             (global-name "com.apple.ap.promotedcontent.attributionservice")))
+(when (entitlement "com.apple.security.personal-information.addressbook")
+      (allow user-preference-read
+             (preference-domain "com.apple.AddressBook.sync"))
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Application Support/SyncServices"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.AddressBook.ScheduledSync"
+               "com.apple.ContactsAgent.addressbook"
+               "com.apple.ContactsAgent.general"
+               "com.apple.syncservices.SyncServer")))
+(when (loadframework
+        "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit")
+      (allow file-read*
+             (literal "/Library/Preferences/com.apple.ViewBridge.plist"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.appkit.touchbarlogger"
+               "com.apple.ServicesTouchBarService"
+               "com.apple.sidecar-display-agent"
+               "com.apple.sidecar-relay")))
+(when (loadframework
+        "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/SpeechSynthesis")
+      (allow mach-lookup
+             (global-name
+               "com.apple.speech.speechsynthesisd"
+               "com.apple.speech.speechsynthesisd.arm64"
+               "com.apple.speech.speechsynthesisd.x86_64")))
+(when (loadframework
+        "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox")
+      (allow mach-lookup
+             (global-name
+               "com.apple.audio.AudioComponentRegistrar"
+               "com.apple.audio.SystemSoundServer-OSX")))
+(when (entitlement "com.apple.security.device.audio-video-bridging")
+      (allow iokit-open-user-client
+             (iokit-user-client-class
+               "IOAVB17221ACMPServiceUserClient"
+               "IOAVB17221AECPServiceUserClient"
+               "IOAVB17221EntityDiscoveryUserClient"
+               "IOAVB1722ApplicationControlServiceUserClient"
+               "IOAVBNubUserClient"
+               "IOTimeSyncClockManagerUserClient")))
+(when (or (loadframework
+            "/System/Library/Frameworks/AuthenticationServices.framework/Versions/A/AuthenticationServices")
+          (loadframework
+            "/System/iOSSupport/System/Library/Frameworks/AuthenticationServices.framework/Versions/A/AuthenticationServices")
+          iOS-App-on-Mac?)
+      (allow mach-lookup (global-name "com.apple.SafariLaunchAgent")))
+(when (loadframework
+        "/System/Library/Frameworks/BackgroundTasks.framework/Versions/A/BackgroundTasks")
+      (allow mach-lookup (global-name "com.apple.duetactivityscheduler")))
+(when (loadframework
+        "/System/Library/Frameworks/CallKit.framework/Versions/A/CallKit")
+      (allow mach-lookup (global-name "com.apple.callkit.callsourcehost")))
+(when (loadframework
+        "/System/Library/Frameworks/ClassKit.framework/Versions/A/ClassKit")
+      (allow mach-lookup (global-name "com.apple.progressd")))
+(when (loadframework
+        "/System/Library/Frameworks/CloudKit.framework/Versions/A/CloudKit")
+      (allow mach-lookup
+             (global-name "com.apple.ckdiscretionaryd" "com.apple.cloudd"))
+      (allow user-preference-read (preference-domain "com.apple.CloudKit"))
+      (with-filter
+        (system-attribute apple-internal)
+        (allow mach-lookup
+               (global-name
+                 "com.apple.ckdiscretionaryd.debug"
+                 "com.apple.cloudd.debug"))))
+(when (loadframework
+        "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/AE")
+      (allow mach-lookup (global-name "com.apple.coreservices.appleevents")))
+(when (loadframework
+        "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/LaunchServices")
+      (allow mach-lookup
+             (global-name
+               "com.apple.SharedWebCredentials"
+               "com.apple.coreservices.launchservicesd"
+               "com.apple.coreservices.lsuseractivitymanager.xpc"
+               "com.apple.lsd.advertisingidentifiers"
+               "com.apple.lsd.extensions"
+               "com.apple.lsd.icons"
+               "com.apple.lsd.mapdb"
+               "com.apple.lsd.modifydb"
+               "com.apple.lsd.open"
+               "com.apple.lsd.openurl"
+               "com.apple.lsd.xpc")))
+(when (loadframework
+        "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Metadata")
+      (allow mach-lookup
+             (global-name
+               "com.apple.metadata.mds"
+               "com.apple.metadata.mds.legacy"
+               "com.apple.metadata.mdwrite")))
+(when (loadframework
+        "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/SharedFileList.framework/Versions/A/SharedFileList")
+      (allow mach-lookup
+             (global-name
+               "com.apple.coreservices.sharedfilelistd.async-mig"
+               "com.apple.coreservices.sharedfilelistd.mig"
+               "com.apple.coreservices.sharedfilelistd.xpc")))
+(when (loadframework
+        "/System/Library/Frameworks/CoreSpotlight.framework/Versions/A/CoreSpotlight")
+      (allow mach-lookup
+             (global-name
+               "com.apple.corespotlightservice"
+               "com.apple.metadata.mds"
+               "com.apple.spotlight.IndexAgent"
+               "com.apple.spotlight.IndexDelegateAgent"
+               "com.apple.spotlight.SearchAgent"))
+      (allow file-read*
+             (path "/Library/Application Support/Apple/Spotlight/MailUsesCoreSpotlight"))
+      (with-filter
+        (require-entitlement
+          "com.apple.corespotlight.privateindex.unsandboxed")
+        (allow file-issue-extension
+               (extension-class "com.apple.corespotlightservice.read-write"))))
+(when (loadframework
+        "/System/Library/Frameworks/CryptoTokenKit.framework/Versions/A/CryptoTokenKit")
+      (allow mach-lookup (global-name "com.apple.ctkd.slot-client")))
+(when (loadframework
+        "/System/Library/Frameworks/DVDPlayback.framework/Versions/A/DVDPlayback")
+      (allow iokit-open-user-client
+             (iokit-user-client-class "ApplePlatformEnablerUserClient")))
+(when (loadframework
+        "/System/Library/Frameworks/EventKit.framework/Versions/A/EventKit")
+      (allow mach-lookup (global-name "com.apple.remindd")))
+(when (loadframework
+        "/System/Library/Frameworks/FileProvider.framework/Versions/A/FileProvider")
+      (allow mach-lookup
+             (global-name
+               "com.apple.fileprovider.pushkit"
+               "com.apple.spotlight.IndexAgent"
+               "com.apple.spotlight.IndexDelegateAgent"))
+      (allow file-read-xattr
+             (require-all
+               (xattr "com.apple.icloud.desktop")
+               (require-any
+                 (home-subpath "/Desktop")
+                 (home-subpath "/Documents"))))
+      (allow system-fsctl (fsctl-command APFSIOC_SYNC_ROOT_GET_FLAG)))
+(when (or (loadframework
+            "/System/Library/Frameworks/GameController.framework/Versions/A/GameController")
+          (loadframework
+            "/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/WebCore.framework/Versions/A/WebCore")
+          (loadframework
+            "/System/iOSSupport/System/Library/Frameworks/GameController.framework/Versions/A/GameController")
+          (loadframework
+            "/System/iOSSupport/System/Library/PrivateFrameworks/WebCore.framework/Versions/A/WebCore")
+          iOS-App-on-Mac?)
+      (allow mach-lookup
+             (global-name
+               "com.apple.GameController.gamecontrolleragentd"
+               "com.apple.GameController.gamecontrollerd.app"
+               "com.apple.GameController.gamecontrollerd.haptics"
+               "com.apple.GameController.gamecontrollerd"))
+      (allow user-preference-read
+             (preference-domain "com.apple.GameController")))
+(when (loadframework
+        "/System/Library/Frameworks/Intents.framework/Versions/A/Intents")
+      (allow mach-lookup (global-name "com.apple.spotlight.IndexAgent")))
+(when (or (loadframework
+            "/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore")
+          (loadframework
+            "/System/iOSSupport/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore"))
+      (allow mach-lookup (global-name "com.apple.webinspector")))
+(when (loadframework
+        "/System/Library/Frameworks/LocalAuthentication.framework/Versions/A/LocalAuthentication")
+      (allow mach-lookup
+             (global-name
+               "com.apple.CoreAuthentication.agent"
+               "com.apple.CoreAuthentication.daemon")))
+(when (loadframework
+        "/System/Library/Frameworks/MapKit.framework/Versions/A/MapKit")
+      (allow file-read* (home-subpath "/Library/Caches/GeoServices")))
+(when (loadframework
+        "/System/Library/Frameworks/MetricKit.framework/Versions/A/MetricKit")
+      (allow mach-lookup (global-name "com.apple.metrickit.xpc")))
+(when (loadframework
+        "/System/Library/Frameworks/QuickLook.framework/Versions/A/QuickLook")
+      (allow mach-lookup (global-name "com.apple.quicklookd.xpc")))
+(when (loadframework
+        "/System/Library/Frameworks/ScreenSaver.framework/Versions/A/ScreenSaver")
+      (allow file-read*
+             (literal "/Library/Preferences/com.apple.screensaver.plist"))
+      (allow user-preference*
+             (preference-domain
+               "com.apple.ScreenSaver.iLifeSlideShows"
+               "com.apple.ScreenSaverPhotoChooser"
+               "com.apple.screensaver")))
+(when (or (loadframework
+            "/System/Library/Frameworks/ScreenTime.framework/Versions/A/ScreenTime")
+          (loadframework
+            "/System/iOSSupport/System/Library/Frameworks/ScreenTime.framework/Versions/A/ScreenTime"))
+      (allow mach-lookup (global-name "com.apple.ScreenTimeAgent")))
+(when (loadframework
+        "/System/Library/Frameworks/Security.framework/Versions/A/Security")
+      (allow mach-lookup
+             (global-name
+               "com.apple.secd"
+               "com.apple.CoreAuthentication.daemon"
+               "com.apple.CoreAuthentication.agent"
+               "com.apple.ctkd.token-client"))
+      (with-filter
+        (system-attribute apple-internal)
+        (allow nvram-get (nvram-variable "AMFITrustedKeys"))))
+(when (loadframework
+        "/System/Library/Frameworks/ShazamKit.framework/Versions/A/ShazamKit")
+      (allow mach-lookup (global-name "com.apple.shazamd")))
+(when (loadframework
+        "/System/Library/Frameworks/Social.framework/Versions/A/Social")
+      (allow user-preference* (preference-domain "com.apple.social")))
+(when (loadframework
+        "/System/Library/Frameworks/Speech.framework/Versions/A/Speech")
+      (allow mach-lookup
+             (xpc-service-name "com.apple.speech.localspeechrecognition")))
+(when (entitlement "com.apple.developer.system-extension.install")
+      (allow mach-lookup (global-name "com.apple.sysextd"))
+      (allow authorization-right-obtain
+             (right-name "com.apple.system-extensions.admin")))
+(when (or (entitlement "com.apple.private.virtualization")
+          (entitlement "com.apple.security.virtualization"))
+      (allow generic-issue-extension
+             (extension-class-prefix "com.apple.virtualization.extension."))
+      (allow iokit-open-user-client
+             (iokit-user-client-class "AppleSMCClient")))
+(when (or (loadframework
+            "/System/Library/Frameworks/iTunesLibrary.framework/Versions/A/iTunesLibrary")
+          (loadframework
+            "/System/Library/PrivateFrameworks/AMPLibrary.framework/Versions/A/AMPLibrary")
+          (loadframework
+            "/System/Library/Frameworks/MediaPlayer.framework/Versions/A/MediaPlayer")
+          (loadframework
+            "/System/iOSSupport/System/Library/Frameworks/MediaPlayer.framework/Versions/A/MediaPlayer")
+          (loadframework
+            "/System/Library/Frameworks/MusicKit.framework/Versions/A/MusicKit"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.amp.artworkd"
+               "com.apple.amp.library.framework"))
+      (allow mach-lookup
+             (global-name "com.apple.Music.MPMusicPlayerControllerInternal")
+             (xpc-service-name
+               "com.apple.Music.MPMusicPlayerApplicationControllerInternal"))
+      (when (entitlement "com.apple.amp.library.client")
+            (allow user-preference-read
+                   (preference-domain "com.apple.AMPLibraryAgent"))))
+(when (entitlement "com.apple.private.accounts.allaccounts")
+      (allow user-preference* (preference-domain "MobileMeAccounts")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/AXHearingSupport.framework/Versions/A/AXHearingSupport")
+      (allow user-preference-read
+             user-preference-write
+             (preference-domain "com.apple.TTY"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.CallHistorySyncHelper"
+               "com.apple.commcenter.coretelephony.xpc"
+               "com.apple.commcenter.xpc"
+               "com.apple.telephonyutilities.callservicesdaemon.callcapabilities"
+               "com.apple.telephonyutilities.callservicesdaemon.callprovidermanager"
+               "com.apple.telephonyutilities.callservicesdaemon.callstatecontroller"
+               "com.apple.telephonyutilities.callservicesdaemon.momentscontroller"
+               "com.apple.videoconference.camera")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/AccountsUI.framework/Versions/A/AccountsUI")
+      (allow user-preference* (preference-domain "com.apple.accounts"))
+      (allow file-read* (literal "/System/Library/Accounts"))
+      (allow file-read* file-write* (home-subpath "/Library/Logs/Accounts")))
+(when (or (entitlement
+            "com.apple.ap.adservicesd.statusconditionclient.allow_read")
+          (entitlement
+            "com.apple.ap.adservicesd.statusconditionclient.allow_write"))
+      (allow mach-lookup
+             (global-name "com.apple.ap.adservicesd.statusconditionservice")))
+(when (entitlement "com.apple.security.personal-information.addressbook")
+      (allow user-preference-read
+             (preference-domain "com.apple.AddressBook.sync"))
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Application Support/SyncServices"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.AddressBook.ScheduledSync"
+               "com.apple.ContactsAgent.addressbook"
+               "com.apple.ContactsAgent.general"
+               "com.apple.syncservices.SyncServer")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/AppSSO.framework/Versions/A/AppSSO")
+          (loadframework
+            "/System/Library/PrivateFrameworks/AppSSOCore.framework/Versions/A/AppSSOCore"))
+      (allow mach-lookup (global-name "com.apple.AppSSO.service-xpc")))
+(when (entitlement "com.apple.private.applemediaservices")
+      (allow mach-lookup
+             (global-name
+               "com.apple.CoreAuthentication.agent"
+               "com.apple.adid"
+               "com.apple.commerce"
+               "com.apple.fpsd"
+               "com.apple.usernotifications.usernotificationservice"
+               "com.apple.xpc.amsaccountsd"
+               "com.apple.xpc.amstoold"))
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Caches/com.apple.AppleMediaServices")
+             (home-subpath "/Library/Logs/com.apple.StoreServices"))
+      (allow file-read*
+             (literal
+               "/Library/Application Support/CrashReporter/DiagnosticMessagesHistory.plist"))
+      (allow user-preference*
+             (preference-domain "com.apple.AppleMediaServices")
+             (preference-domain "com.apple.AppleMediaServices.notbackedup")))
+(when (entitlement "com.apple.private.applemediaservices")
+      (allow mach-issue-extension
+             (require-all (extension-class "com.apple.app-sandbox.mach"))
+             (global-name "com.apple.commerce")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/AudioSession.framework/Versions/A/AudioSession")
+          iOS-App-on-Mac?)
+      (allow mach-lookup (global-name "com.apple.audio.session-manager")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/AuthKit.framework/Versions/A/AuthKit")
+      (allow mach-lookup
+             (global-name
+               "com.apple.aa.custodian.xpc"
+               "com.apple.ak.auth.xpc"
+               "com.apple.ak.anisette.xpc"
+               "com.apple.ak.authorizationservices.xpc"))
+      (when (entitlement "com.apple.authkit.client.internal")
+            (allow authorization-right-obtain
+                   (right-name
+                     "com.apple.icloud.passwordreset"
+                     "com.apple.icloud.validatePassword"))))
+(when iOS-App-on-Mac?
+      (allow mach-lookup
+             (global-name "com.apple.ak.authorizationservices.xpc")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Versions/A/BackgroundTaskManagement")
+      (allow mach-lookup
+             (global-name "com.apple.backgroundtaskmanagementagent")))
+(when (entitlement "com.apple.private.backup")
+      (allow mach-lookup
+             (global-name
+               "com.apple.dock.remotedesktoppicture"
+               "com.apple.mtmd.xpc")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/Calculate.framework/Versions/A/Calculate")
+      (allow user-preference*
+             (preference-domain "com.apple.calculateframework")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/CalendarAgentLink.framework/Versions/A/CalendarAgentLink")
+      (when (entitlement "com.apple.security.personal-information.calendars")
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.CalendarAgent"
+                     "com.apple.CalendarAgent.database"
+                     "com.apple.CalendarAgent.debug"
+                     "com.apple.CalendarAgent.proxy"
+                     "com.apple.CalendarAgent.store"))
+            (allow file-read*
+                   (home-literal
+                     "/Library/Application Support/SyncServices/Local/SyncingClients.plist")))
+      (allow mach-lookup
+             (global-name
+               "com.apple.ContactsAgent.addressbook"
+               "com.apple.ContactsAgent.general")))
+(when (entitlement "com.apple.private.CallHistory.read")
+      (allow file-read*
+             (home-subpath "/Library/Application Support/CallHistoryDB")))
+(when (entitlement "com.apple.private.CallHistory.read-write")
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Application Support/CallHistoryDB")))
+(when (entitlement "com.apple.private.CallHistory.Tool")
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Application Support/CallHistoryDB"))
+      (allow file-read* (subpath "/usr/local/bin")))
+(when (entitlement "com.apple.private.commerce")
+      (allow mach-lookup (global-name "com.apple.commerce"))
+      (allow user-preference*
+             (preference-domain
+               "com.apple.AppleMediaServices"
+               "com.apple.commerce"))
+      (allow mach-issue-extension
+             (require-all (extension-class "com.apple.app-sandbox.mach"))
+             (global-name "com.apple.commerce")))
+(when (entitlement "com.apple.private.communicationsfilter")
+      (allow mach-lookup
+             (global-name
+               "com.apple.cmfsyncagent.auth"
+               "com.apple.cmfsyncagent.embedded.auth")))
+(when (entitlement "com.apple.private.contactsui")
+      (allow mach-lookup
+             (global-name
+               "com.apple.corerecents.recentsd"
+               "com.apple.icloud.fmfd"
+               "com.apple.imdpersistence.IMDPersistenceAgent"
+               "com.apple.ScreenTimeAgent.Contacts"
+               "com.apple.telephonyutilities.callservicesdaemon.callprovidermanager"))
+      (allow file-read* (home-subpath "/Library/Mail")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/AccountsUI.framework/Versions/A/AccountsUI")
+          (loadframework
+            "/System/Library/PrivateFrameworks/AuthKit.framework/Versions/A/AuthKit")
+          (loadframework
+            "/System/Library/PrivateFrameworks/CoreCDP.framework/Versions/A/CoreCDP"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.cdp.daemon"
+               "com.apple.mobile.keybagd.xpc")))
+(when (entitlement "com.apple.coreduetd.allow")
+      (allow mach-lookup
+             (global-name
+               "com.apple.coreduetd.knowledge.user"
+               "com.apple.coreduetd.knowledge"
+               "com.apple.coreduetd.people"
+               "com.apple.coreduetd"))
+      (allow file-read*
+             (home-prefix
+               "/Library/Application Support/Knowledge/knowledgeC.db"))
+      (allow file-write*
+             (home-literal
+               "/Library/Application Support/Knowledge/knowledgeC.db-shm")))
+(when (entitlement "com.apple.coreduetd.context")
+      (allow mach-lookup (global-name "com.apple.coreduetd.context")))
+(when (entitlement "com.apple.private.corefollowup.internal")
+      (allow mach-lookup (global-name "com.apple.corefollowup.agent")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/CoreParsec.framework/Versions/A/CoreParsec")
+      (allow mach-lookup (global-name "com.apple.parsecd")))
+(when (entitlement "com.apple.private.corerecents")
+      (allow mach-lookup (global-name "com.apple.corerecents.recentsd")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/CoreSuggestions.framework/Versions/A/CoreSuggestions")
+      (allow mach-lookup
+             (global-name
+               "com.apple.suggestd.contacts"
+               "com.apple.suggestd.deliveries"
+               "com.apple.suggestd.events"
+               "com.apple.suggestd.fides"
+               "com.apple.suggestd.internal"
+               "com.apple.suggestd.ipsos"
+               "com.apple.suggestd.mail"
+               "com.apple.suggestd.reminders"
+               "com.apple.suggestd.urls")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/DFRFoundation.framework/Versions/A/DFRFoundation")
+          iOS-App-on-Mac?)
+      (allow mach-lookup
+             (global-name
+               "com.apple.touchbarserver"
+               "com.apple.touchbarserver.mig"
+               "com.apple.controlstrip")))
+(when (entitlement "com.apple.dmd-access")
+      (allow mach-lookup (global-name "com.apple.dmd")))
+(when (entitlement "com.apple.private.dmd.emergency-mode")
+      (allow mach-lookup (global-name "com.apple.dmd.emergency-mode")))
+(when (entitlement "com.apple.private.dmd.policy")
+      (allow mach-lookup (global-name "com.apple.dmd.policy")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/DiagnosticLogCollection.framework/Versions/A/DiagnosticLogCollection")
+      (when (entitlement "com.apple.private.imcore.imremoteurlconnection")
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.imfoundation.IMRemoteURLConnectionAgent")))
+      (allow mach-lookup (global-name "com.apple.marco")))
+(when (entitlement "com.apple.private.dprivacyd.allow")
+      (allow mach-lookup
+             (global-name "com.apple.dprivacyagentd" "com.apple.dprivacyd")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/DisplayServices.framework/Versions/A/DisplayServices")
+      (allow ipc-posix-shm (ipc-posix-name "displayservices_shared")))
+(when (entitlement "com.apple.private.familycircle")
+      (allow mach-lookup (global-name "com.apple.familycircle.agent")))
+(when (entitlement "com.apple.private.familycontrols")
+      (allow mach-lookup (global-name "com.apple.familycontrols")))
+(when (entitlement "com.apple.private.familynotification")
+      (allow mach-lookup (global-name "com.apple.familynotification.agent")))
+(when (entitlement "com.apple.private.feedbacklogger")
+      (allow user-preference-read
+             user-preference-write
+             (preference-domain "com.apple.parsecd"))
+      (let ((cache-path-filter
+              (home-subpath "/Library/Caches/com.apple.parsecd")))
+        (allow file-read* file-write* cache-path-filter)
+        (allow file-issue-extension
+               (require-all
+                 (extension-class
+                   "com.apple.app-sandbox.read"
+                   "com.apple.app-sandbox.read-write")
+                 cache-path-filter)))
+      (allow mach-lookup (global-name "com.apple.parsec-fbf"))
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Caches/com.apple.feedbacklogger")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/IDS.framework/Versions/A/IDS")
+      (when (or (entitlement "com.apple.private.ids.registration")
+                (entitlement "com.apple.private.ids.messaging")
+                (entitlement "com.apple.private.ids.idquery-cache"))
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.identityservicesd.desktop.auth"
+                     "com.apple.identityservicesd.embedded.auth")))
+      (allow mach-lookup
+             (global-name
+               "com.apple.identityservicesd.idquery.desktop.auth"
+               "com.apple.identityservicesd.idquery.embedded.auth"
+               "com.apple.identityservicesd.nsxpc")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/IMCore.framework/Versions/A/IMCore")
+          (loadframework
+            "/System/iOSSupport/System/Library/PrivateFrameworks/IMCore.framework/Versions/A/IMCore"))
+      (when (or (entitlement "com.apple.imagent")
+                (entitlement "com.apple.private.imagent")
+                (entitlement "com.apple.private.imcore.imagent")
+                (entitlement "com.apple.imagent.av")
+                (entitlement "com.apple.imagent.chat"))
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.imagent.desktop.auth"
+                     "com.apple.imagent.embedded.auth")))
+      (when (or (entitlement "com.apple.private.ids.registration")
+                (entitlement "com.apple.private.ids.messaging")
+                (entitlement "com.apple.private.ids.idquery-cache"))
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.identityservicesd.desktop.auth"
+                     "com.apple.identityservicesd.embedded.auth")))
+      (allow mach-lookup
+             (global-name
+               "com.apple.identityservicesd.idquery.desktop.auth"
+               "com.apple.identityservicesd.idquery.embedded.auth")))
+(when (entitlement "com.apple.private.imcore.imdmessageservices")
+      (allow mach-lookup
+             (global-name
+               "com.apple.imdmessageservices.IMDMessageServicesAgent")))
+(when (or (entitlement "com.apple.private.imcore.spi.database-access")
+          (entitlement
+            "com.apple.private.imcore.imdpersistence.data-detection-access")
+          (entitlement
+            "com.apple.private.imcore.imdpersistence.database-access")
+          (entitlement
+            "com.apple.imdpersistence.IMDPersistenceAgent-UnreadChatList"))
+      (allow mach-lookup
+             (global-name "com.apple.imdpersistence.IMDPersistenceAgent")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/IMFoundation.framework/Versions/A/IMFoundation")
+      (when (entitlement "com.apple.private.imcore.imremoteurlconnection")
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.imfoundation.IMRemoteURLConnectionAgent")))
+      (allow mach-lookup (global-name "com.apple.marco")))
+(when (entitlement "com.apple.private.imcore.imtranscoderservice")
+      (allow mach-lookup
+             (global-name "com.apple.imtranscoding.IMTranscoderAgent")))
+(when (entitlement "com.apple.private.imcore.imtransferservice")
+      (allow mach-lookup
+             (global-name "com.apple.imtransferservices.IMTransferAgent")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/IconServices.framework/Versions/A/IconServices")
+      (allow mach-lookup
+             (global-name
+               "com.apple.iconservices"
+               "com.apple.iconservices.store")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/InternetAccounts.framework/Versions/A/InternetAccounts")
+      (allow file-read*
+             (literal "/Library/Preferences/com.apple.internetaccounts.plist")
+             (literal
+               "/System/Library/PreferencePanes/InternetAccounts.prefPane")
+             (literal
+               "/System/Library/Caches/com.apple.internetaccounts.domainscache.plist"))
+      (allow user-preference*
+             (preference-domain
+               "MobileMeAccounts"
+               "com.apple.internetaccounts"))
+      (allow file-read*
+             file-write*
+             (home-subpath "/Library/Logs/InternetAccounts"))
+      (when (entitlement "com.apple.private.iaaccounts")
+            (allow mach-lookup (global-name "com.apple.CalendarAgent.store"))))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/Mail.framework/Versions/A/Mail")
+      (when (entitlement "com.apple.private.mail.persistence")
+            (allow file-read* file-write* (home-subpath "/Library/Mail")))
+      (allow user-preference-read
+             (preference-domain
+               "com.apple.icloud.managed"
+               "com.apple.loginwindow")))
+(when (entitlement "com.apple.private.mailservice.delivery")
+      (allow mach-lookup (global-name "com.apple.MailServiceAgent")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/Marco.framework/Versions/A/Marco")
+      (when (entitlement "com.apple.private.imcore.imremoteurlconnection")
+            (allow mach-lookup
+                   (global-name
+                     "com.apple.imfoundation.IMRemoteURLConnectionAgent")))
+      (allow mach-lookup (global-name "com.apple.marco")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/MediaAnalysisServices.framework/Versions/A/MediaAnalysisServices")
+          (loadframework
+            "/System/Library/PrivateFrameworks/PhotoLibraryServices.framework/Versions/A/PhotoLibraryServices")
+          iOS-App-on-Mac?)
+      (allow mach-lookup
+             (global-name
+               "com.apple.mediaanalysisd.analysis"
+               "com.apple.mediaanalysisd.service.public")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/MessageUIMacHelper.framework/Versions/A/MessageUIMacHelper")
+      (allow mach-lookup (global-name "com.apple.MessageUIMacHelperService")))
+(allow iokit-open-user-client
+       (iokit-user-client-class "AppleKeyStoreUserClient"))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Versions/A/MobileSoftwareUpdate")
+          (loadframework
+            "/System/Library/PrivateFrameworks/SoftwareUpdateCore.framework/Versions/A/SoftwareUpdateCore"))
+      (import "com.apple.corefoundation.sb")
+      (corefoundation)
+      (allow process-info* (target self))
+      (allow file-read-metadata)
+      (allow process-info-codesignature)
+      (allow user-preference-read
+             user-preference-write
+             (preference-domain "com.apple.UpdateMetrics")
+             (preference-domain "com.apple.mobile.softwareupdated"))
+      (allow nvram*)
+      (allow file-read*
+             file-write*
+             (subpath "/private/var/mobile/MobileSoftwareUpdate/")
+             (subpath "/private/var/MobileSoftwareUpdate/")
+             (subpath "/private/var/db/UpdateMetrics/"))
+      (allow mach-lookup
+             (global-name "com.apple.mobileassetd.v2")
+             (global-name "com.apple.mobile.softwareupdated")
+             (global-name
+               "com.apple.MobileSoftwareUpdate.UpdateBrainService")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/OSPersonalization.framework/Versions/A/OSPersonalization")
+      (allow file-write*
+             (regex "^/private/var/tmp/[^/]+OSPPackagePersonalizationController-FirmwareBundleComponent($|/)")
+             (regex "^/private/var/tmp/[^/]+SignedManifestsSandbox($|/)")
+             (regex "^/private/var/tmp/[^/]+PersonalizedBundle($|/)"))
+      (allow user-preference-read
+             (preference-domain "com.apple.OSPersonalization"))
+      (allow mach-per-user-lookup)
+      (allow mach-lookup (global-name "com.apple.installerauthagent"))
+      (allow process-fork)
+      (allow file-read* process-exec (literal "/usr/bin/ditto")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/PIP.framework/Versions/A/PIP")
+      (allow mach-lookup (global-name "com.apple.PIPAgent")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/PersonaKit.framework/Versions/A/PersonaKit")
+      (allow mach-lookup (global-name "com.apple.personad.xpc")))
+(when (entitlement "com.apple.proactive.PersonalizationPortrait.Config")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.Config")))
+(when (entitlement "com.apple.proactive.PersonalizationPortrait.Connections")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.Connections")))
+(when (entitlement "com.apple.proactive.PersonalizationPortrait.Contact")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.Contact")))
+(when (entitlement "com.apple.proactive.PersonalizationPortrait.Event")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.Event")))
+(when (entitlement
+        "com.apple.proactive.PersonalizationPortrait.FeatureUsage.readOnly")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.FeatureUsage.readOnly")))
+(when (entitlement
+        "com.apple.proactive.PersonalizationPortrait.FeatureUsage.readWrite")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.FeatureUsage.readWrite")))
+(when (entitlement
+        "com.apple.proactive.PersonalizationPortrait.NamedEntity.readOnly")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.NamedEntity.readOnly")))
+(when (entitlement
+        "com.apple.proactive.PersonalizationPortrait.NamedEntity.readWrite")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.NamedEntity.readWrite")))
+(when (entitlement "com.apple.proactive.PersonalizationPortrait.QuickType")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.QuickType")))
+(when (entitlement
+        "com.apple.proactive.PersonalizationPortrait.Topic.readOnly")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.Topic.readOnly")))
+(when (entitlement
+        "com.apple.proactive.PersonalizationPortrait.Topic.readWrite")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.Topic.readWrite")))
+(when (entitlement "com.apple.private.sociallayer.highlights")
+      (allow mach-lookup
+             (global-name
+               "com.apple.proactive.PersonalizationPortrait.SocialHighlight"
+               "com.apple.sociallayerd")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/PhotoLibraryServicesCore.framework/Versions/A/PhotoLibraryServicesCore")
+      (allow mach-lookup (global-name "com.apple.photos.service")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/PlugInKit.framework/Versions/A/PlugInKit")
+      (allow mach-lookup
+             (global-name "com.apple.pluginkit.pkd")
+             (extension "com.apple.pluginkit.plugin-service")))
+(when (entitlement "com.apple.proactive.eventtracker")
+      (allow file-read*
+             file-write*
+             (home-subpath
+               "/Library/Caches/com.apple.proactive.eventtracker")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/RTTUtilities.framework/Versions/A/RTTUtilities")
+      (allow user-preference-read
+             user-preference-write
+             (preference-domain "com.apple.TTY"))
+      (allow mach-lookup
+             (global-name
+               "com.apple.CallHistorySyncHelper"
+               "com.apple.accessibility.heard"
+               "com.apple.commcenter.coretelephony.xpc"
+               "com.apple.commcenter.xpc"
+               "com.apple.telephonyutilities.callservicesdaemon.callcapabilities"
+               "com.apple.telephonyutilities.callservicesdaemon.callprovidermanager"
+               "com.apple.telephonyutilities.callservicesdaemon.callstatecontroller"
+               "com.apple.telephonyutilities.callservicesdaemon.momentscontroller"
+               "com.apple.videoconference.camera")))
+(when (entitlement "com.apple.CompanionLink")
+      (allow mach-lookup (global-name "com.apple.CompanionLink")))
+(when (entitlement "com.apple.rapport.people")
+      (allow mach-lookup (global-name "com.apple.rapport.people")))
+(when (entitlement "com.apple.RemoteDisplay")
+      (allow mach-lookup (global-name "com.apple.RemoteDisplay")))
+(when (or (entitlement "com.apple.PairingManager.DeleteIdentity")
+          (entitlement "com.apple.PairingManager.HomeKit")
+          (entitlement "com.apple.PairingManager.Read")
+          (entitlement "com.apple.PairingManager.RemoveAdmin")
+          (entitlement "com.apple.PairingManager.RemovePeer")
+          (entitlement "com.apple.PairingManager.Write"))
+      (allow mach-lookup (global-name "com.apple.PairingManager")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/ReminderKit.framework/Versions/A/ReminderKit")
+      (allow mach-lookup (global-name "com.apple.remindd")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/RunningBoardServices.framework/Versions/A/RunningBoardServices")
+      (allow mach-lookup (global-name "com.apple.runningboard")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/SafariSafeBrowsing.framework/Versions/A/SafariSafeBrowsing")
+      (allow mach-lookup
+             (global-name "com.apple.Safari.SafeBrowsing.Service")))
+(when (or (entitlement "com.apple.private.screen-time")
+          (entitlement "com.apple.private.screen-time.persistence"))
+      (allow mach-lookup
+             (global-name "com.apple.ScreenTimeAgent.ask-for-time")
+             (global-name "com.apple.ScreenTimeAgent.private")))
+(when (entitlement "com.apple.private.screen-time.persistence")
+      (allow mach-lookup
+             (global-name "com.apple.ScreenTimeAgent.persistence")))
+(when (or (entitlement "com.apple.private.contacts")
+          (entitlement "com.apple.private.contactsui")
+          (entitlement "com.apple.private.screen-time"))
+      (allow mach-lookup (global-name "com.apple.ScreenTimeAgent.Contacts")))
+(when (or (entitlement "com.apple.PairingManager.DeleteIdentity")
+          (entitlement "com.apple.PairingManager.HomeKit")
+          (entitlement "com.apple.PairingManager.Read")
+          (entitlement "com.apple.PairingManager.RemoveAdmin")
+          (entitlement "com.apple.PairingManager.RemovePeer")
+          (entitlement "com.apple.PairingManager.Write"))
+      (allow mach-lookup (global-name "com.apple.PairingManager")))
+(when (or (entitlement "com.apple.sharing.BluetoothUserInteraction")
+          (entitlement "com.apple.sharing.Client")
+          (entitlement "com.apple.sharing.CoordinatedAlerts")
+          (entitlement "com.apple.sharing.DeviceDiscovery")
+          (entitlement "com.apple.sharing.Diagnostics")
+          (entitlement "com.apple.sharing.RemoteInteractionSession")
+          (entitlement "com.apple.sharing.Services")
+          (entitlement "com.apple.sharing.Session")
+          (entitlement "com.apple.sharing.WiFiPasswordSharing"))
+      (allow mach-lookup (global-name "com.apple.SharingServices")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/SidecarCore.framework/Versions/A/SidecarCore")
+      (allow mach-lookup
+             (global-name
+               "com.apple.sidecar-display-agent"
+               "com.apple.sidecar-relay")))
+(when (entitlement "com.apple.private.softwareupdate.spi")
+      (allow mach-lookup
+             (global-name
+               "com.apple.softwareupdated"
+               "com.apple.softwareupdated.SUOSUScheduler"
+               "com.apple.sumaccontroller"))
+      (allow file-read*
+             (literal "/Library/Preferences/com.apple.SoftwareUpdate.plist")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/SoftwareUpdateCore.framework/Versions/A/SoftwareUpdateCore")
+          (loadframework
+            "/System/Library/PrivateFrameworks/SoftwareUpdateMacController.framework/Versions/A/SoftwareUpdateMacController"))
+      (import "com.apple.corefoundation.sb")
+      (corefoundation)
+      (allow process-info* (target self))
+      (allow file-read-metadata)
+      (allow process-info-codesignature)
+      (allow nvram*)
+      (allow mach-lookup (global-name "com.apple.mobileassetd.v2")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/SoftwareUpdateCoreSupport.framework/Versions/A/SoftwareUpdateCoreSupport")
+          (loadframework
+            "/System/Library/PrivateFrameworks/SoftwareUpdateCore.framework/Versions/A/SoftwareUpdateCore")
+          (loadframework
+            "/System/Library/PrivateFrameworks/SoftwareUpdateMacController.framework"))
+      (import "com.apple.corefoundation.sb")
+      (corefoundation)
+      (allow process-info* (target self))
+      (allow file-read-metadata)
+      (allow process-info-codesignature)
+      (allow nvram*))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/SoftwareUpdateMacController.framework/Versions/A/SoftwareUpdateMacController")
+      (import "com.apple.corefoundation.sb")
+      (corefoundation)
+      (allow process-info* (target self))
+      (allow file-read-metadata)
+      (allow process-info-codesignature)
+      (allow nvram*)
+      (allow user-preference-read
+             user-preference-write
+             (preference-domain "com.apple.SoftwareUpdateMacController"))
+      (allow file-read*
+             file-write*
+             (subpath "/var/MobileSoftwareUpdate/Controller/")
+             (subpath
+               "/AppleInternal/CoreOS/tests/SoftwareUpdateMacController"))
+      (allow mach-register (global-name "com.apple.sumaccontroller"))
+      (allow mach-lookup (global-name "com.apple.sumaccontroller")))
+(when (entitlement "com.apple.private.DictationIM.feedback")
+      (allow mach-lookup (global-name "com.apple.DictationIM.feedback")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/StatsKit.framework/Versions/A/StatsKit")
+      (allow file-read file-write* (subpath "/private/tmp/.statskit")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/SymptomDiagnosticReporter.framework/Versions/A/SymptomDiagnosticReporter")
+      (allow mach-lookup (global-name "com.apple.symptom_diagnostics")))
+(when (entitlement "com.apple.private.translation")
+      (allow mach-lookup (global-name "com.apple.translationd")))
+(allow mach-lookup (global-name "com.apple.UsageTrackingAgent"))
+(when (entitlement "com.apple.private.usage-tracking")
+      (allow mach-lookup (global-name "com.apple.UsageTrackingAgent.private")))
+(when (loadframework
+        "/System/Library/PrivateFrameworks/WebContentAnalysis.framework/Versions/A/WebContentAnalysis")
+      (allow file-read*
+             (literal
+               "/Library/Preferences/com.apple.familycontrols.webfilter.plist")))
+(when (or (loadframework
+            "/System/Library/PrivateFrameworks/XCTTargetBootstrap.framework/Versions/A/XCTTargetBootstrap")
+          iOS-App-on-Mac?)
+      (allow mach-lookup
+             (global-name
+               "com.apple.dt.testmanagerd.uiprocess"
+               "com.apple.dt.xctestd.target")))
+(allow mach-lookup (xpc-service-name "com.apple.OSLogService"))
+(when (entitlement "com.apple.developer.group-session")
+      (allow mach-lookup
+             (global-name
+               "com.apple.group-activities.conversationmanagerhost")))
+(allow mach-lookup (global-name "com.apple.synapse.backlink-service"))
+(sandbox-array-entitlement
+  "com.apple.trial.client"
+  (lambda (trial)
+    (allow file-read*
+           (home-subpath "/Library/Trial/NamespaceDescriptors")
+           (home-subpath (string-append "/Library/Trial/Treatments/" trial)))
+    (allow file-issue-extension
+           (require-all
+             (extension-class
+               "com.apple.aned.read-only"
+               "com.apple.app-sandbox.read")
+             (home-subpath
+               (string-append "/Library/Trial/Treatments/" trial))))))

@@ -1,0 +1,140 @@
+;;; Copyright (c) 2019 Apple Inc.  All Rights reserved.
+
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow process-info* (target self))
+
+(allow process-info-pidinfo)
+
+(allow file-read-data)
+
+(allow file-read-metadata)
+
+(allow file-read-xattr (subpath "/Library/KerberosPlugins"))
+
+(allow file-read*
+    (literal "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains"))
+
+(allow file-read* file-write*
+    (regex #"^(/private)?/var/folders/[^/]+/[^/]+/[^/]+/com\.apple\.AppSSOAgent($|/)"))
+
+(allow file-read* file-write*
+    (literal "/private/var/db/ExtensibleSSO/Configuration/com.apple.AppSSO.configuration.plist"))
+
+;; Read/write access to shared folder for kerberos extension
+(allow file-read* file-write* (home-subpath "/Library/Group Containers/group.com.apple.KerberosExtension"))
+
+(allow lsopen)
+
+(allow process-info-codesignature)
+
+(allow network-outbound)
+
+(allow network-bind)
+
+(deny mach-priv-host-port)
+
+(allow iokit-get-properties)
+
+(allow system-socket)
+
+(allow ipc-posix-shm)
+
+(allow mach-lookup (global-name
+    "com.apple.AppSSO.service-xpc"
+    "com.apple.coreservices.quarantine-resolver"
+    "com.apple.pluginkit.pkd"
+    "com.apple.runningboard"
+    "com.apple.SecurityServer"
+    "com.apple.ak.authorizationservices.xpc"
+    "com.apple.SharedWebCredentials"
+    "com.apple.CoreDisplay.master"
+    "com.apple.coreservices.appleevents"
+    "com.apple.dock.server"
+    "com.apple.lsd.modifydb"
+    "com.apple.lsd.mapdb"
+    "com.apple.coreservices.launchservicesd"
+    "com.apple.windowserver.active"
+    "com.apple.pasteboard.1"
+    "com.apple.window_proxies"
+    "com.apple.fonts"
+    "com.apple.CARenderServer"
+    "com.apple.dock.fullscreen"
+    "com.apple.quicklook.ui.helper.active"
+    "com.apple.SystemConfiguration.DNSConfiguration"
+    "org.h5l.kcm"
+    "com.apple.GSSCred"
+    "com.apple.SystemConfiguration.configd"
+    "com.apple.system.opendirectoryd.api"
+    "com.apple.usernoted.client"
+    "com.apple.inputmethodkit.launchagent"
+    "com.apple.inputmethodkit.launcher"
+    "com.apple.inputmethodkit.getxpcendpoint"
+    "com.apple.ocspd"
+    "com.apple.audio.SystemSoundServer-OSX"
+    "com.apple.tccd.system"
+    "com.apple.iohideventsystem"
+    "com.apple.touchbarserver.mig"
+    "com.apple.DiskArbitration.diskarbitrationd"
+    "com.apple.tsm.uiserver"
+    "com.apple.mdmclient.daemon"
+    "com.apple.mdmclient.agent"
+    "com.apple.mdmclient.daemon.unrestricted"
+    "com.apple.mdmclient.agent.unrestricted"
+    "com.apple.dnssd.service"
+    "com.apple.cfnetwork.cfnetworkagent"
+    "com.apple.SystemConfiguration.NetworkInformation"
+    "com.apple.nesessionmanager"
+    "com.apple.usernotifications.usernotificationservice"))
+
+(allow user-preference* (preference-domain
+    "group.com.apple.KerberosExtension"
+    "com.apple.AppSSO"
+    "com.apple.AppSSOAgent"))
+
+(allow user-preference-read (preference-domain
+    "kCFPreferencesAnyApplication"
+    "com.apple.universalaccess"
+    "com.apple.HIToolbox"
+    "com.apple.MultitouchSupport"))
+
+(allow file-map-executable (subpath
+    "/System/Library/CoreServices/ManagedClient.app/Contents/PlugIns"
+    "/System/Library/KerberosPlugins"
+    "/Library/Frameworks/"
+    "/Library/KerberosPlugins"))
+
+(with-filter (extension "com.apple.app-sandbox.read")
+    (allow file-read*)
+    (allow file-issue-extension (extension-class "com.apple.app-sandbox.read")))
+(with-filter (extension "com.apple.app-sandbox.read-write")
+    (allow file-read* file-write*)
+    (allow file-issue-extension (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")))
+
+;; read/write cache access
+(let ((agent-path-filter (subpath "/System/Library/PrivateFrameworks/AppSSO.framework/Support/AppSSOAgent.app")))
+    (allow file-read* file-write* agent-path-filter)
+    (allow file-issue-extension
+        (require-all
+            (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+            agent-path-filter)))

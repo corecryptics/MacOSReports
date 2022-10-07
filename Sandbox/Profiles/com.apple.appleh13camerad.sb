@@ -1,0 +1,84 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+(allow process-info-pidinfo)
+(allow process-info* (target self))
+
+;; RPCFileRead/Write
+(allow file-read* file-write*
+    (subpath "/private/var/tmp"))
+
+;; CMIO Preferences
+(allow file-read*
+    (literal "/Library/Preferences/.GlobalPreferences.plist")
+    (literal "/var/root/Library/Preferences/.GlobalPreferences.plist"))
+
+;; Preference domain
+(allow user-preference-read user-preference-write
+        (preference-domain-prefix "com.apple.appleh13camerad")
+        (preference-domain-prefix "com.apple.cmio")
+        (preference-domain-prefix "com.apple.coremedia")
+        (preference-domain "kCFPreferencesAnyApplication"))
+
+;; IOKit properties
+(allow iokit-get-properties)
+(allow iokit-open
+    (iokit-user-client-class
+        "AGXDeviceUserClient"
+        "AppleH13CamInUserClient"
+        "IOSurfaceRootUserClient"
+        "RootDomainUserClient"
+        "H11ANEInDirectPathClient"
+        "H1xANELoadBalancerClient"
+        "H1xANELoadBalancerDirectPathClient"))
+
+;; TCC permissions
+(allow mach-lookup (global-name "com.apple.tccd")
+                   (global-name "com.apple.tccd.system")
+                   (global-name "com.apple.systemstatus.publisher")
+                   (global-name "com.apple.windowserver.active")
+                   (global-name "com.apple.appleneuralengine")
+                   (global-name "com.apple.appleneuralengine.private")
+                   (global-name "com.apple.coreservices.launchservicesd")
+                   (global-name "com.apple.PowerManagement.control"))
+
+;; Load custom firmware
+(allow file-read-data (subpath "/usr/local/share/firmware/isp")
+                      (subpath "/usr/sbin"))
+    
+;; FilterGraph
+(allow file-read* file-write* (subpath "/private/var/folders/zz"))
+(allow file-read*
+    (subpath "/Library/Frameworks/AppleISPEmulator.framework")
+    (subpath "/private/var/db/cmiodalassistants/Library/Preferences"))
+(allow file-write*
+    (subpath "/private/var/db/cmiodalassistants/Library/Preferences/com.apple.video.AppleISPEmulator.plist"))
+(allow file-map-executable
+    (subpath "/System/Library/Extensions/AGXMetal13_3.bundle/Contents/MacOS/AGXMetal13_3"))
+
+;; GeoServices
+(allow file-read*
+    (subpath "/private/var/db/cmiodalassistants/Library/Caches/GeoServices")
+    (subpath "/AppleInternal/System/Library/ExtensionKit/ExtensionPoints"))
+(allow mach-lookup
+    (global-name "com.apple.coreservices.quarantine-resolver")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb"))

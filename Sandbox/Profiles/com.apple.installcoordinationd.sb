@@ -1,0 +1,77 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+
+;; Uncomment the following rules to report violations when testing a change and
+;;   set 'sysctl security.mac.sandbox.debug_mode=544' to see verbose violation reporting.
+;;
+;; (allow (with report) default)
+;; (allow (with report) file-map-executable process-info* nvram*)
+;; (allow (with report) dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(allow process-info* (target self))
+
+;; installcoordinationd will log info when a process isn't entitled to the service
+(allow process-info-pidinfo)
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow file-read* file-write*
+    (mount-relative-regex #"^/private/var/db/installcoordinationd($|/)"))
+
+;; NSFileManager uses the following for creating temporary items
+(allow file-read* file-write*
+    (regex #"^/private/var/folders/[^/]+/[^/]+/T")
+    (mount-relative-literal "/.TemporaryItems")
+    (mount-relative-regex #"^/\.TemporaryItems/folders.[0-9]+(/|$)"))
+
+(allow mach-lookup
+    (global-name "com.apple.metadata.mds")
+    (global-name "com.apple.containermanagerd")
+    (global-name "com.apple.installcoordinationd_test_daemon")
+    (global-name "com.apple.appinstalld")
+    (global-name "com.apple.security.syspolicy.exec")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb")
+    (global-name "com.apple.mdmclient.daemon.unrestricted")
+    (global-name "com.apple.mdmclient.daemon"))
+
+;; For power assertions.
+(allow mach-lookup
+       (global-name "com.apple.PowerManagement.control")
+       (global-name "com.apple.iokit.powerdxpc")
+       (global-name "com.apple.powerlog.plxpclogger.xpc"))
+(allow iokit-open
+    (iokit-user-client-class "RootDomainUserClient"))
+
+(allow ipc-posix-sem
+    (ipc-posix-name "installcoordinationd.run")
+    (ipc-posix-name-prefix "installcood.f."))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+;; Required for use of CFPreferences
+(allow user-preference-read user-preference-write
+       (preference-domain "kCFPreferencesAnyApplication"))
+(allow file-read-metadata
+    ;; __CFXPreferencesCreatePreferencesDirectoryURLForTriplet stats the user's home directory.
+    (home-literal "")
+    ;; CFPreferencesCopyAppValue stats Preferences' parent directory.
+    (home-literal "/Library/Preferences"))

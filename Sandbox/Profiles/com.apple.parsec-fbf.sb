@@ -1,0 +1,102 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+;; Debugging lines. Enable these and disable the three lines above if you need to make changes or otherwise tinker with this.
+;(allow default (with report))
+;(allow file-map-executable iokit-get-properties process-info* nvram* (with report))
+;(allow dynamic-code-generation (with report))
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; Necessary-to-parsec-fbf bits
+(allow iokit-get-properties)
+
+(allow mach-lookup
+    (global-name "com.apple.nsurlsessiond")
+    (global-name "com.apple.cookied")
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.lsd.mapdb"))
+
+(system-network)
+(allow network-outbound
+    (literal "/private/var/run/mDNSResponder")
+    (remote ip))
+
+;; Process information
+(allow process-info-pidinfo)
+(allow process-info* (target self))
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+  (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+  (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+  (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+  (literal (string-append (param "HOME") home-relative-literal)))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; (shared with)parsecd’s CFPreferences/NSUserDefaults operational requirements
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.parsecd"))
+
+(allow user-preference-read
+    (preference-domain "kCFPreferencesAnyApplication")
+    (preference-domain "com.apple.security")
+    (preference-domain "com.apple.GEO"))
+
+;; Filesystem Access
+(allow file-read*
+    (literal "/Library/Preferences/.GlobalPreferences.plist")
+    (subpath "/usr/local/lib/log")
+    (home-literal "/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist"))
+
+;; Security.Framework
+(allow file-read* file-write* (extension "parsec-fbf:mds"))
+(allow file-read* (subpath (param "SECURITY_MESSAGES_DIR")))
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+;; Read/write access to temporary and cache directories
+(allow file-read* file-write*
+    (subpath (param "DARWIN_TMP_DIR"))
+    (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write access to parsecd’s cache.
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.parsecd")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Read/write access to FeedbackLogger's cache dir
+(allow file-read* file-write* (home-subpath "/Library/Caches/com.apple.feedbacklogger"))
+
+(let ((cache-path-filter (subpath (param "DARWIN_TMP_DIR"))))
+    (allow file-read* file-write* cache-path-filter)
+    (allow file-issue-extension
+        (require-all
+        (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+        cache-path-filter)))

@@ -1,0 +1,109 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; Training wheels ON...
+(allow (with report) default)
+(allow (with report) file-map-executable iokit-get-properties process-info* nvram*)
+(allow (with report) dynamic-code-generation)
+
+;;; Training wheels OFF...
+;;; (deny default)
+;;; (deny file-map-executable iokit-get-properties process-info* nvram*)
+;;; (deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow process-info* (target self))
+
+(allow file-read-metadata)
+
+(allow process-info-codesignature)
+
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.USBCAccessoryFirmwareUpdaterService"))
+
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+)
+
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.USBCAccessoryFirmwareUpdaterService")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+(allow iokit-get-properties
+	(iokit-property "bDeviceProtocol")
+	(iokit-property "bMaxPacketSize0")
+	(iokit-property "idVendor")
+	(iokit-property "idProduct")
+	(iokit-property "bcdDevice")
+	(iokit-property "iManufacturer")
+	(iokit-property "iProduct")
+	(iokit-property "iSerialNumber")
+	(iokit-property "bNumConfigurations")
+	(iokit-property "bcdUSB")
+	(iokit-property "Device Speed")
+	(iokit-property "Bus Power Available")
+	(iokit-property "USB Address")
+	(iokit-property "Built-In")
+	(iokit-property "non-removable")
+	(iokit-property "sessionID")
+	(iokit-property "USB Vendor Name")
+	(iokit-property "kUSBVendorString")
+	(iokit-property "USB Product Name")
+	(iokit-property "kUSBProductString")
+	(iokit-property "USB Serial Number")
+	(iokit-property "kUSBSerialNumberString")
+	(iokit-property "AppleUSBAlternateServiceRegistryID")
+	(iokit-property "IOCFPlugInTypes")
+	(iokit-property "IOPowerManagement")
+	(iokit-property "kUSBCurrentConfiguration")
+	(iokit-property "IOClassNameOverride")
+	(iokit-property "locationID")
+	(iokit-property "PortNum")
+	(iokit-property "IOGeneralInterest")
+	(iokit-property "bDeviceClass")
+	(iokit-property "bDeviceSubClass")
+	(iokit-property "RID")
+	(iokit-property "Route String")
+	(iokit-property "OSKernelCPUType")
+	(iokit-property "OSKernelCPUSubtype")
+	(iokit-property "Address")
+	(iokit-property "Vendor ID")
+	(iokit-property "Device ID")
+)
+
+(allow nvram-get
+    (nvram-variable "boot-args")
+)
+
+(allow iokit-open
+	(iokit-user-client-class "AppleHPMUserClient")
+)
+
+(allow file-map-executable
+	(subpath "/System/Library/Extensions/AppleHPM.kext/")
+)

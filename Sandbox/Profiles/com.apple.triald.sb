@@ -1,0 +1,116 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;; replace `deny` with allow (with report)` if you want to change default behavior
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.triald"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR"))
+       )
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.triald")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Read absolute path
+(allow file-read*
+    (subpath "/usr/libexec"))
+
+;; Write absolute path
+(allow file-read* file-write*
+    (subpath "/private/var/tmp/com.apple.triald"))
+
+;; Write to Trial subdirectory of any app container
+(allow file-read* file-write*
+    (home-regex "/Library/Containers/[^/]+/Data/Library/Trial(/|$)")
+    (home-regex "/Library/Group Containers/[^/]+/Library/Trial(/|$)"))
+
+;; Allow read-write access to $HOME/Library/Trial
+(allow file-read* file-write*
+    (home-subpath "/Library/Trial"))
+
+;; Allow read-write access to $HOME//Library/Logs/Trial
+(allow file-read* file-write*
+    (home-subpath "/Library/Logs/Trial"))
+
+;; Generic use of CloudKit - mostly copied from common.sb on embedded platforms
+(allow user-preference-read
+    (preference-domain "com.apple.CloudKit"))
+
+(allow mach-lookup
+    (global-name "com.apple.apsd"
+                 "com.apple.ckdiscretionaryd"
+                 "com.apple.cloudd"
+                 "com.apple.SystemConfiguration.configd"    ;; APS
+                 "com.apple.windowserver.active"))          ;; APS
+
+;; CloudKit caches
+(allow file-read* file-write*
+    (home-subpath "/Library/Caches/CloudKit"))
+
+;; CloudKit - [CKAsset CKDescriptionPropertiesWithPublic:private:shouldExpand:]
+(allow mach-lookup
+    (global-name "com.apple.system.opendirectoryd.api"))
+
+;; Keyboard Input
+(allow file-read* (home-subpath "/Library/Preferences"))
+(allow user-preference-read)
+
+;; PET
+(allow file-read* file-write*
+    (home-subpath "/Library/Caches/com.apple.proactive.eventtracker"))
+
+;; Issue sandbox extensions intended for TrialArchivingService
+(allow file-issue-extension
+    (require-all
+              (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+              (home-subpath "/Library/Trial")))
+
+;; CacheDelete 
+(allow mach-lookup
+    (global-name "com.apple.cache_delete"
+                 "com.apple.cache_delete.public"))

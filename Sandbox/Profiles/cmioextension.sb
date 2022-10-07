@@ -1,0 +1,291 @@
+;;;;;; CoremediaIO Extensions
+;;;;;;
+;;;;;; Copyright (c) 2011-2021 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+(version 1)
+(deny default)
+(import "system.sb")
+(import "appsandbox-common.sb")
+(allow system-audit mach-task-name)
+(appsandbox-process-common)
+(deny nvram*)
+(allow sysctl-read (sysctl-name "kern.tcsm_available"))
+(allow sysctl-read sysctl-write (sysctl-name "kern.tcsm_enable"))
+(deny file-link (home-subpath "/Library"))
+(allow file-read* (subpath "/Library"))
+(deny file-read*
+      (subpath "/Library/Application Support/AppStoreContent")
+      (subpath "/Library/Application Support/AppStore")
+      (subpath "/Library/Caches")
+      (subpath "/Library/Logs")
+      (subpath "/Library/Managed Preferences")
+      (subpath "/Library/Preferences"))
+(allow file-read* (subpath "/Library/Preferences/Logging"))
+(when (param "application_bundle")
+      (allow-read-directory-contents (param "application_bundle")))
+(allow-read-write-directory-contents (param "application_darwin_user_dir"))
+(let ((tmpdir (param "application_darwin_temp_dir")))
+  (apply-read-and-issue-extension allow (subpath tmpdir))
+  (apply-write-and-issue-extension allow (subpath tmpdir))
+  (allow file-write-create
+         file-write-data
+         (require-all (vnode-type DIRECTORY) (literal tmpdir))))
+(allow-read-write-directory-contents (param "application_darwin_cache_dir"))
+(when (param "application_dyld_paths")
+      (let ((dyld_subpaths
+              (apply subpath
+                     (split-string (param "application_dyld_paths") ":"))))
+        (allow file-read* dyld_subpaths)
+        (with-filter
+          (extension-class
+            "com.apple.app-sandbox.read"
+            "com.apple.aned.read-only")
+          (allow file-issue-extension dyld_subpaths))))
+(appsandbox-container-common)
+(when (entitlement "com.apple.security.network.client") (network-client))
+(when (entitlement "com.apple.security.device.camera") (camera))
+(when (entitlement "com.apple.security.device.usb")
+      (allow iokit-open-user-client
+             (iokit-user-client-class
+               "IOHIDLibUserClient"
+               "IOUSBDeviceUserClientV2"
+               "IOUSBInterfaceUserClientV3")))
+(when (entitlement "com.apple.security.device.firewire")
+      (allow iokit-open-user-client
+             (iokit-user-client-class
+               "IOFireWireUserClient"
+               "IOFireWireAVCUserClient"
+               "IOFireWireAVCProtocolUserClient"))
+      (allow iokit-set-properties (iokit-property "SummonNub")))
+(when (entitlement "com.apple.security.device.bluetooth") (bluetooth))
+(when (or (entitlement "com.apple.security.files.bookmarks.app-scope")
+          (entitlement "com.apple.security.files.bookmarks.document-scope")
+          (entitlement "com.apple.security.files.bookmarks.collection-scope")
+          (entitlement "com.apple.security.files.user-selected.read-only")
+          (entitlement "com.apple.security.files.user-selected.read-write"))
+      (allow mach-lookup (global-name "com.apple.scopedbookmarksagent.xpc")))
+(sandbox-array-entitlement
+  "com.apple.security.application-groups"
+  (lambda (suite)
+    (allow file-read-data (application-group-literal suite ""))
+    (allow file-link
+           network-bind
+           network-outbound
+           (application-group-regex suite "/"))
+    (read-write-and-issue-extensions (application-group-regex suite "/"))
+    (allow file-issue-extension
+           (require-all
+             (extension-class "com.apple.aned.read-only")
+             (application-group-regex suite "/")))
+    (allow file-read*
+           (subpath
+             (string-append
+               "/Library/Application Support/AppStore/GroupContent/"
+               suite)))
+    (deny file-write-create
+          (require-all
+            (require-not (vnode-type DIRECTORY))
+            (application-group-literal suite "/Library")))
+    (allow mach-lookup
+           mach-register
+           (global-name-prefix (string-append suite ".")))
+    (allow ipc-posix* (ipc-posix-name-prefix (string-append suite "/")))))
+(appsandbox-extensions)
+(read-only-and-issue-extensions
+  (require-all (file-mode 4) (require-any (subpath "/System"))))
+(allow file-read* (home-literal "/.CFUserTextEncoding"))
+(allow user-preference-read
+       (preference-domain
+         "com.apple.Accessibility"
+         "com.apple.AppleMultitouchTrackpad"
+         "com.apple.assistant.support"
+         "com.apple.ATS"
+         "com.apple.CoreGraphics"
+         "com.apple.coremedia"
+         "com.apple.mediaaccessibility"
+         "com.apple.driver.AppleBluetoothMultitouch.mouse"
+         "com.apple.driver.AppleBluetoothMultitouch.trackpad"
+         "com.apple.driver.AppleHIDMouse"
+         "com.apple.HIToolbox"
+         "com.apple.inputsources"
+         "com.apple.security_common"
+         "com.apple.security"
+         "com.apple.systemsound"
+         "com.apple.universalaccess"
+         "com.apple.WebFoundation"
+         "kCFPreferencesAnyApplication"))
+(%protect-preference-symlink "com.apple.security_common")
+(%protect-preference-symlink "com.apple.security")
+(allow file-read*
+       (home-literal
+         "/Library/Preferences/com.apple.LaunchServices/com.apple.LaunchServices.plist")
+       (home-literal "/Library/Preferences/com.apple.security_common.plist")
+       (home-literal "/Library/Preferences/com.apple.security.plist"))
+(when (param "application_bundle_id")
+      (allow file-read*
+             (literal
+               (string-append
+                 "/Library/Managed Preferences/"
+                 (param "application_bundle_id")
+                 ".plist"))
+             (literal
+               (string-append
+                 "/Library/Managed Preferences/"
+                 (param "_USER")
+                 "/"
+                 (param "application_bundle_id")
+                 ".plist"))
+             (literal
+               (string-append
+                 "/Library/Preferences/"
+                 (param "application_bundle_id")
+                 ".plist"))
+             (subpath
+               (string-append
+                 "/Library/Application Support/AppStore/Content/"
+                 (param "application_bundle_id"))))
+      (allow mach-register
+             (global-name (param "application_bundle_id"))
+             (global-name
+               (string-append
+                 (param "application_bundle_id")
+                 ".ServiceProvider"))))
+(allow file-read*
+       (subpath
+         (string-append
+           "/Library/Application Support/AppStoreContent/"
+           (param "application_container_id")))
+       (literal "/Library/Caches/com.apple.DiagnosticReporting.Networks.plist")
+       (literal "/Library/Preferences/.GlobalPreferences.plist")
+       (literal "/Library/Preferences/com.apple.HIToolbox.plist")
+       (literal "/Library/Preferences/com.apple.loginwindow.plist")
+       (prefix "/Library/Preferences/com.apple.security.")
+       (subpath "/Library/Preferences/Logging/Subsystems")
+       (prefix "/Library/Preferences/com.apple.PowerManagement.")
+       (literal "/Library/Preferences/SystemConfiguration/preferences.plist")
+       (subpath "/Users/Shared/SC Info")
+       (literal "/Volumes")
+       (literal "/private/etc/group")
+       (literal "/private/etc/hosts")
+       (literal "/private/etc/openldap/ldap.conf")
+       (literal "/private/etc/passwd")
+       (literal "/private/etc/protocols")
+       (literal "/private/etc/resolv.conf")
+       (literal "/private/etc/services")
+       (literal "/private/etc/ssl/cert.pem")
+       (literal "/private/etc/ssl/openssl.cnf")
+       (literal "/private/var/run/resolv.conf"))
+(allow mach-lookup (global-name "com.apple.ocspd"))
+(allow file-read* file-write* (home-prefix "/Library/Keychains/"))
+(deny file-read* file-write* (home-subpath "/Library/Keychains/${ANY_UUID}"))
+(allow file-read* (subpath "/private/var/db/mds"))
+(when (equal? (param "_UID") "0")
+      (allow file-write* (subpath "/private/var/db/mds")))
+(allow file-read* (literal "/private/var/db/DetachedSignatures"))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-create
+       ipc-posix-shm-write-data
+       (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+(allow mach-lookup
+       (global-name "com.apple.BluetoothServices")
+       (global-name "com.apple.containermanagerd")
+       (global-name "com.apple.CoreServices.coreservicesd")
+       (global-name "com.apple.coreservices.quarantine-resolver")
+       (global-name "com.apple.cvmsServ")
+       (global-name "com.apple.DiskArbitration.diskarbitrationd")
+       (global-name "com.apple.distributed_notifications@1v3")
+       (global-name "com.apple.distributed_notifications@Uv3")
+       (global-name "com.apple.dock.fullscreen")
+       (global-name "com.apple.dock.server")
+       (global-name "com.apple.FileCoordination")
+       (global-name "com.apple.FontObjectsServer")
+       (global-name "com.apple.fonts")
+       (global-name "com.apple.securityd.xpc")
+       (global-name "com.apple.SecurityServer")
+       (global-name "com.apple.spindump")
+       (global-name "com.apple.SystemConfiguration.configd")
+       (global-name "com.apple.tailspind")
+       (global-name "com.apple.tccd")
+       (global-name "com.apple.tccd.system")
+       (global-name "com.apple.TrustEvaluationAgent")
+       (global-name "com.apple.VirtualDisplay")
+       (global-name "com.apple.window_proxies")
+       (global-name "com.apple.windowserver.active"))
+(power-assertions)
+(system-graphics)
+(allow network-outbound (subpath "/private/var/run"))
+(deny network-outbound (literal "/private/var/run/usbmuxd"))
+(allow network-bind
+       network-outbound
+       (resolving-subpath (param "application_container")))
+(deny network-outbound (literal "/private/var/run/cupsd"))
+(unless
+  (entitlement "com.apple.security.network.client")
+  (deny network-outbound (literal "/private/var/run/mDNSResponder")))
+(deny network-outbound (remote ip "localhost:631"))
+(deny file-read-xattr
+      file-write-xattr
+      (xattr-prefix "com.apple.security.private."))
+(allow file-read*
+       file-write*
+       (mount-relative-regex "^/\\.Trashes(/|$)")
+       (home-subpath "/.Trash"))
+(allow iokit-open-user-client
+       (iokit-user-client-class
+         "AppleAVDUserClient"
+         "AppleAVE2UserClient"
+         "AppleJPEGDriverUserClient"
+         "IOMobileFramebufferUserClient"))
+(ane-client)
+(read-write-and-issue-extensions
+  (mount-relative-regex "^/\\.TemporaryItems(/|$)"))
+(appsandbox-fsctl)
+(allow ipc-posix-shm-read*
+       (ipc-posix-name-prefix "/tmp/com.apple.csseed.")
+       (ipc-posix-name-prefix "ls."))
+(allow ipc-posix-shm-read*
+       ipc-posix-shm-write-data
+       ipc-posix-shm-write-unlink
+       (ipc-posix-name-regex "^gdt-[A-Za-z0-9]+-(c|s)$"))
+(when (entitlement "com.apple.security.network.client")
+      (allow mach-lookup (global-name "org.h5l.kcm"))
+      (allow authorization-right-obtain (right-name "com.apple.KerberosAgent"))
+      (allow file-read*
+             (literal "/Library/Preferences/edu.mit.Kerberos")
+             (literal "/Library/Preferences/com.apple.Kerberos.plist")
+             (literal "/private/etc/krb5.conf")
+             (regex "^/Library/Preferences/com\\.apple\\.GSS\\..*\\.plist$")
+             (home-literal "/Library/Preferences/edu.mit.Kerberos")
+             (home-literal "/Library/Preferences/com.apple.Kerberos.plist")))
+(foundation)
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.iokit-user-client-class"
+  (lambda (name)
+    (allow iokit-open-user-client
+           iokit-set-properties
+           (iokit-user-client-class name))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.mach-lookup.global-name"
+  (lambda (name) (allow mach-lookup (global-name name))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.mach-lookup.local-name"
+  (lambda (name) (allow mach-lookup (local-name name))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.files.absolute-path.read-only"
+  (lambda (path)
+    (let ((filter (select-filter path safe-subpath literal)))
+      (allow filter)
+      (read-only-and-issue-extensions filter)
+      (allow file-issue-extension
+             (require-all
+               (extension-class "com.apple.aned.read-only")
+               filter)))))
+(sandbox-array-entitlement
+  "com.apple.security.temporary-exception.shared-preference.read-only"
+  (lambda (domain) (allow user-preference-read (preference-domain domain))))
+(protect-redirected-paths)
+(protect-redirectable-paths)

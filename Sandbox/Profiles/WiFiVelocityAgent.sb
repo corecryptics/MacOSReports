@@ -1,0 +1,54 @@
+;; Copyright (c) 2014-2020 Apple Inc.  All Rights reserved.
+;;
+;; WARNING: The sandbox rules in this file currently constitute 
+;; Apple System Private Interface and are subject to change at any time and
+;; without notice. The contents of this file are also auto-generated and not
+;; user editable; it may be overwritten at any time.
+;;
+
+(version 1)
+(deny default)
+(import "system.sb")
+
+(allow signal)
+(allow process-fork)
+(allow pseudo-tty)
+
+(allow file-ioctl
+    (literal "/dev/ptmx")
+    (regex #"^/dev/ttys")
+)
+
+(allow file-read-metadata)
+(allow file-read-data)
+(allow file-read-xattr)
+
+(allow file-write*
+    (literal "/dev/ptmx")
+    (regex #"^/dev/ttys")
+    (subpath (param "TMP_DIR"))
+    (subpath (param "HOME_DIR"))
+    (regex #"/\.TemporaryItems(/|$)")
+)
+
+(allow mach-lookup
+    (global-name "com.apple.SystemConfiguration.configd")
+    (global-name "com.apple.wifivelocityd")
+    (global-name "com.apple.CoreServices.coreservicesd")
+    (global-name "com.apple.DiskArbitration.diskarbitrationd")
+)
+
+(allow process-exec
+    (literal "/usr/sbin/system_profiler")
+    (with no-sandbox)
+)
+
+(with-filter (system-attribute apple-internal)
+    (allow process-exec
+        (literal "/usr/local/bin/security2")
+    )
+)
+
+(allow system-fsctl
+    (fsctl-command #x682f) ; HFSIOC_SET_HOTFILE_STATE
+)

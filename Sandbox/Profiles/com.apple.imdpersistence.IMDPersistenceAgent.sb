@@ -1,0 +1,197 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+
+(import "com.apple.iMessage.shared.sb")
+(import "com.apple.iMessage.addressbook.sb")
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.imdpersistence.IMDPersistenceAgent")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-any
+        (require-all
+            (extension-class "com.apple.app-sandbox.read")
+            (home-subpath "/Library/SMS/Attachments"))
+        (require-all
+            (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+            cache-path-filter))))
+
+(allow mach-lookup
+    (global-name "com.apple.accountsd.accountmanager")
+    (global-name "com.apple.AddressBook.abd")
+    (global-name "com.apple.analyticsd")
+    (global-name "com.apple.backupd.xpc")
+    (global-name "com.apple.corerecents.recentsd")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.dock.server")
+    (global-name "com.apple.logind")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb")
+    (global-name "com.apple.metadata.mds")
+    (global-name "com.apple.metadata.mdwrite")
+    (global-name "com.apple.ocspd")
+    (global-name "com.apple.powerlog.plxpclogger.xpc")
+    (global-name "com.apple.SharingServices")
+    (global-name "com.apple.spotlight.IndexAgent")
+    (global-name "com.apple.suggestd.messages")
+    (global-name "com.apple.suggestd.messages")
+    (global-name "com.apple.system.opendirectoryd.api")
+    (global-name "com.apple.tccd")
+    (global-name "com.apple.usernotifications.usernotificationservice")
+    (global-name "com.apple.dmd.policy")
+    (global-name "com.apple.ScreenTimeAgent")
+    (global-name "com.apple.ScreenTimeAgent.private")
+    (global-name "com.apple.dmd.emergency-mode")
+    (global-name "com.apple.private.corespotlight.internal")
+    (global-name "com.apple.newsd.url-resolution")
+    (global-name "com.apple.gamed")
+    )
+
+;; IMDPersistenceAgent should not be able to launch WebKit services
+(deny mach-lookup
+      (with send-signal SIGKILL)(with telemetry)(with message "Unexpected WebKit Usage")
+      (xpc-service-name-prefix "com.apple.WebKit"))
+
+(allow file*
+    (home-subpath "/Library/Logs/SMSMigrator")
+    (subpath temp-directory)
+    (subpath "/private/var/tmp/com.apple.messages")
+    (regex #"^/Volumes/[^/]+/.TemporaryItems/.*")
+    )
+
+(allow file-read*
+    (subpath "/private/var/db")
+    (subpath "/private/var/containers/Shared/SystemGroup")
+    (home-subpath "/Library/Caches/com.apple.MobileSMS")
+    (darwin-user-root-subpath "/T/com.apple.imagent")
+    (darwin-user-root-subpath "/T/com.apple.iChat")
+    )
+
+    
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.imdpersistence.IMDPersistenceAgent")
+    (preference-domain "com.apple.imdsmsrecordstore")
+    (preference-domain "com.apple.iChat")
+    (preference-domain "com.apple.IMCoreSpotlight")
+    (preference-domain "com.apple.MobileSMS.CKDNDList")
+    )
+    
+(allow user-preference-read
+    (preference-domain "com.apple.imagent")
+    (preference-domain "com.apple.Sharing")
+    (preference-domain "com.apple.messages")
+    (preference-domain "com.apple.messages.statistics")
+    (preference-domain "com.apple.SocialLayer")
+    (preference-domain "com.apple.gamecenter")
+    )
+
+(allow file-map-executable
+    (darwin-user-root-subpath "/T/com.apple.imdpersistence.IMDPersistenceAgent")
+    (subpath "/System/Library/Messages")
+    
+    (home-subpath "/Library/Application Support/AddressBook")
+    )
+
+(allow system-audit)
+
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (global-name "com.apple.AppleDatabaseChanged")
+    )
+
+(deny syscall-unix (with send-signal SIGKILL))
+(allow syscall-unix
+       (syscall-group-bsdthread)
+       (syscall-group-close)
+       (syscall-group-fcntl)
+       (syscall-group-getfsstat)
+       (syscall-group-kevent)
+       (syscall-group-kqueue)
+       (syscall-group-mkdir)
+       (syscall-group-necp-client)
+       (syscall-group-open-dprotected)
+       (syscall-group-open)
+       (syscall-group-pthread)
+       (syscall-group-read)
+       (syscall-group-rlimit)
+       (syscall-group-select)
+       (syscall-group-send)
+       (syscall-group-signal)
+       (syscall-group-sockopt)
+       (syscall-group-stat)
+       (syscall-group-statfs)
+       (syscall-group-ulock)
+       (syscall-group-write)
+       (syscall-number SYS___disable_threadsignal
+                       SYS___mac_syscall
+                       SYS___semwait_signal
+                       SYS___semwait_signal_nocancel
+                       SYS_abort_with_payload
+                       SYS_access
+                       SYS_access_extended
+                       SYS_change_fdguard_np
+                       SYS_csrctl
+                       SYS_debug_syscall_reject
+                       SYS_exit
+                       SYS_faccessat
+                       SYS_fgetattrlist
+                       SYS_fgetxattr
+                       SYS_fileport_makefd
+                       SYS_fileport_makeport
+                       SYS_flistxattr
+                       SYS_fsetattrlist
+                       SYS_fsgetpath
+                       SYS_fsync
+                       SYS_ftruncate
+                       SYS_getattrlist
+                       SYS_getattrlistbulk
+                       SYS_getaudit_addr
+                       SYS_getdirentries64
+                       SYS_getegid
+                       SYS_getentropy
+                       SYS_geteuid
+                       SYS_getgid
+                       SYS_getgroups
+                       SYS_getpid
+                       SYS_getppid
+                       SYS_getrusage
+                       SYS_gettid
+                       SYS_gettimeofday
+                       SYS_getuid
+                       SYS_getxattr
+                       SYS_issetugid
+                       SYS_kdebug_trace
+                       SYS_kdebug_trace_string
+                       SYS_kdebug_trace64
+                       SYS_kdebug_typefilter
+                       SYS_kevent_id
+                       SYS_kevent_qos
+                       SYS_listxattr
+                       SYS_lseek
+                       SYS_madvise
+                       SYS_mmap
+                       SYS_mprotect
+                       SYS_mremap_encrypted
+                       SYS_munmap
+                       SYS_os_fault_with_payload
+                       SYS_pathconf
+                       SYS_persona
+                       SYS_psynch_mutexdrop
+                       SYS_psynch_mutexwait
+                       SYS_readlink
+                       SYS_rmdir
+                       SYS_setattrlist
+                       SYS_shared_region_check_np
+                       SYS_socket
+                       SYS_terminate_with_payload
+                       SYS_thread_selfid
+                       SYS_workq_kernreturn
+                       SYS_workq_open)
+)

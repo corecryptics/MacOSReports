@@ -1,0 +1,319 @@
+;;; Copyright (c) 2017-2021 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;; Strictly enforce sandbox
+(deny default)
+(deny file-map-executable)
+(deny dynamic-code-generation)
+
+; Imports
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(system-graphics)
+(corefoundation)
+
+;; Prevents suspension (for full backtrace collection during violations)
+(disable-callouts)
+
+;; Must be able to read NVRAM
+(allow nvram-get)
+
+;; Must be able to get process-info
+(allow process-info*)
+
+;; Must be able to map the Touchbar bundle, the IOHID kext, and the graphics drivers
+(allow file-map-executable
+    (subpath "/System/Library/CoreServices")
+    (subpath "/System/Library/Extensions")
+    (subpath "/System/Volumes/macOS/System/Library/Extensions")
+    (subpath "/Library/GPUBundles")
+    (subpath "/System/Library/HIDPlugins"))
+    
+(with-filter (system-attribute apple-internal)
+(allow file-map-executable
+    (subpath "/AppleInternal/Library/Frameworks")
+    (subpath "/AppleInternal/Library/HIDPlugins")
+    (subpath "/usr/appleinternal/lib/HIDPlugins")))
+
+;; Must be able to read bundle data from connecting applications, and be able to resolve
+;; symlinks, etc, as well as debug file info. Not readily restrictable.
+(allow file-read-data)
+(allow file-read-metadata)
+
+;; CrashReporter whitelist
+(allow file-read-xattr (path "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains"))
+
+;; Must manage /dev/console ownership and some state flag files
+(allow file-write-mode file-write-owner (path "/dev/console"))
+(allow file-write-create file-write-data
+    (path "/private/var/db/.com.apple.iokit.graphics")
+    (path "/private/var/run/com.apple.WindowServer.didRunThisBoot"))
+
+;; Event stream management
+(allow hid-control)
+
+(allow distributed-notification-post)
+
+;; Must be able to open user-clients for root-domain behaviors, IOHID events, and graphics-related
+(allow iokit-open
+    (iokit-registry-entry-class "AppleActuatorDeviceUserClient")
+    (iokit-registry-entry-class "AppleMultitouchDeviceUserClient")
+    (iokit-registry-entry-class "AppleGraphicsControlClient")
+    (iokit-registry-entry-class "AppleGraphicsDeviceControlClient")
+    (iokit-registry-entry-class "AppleSPUProfileDriverUserClient")
+    (iokit-registry-entry-class "RootDomainUserClient")
+    (iokit-registry-entry-class "AppleLMUClient")
+    (iokit-registry-entry-class "AppleUSBMultitouchUserClient")
+    (iokit-registry-entry-class "IOBluetoothHCIUserClient")
+    (iokit-registry-entry-class "IODisplayAssertionUserClient")
+    (iokit-registry-entry-class "IOGDiagnosticGTraceClient")
+    (iokit-registry-entry-class "AppleKeyStoreUserClient")
+    (iokit-registry-entry-class "AFKEndpointInterfaceUserClient")
+    (iokit-registry-entry-class "AppleSPUHIDDeviceUserClient")
+    (iokit-registry-entry-class "AppleSPUHIDDriverUserClient")
+    (iokit-registry-entry-class "AppleNVMeEANUC")
+    (iokit-registry-entry-class-prefix "IOAccel")
+    (iokit-registry-entry-class-prefix "IOFramebuffer")
+    (iokit-registry-entry-class-prefix "IOHID")
+    (iokit-registry-entry-class-prefix "IOSurface")
+    (iokit-registry-entry-class-prefix "IOMobileFramebuffer"))
+
+;; Hard to reasonably restrict getters for services above, as they can depend on user client code
+(allow iokit-get-properties)
+
+;; Must be able to set these properties as filtered by registry entry hierarchy.
+;; This set may need to be adjusted for IOHID, CoreDisplay, CoreAnimation, etc.
+(with-filter (iokit-registry-entry-class "AppleBacklightDisplay")
+    (allow iokit-set-properties
+        (iokit-property "brightness")
+        (iokit-property "brightness-probe")
+        (iokit-property "linear-brightness")
+        (iokit-property "linear-brightness-probe")))
+(with-filter (iokit-registry-entry-class "AppleDisplay")
+    (allow iokit-set-properties
+        (iokit-property "IODisplayParameters")
+        (iokit-property "pscn")))
+(with-filter (iokit-registry-entry-class "IODisplayWrangler")
+    (allow iokit-set-properties
+        (iokit-property "IOGraphicsPrefs"))
+    (allow iokit-set-properties
+        (iokit-property "IORequestIdle"))
+    (allow iokit-set-properties
+        (iokit-property "IORequestDim")))
+(with-filter (iokit-registry-entry-class "AppleHIDKeyboardEventDriverV2")
+    (allow iokit-set-properties
+        (iokit-property "command")
+        (iokit-property "rate")
+        (iokit-property "value")))
+(with-filter (iokit-registry-entry-class "AppleMultitouchDevice")
+    (allow iokit-set-properties
+        (iokit-property "TrackpadUserPreferences")))
+(with-filter (iokit-registry-entry-class "AppleUSBALSService")
+    (allow iokit-set-properties
+        (iokit-property "als-lgp-version")))
+(with-filter (iokit-registry-entry-class "AppleUSBMultitouchDriver")
+    (allow iokit-set-properties
+        (iokit-property "TrackpadUserPreferences")))
+(with-filter (iokit-registry-entry-class "IOFramebufferUserClient")
+    (allow iokit-set-properties
+        (iokit-property "IODisplayAttributes")
+        (iokit-property "IOFBConfig")))
+(with-filter (iokit-registry-entry-class "IOHIDEventServiceUserClient")
+    (allow iokit-set-properties))
+(with-filter (iokit-registry-entry-class "IOHIDSystem")
+    (allow iokit-set-properties
+        (iokit-property "HIDKeyboardGlobalModifiers")
+        (iokit-property "IOHIDActivityUserIdle")))
+(with-filter (iokit-registry-entry-class "IOPMrootDomain")
+    (allow iokit-set-properties
+        (iokit-property "CoreDisplayProgress")))
+(with-filter (iokit-registry-entry-class "IOResources")
+    (allow iokit-set-properties
+        (iokit-property "IOConsoleUsers")))
+(with-filter (iokit-registry-entry-class "AppleARMBacklight")
+    (allow iokit-set-properties
+        (iokit-property "brightness")
+        (iokit-property "brightness-nits")))
+
+(with-filter (iokit-registry-entry-class "AppleARMPWMDevice")
+    (allow iokit-set-properties
+        (iokit-property "set-enabled")
+        (iokit-property "set-hz")
+        (iokit-property "set-duty-cycle")))
+
+(with-filter (iokit-registry-entry-class "IOMobileFramebuffer")
+    (allow iokit-set-properties
+        (iokit-property "IOMFBSkipSpinner")
+        (iokit-property "IOMFBContrastEnhancerStrength")
+        (iokit-property "IOMFBExtContrastEnhancerStrength")
+        (iokit-property "AmbientBrightness")))
+
+(with-filter (iokit-registry-entry-class "AppleEmbeddedBluetoothDeviceManagement")
+    (allow iokit-set-properties
+        (iokit-property "BondManagement")
+        (iokit-property "DeviceDisconnect")
+        (iokit-property "ConnectionKeepAliveInterval")
+        (iokit-property "FactoryDefault")
+        (iokit-property "FactoryReset")
+        (iokit-property "AdvertiseNonConnectable")))
+(with-filter (iokit-registry-entry-class "AppleEmbeddedBluetoothSensors")
+    (allow iokit-set-properties
+        (iokit-property "InertialSensorState")
+        (iokit-property "ReportInterval")))
+(with-filter (iokit-registry-entry-class "AppleEmbeddedBluetoothProximity")
+    (allow iokit-set-properties
+        (iokit-property "ProximitySensingState")
+        (iokit-property "ReportInterval")))
+
+(allow mach-lookup
+    (global-name "com.apple.CoreDisplay.Notification")
+    (global-name "com.apple.CoreDisplay.master")
+    (global-name "com.apple.GameController.gamecontrollerd.driver")
+    (global-name "com.apple.PowerManagement.control")
+    (global-name "com.apple.SystemConfiguration.configd")
+    (global-name "com.apple.aquaappearancehelper")
+    (global-name "com.apple.backlightd")
+    (global-name "com.apple.bluetooth.nsxpc")
+    (global-name "com.apple.bluetooth.xpc")
+    (global-name "com.apple.colorsync.displayservices")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.cvmsServ")
+    (global-name "com.apple.distributed_notifications@1v3")
+    (global-name "com.apple.gpumemd.source")
+    (global-name "com.apple.iohideventsystem")
+    (global-name "com.apple.spinreporterd")
+    (global-name "com.apple.powerlog.plxpclogger.xpc")
+    (global-name "com.apple.tccd")
+    (global-name "com.apple.tccd.system")
+    (global-name "com.apple.touchbarserver.plugin")
+    (global-name "com.apple.hidpreferenceshelper")
+    (global-name "com.apple.iokit.powerdxpc")
+    (global-name "com.apple.diskmanagementd")
+    (global-name "com.apple.server.bluetooth")
+    (global-name "com.apple.server.bluetooth.classic.xpc")
+    (global-name "com.apple.server.bluetooth.general.xpc")
+    (global-name "com.apple.DiskArbitration.diskarbitrationd")
+    (global-name "com.apple.systemstatus"))
+
+;; Must be able to register the following non-launchd.plist registered names
+(allow mach-register
+    (global-name "com.apple.CARenderServer")
+    (global-name "com.apple.VirtualDisplay")
+    (global-name "com.apple.CoreDisplay.Notification")
+    (global-name "com.apple.CoreDisplay.master"))
+
+;; Must have access to task name ports for tracking process lifetime
+(allow mach-task-name)
+
+;; Required for host_processor_set_priv to get process set for thread policy
+(allow mach-priv-host-port)
+
+(allow nvram-get (nvram-variable "boot-args"))
+
+;; Enable spawning FUS loginwindow & LockScreen instances, and allow killing them
+(allow process-exec* (with no-sandbox) (literal "/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow"))
+(allow process-exec* (with no-sandbox) (literal "/System/Library/CoreServices/RemoteManagement/AppleVNCServer.bundle/Contents/Support/LockScreen.app/Contents/MacOS/LockScreen"))
+(allow process-fork)
+(allow signal (target children))
+(with-filter (system-attribute apple-internal)
+    (allow process-fork)
+    (allow process-exec
+         (literal "/usr/local/bin/ddt")
+         (with no-sandbox)))
+
+(allow process-info* (target self))
+(allow process-info-pidinfo)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow system-audit)
+
+;; We need to be able to read from global and driver preference domains, as well as CD, CA, CS, and WS
+(allow user-preference-read)
+
+;; Write to WS and CD domains
+(allow user-preference-write
+       (preference-domain "com.apple.WindowServer")
+       (preference-domain "com.apple.CoreDisplay"))
+(allow file-read* file-write*
+       (path "/Library/Preferences/com.apple.windowserver.displays.plist")
+       (path "/Library/Preferences/com.apple.WindowServer.plist")
+       (path "/Library/Preferences/com.apple.CoreDisplay.plist"))
+
+;; We also need the ability to read (but not write) any prefs that might migrate
+;; to the PreBoot volume.  The UUID matching goop is yanked shamelessly from
+;; application.sb.
+
+(define (HEX-pattern-match-generator pattern-descriptor)
+    (letrec ((pattern-string ""))
+        (for-each
+            (lambda (repeat-count)
+                (if (zero? repeat-count)
+                    (set! pattern-string (string-append pattern-string "-"))
+                    (let appender ((count repeat-count))
+                        (if (> count 0)
+                            (begin
+                                (set! pattern-string (string-append pattern-string "[0-9A-F]"))
+                                (appender (- count 1)))))))
+            pattern-descriptor)
+        pattern-string))
+
+(define (uuid-HEX-pattern-match-string)
+    (HEX-pattern-match-generator '(8 0 4 0 4 0 4 0 12)))
+
+(define *uuid-pattern* "")
+
+(define (uuid-regex-string)
+    (if (zero? (string-length *uuid-pattern*))
+        (set! *uuid-pattern* (uuid-HEX-pattern-match-string)))
+    *uuid-pattern*)
+
+(allow file-read*
+    (regex
+        (string-append "/System/Volumes/Preboot/"
+        (uuid-regex-string)
+        "/Library/Preferences/com.apple.windowserver.displays.plist")))
+
+;; Read/write access to temporary directories.
+(allow file-read* file-write*
+       (subpath "/private/tmp")
+       (subpath "/private/var/tmp")
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+  (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+  (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+  (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+  (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow file-issue-extension
+     (require-all
+         (subpath (param "DARWIN_CACHE_DIR"))
+         (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")))
+
+;; Read/write access to WindowServer’s cache.
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.WindowServer")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Access to shared memory to leave watchdog initialization breadcrumb
+(allow ipc-posix-shm-read* ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.windowserver.watchdog"))
+

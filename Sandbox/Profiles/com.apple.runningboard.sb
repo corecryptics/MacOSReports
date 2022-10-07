@@ -1,0 +1,79 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow ipc-posix-shm-read-data  ipc-posix-shm-write-data ipc-posix-shm-write-create
+    (ipc-posix-name "/runningboard/header")
+)
+(allow ipc-posix-shm-read-data  ipc-posix-shm-write-data ipc-posix-shm-write-create
+    (ipc-posix-name "/runningboard/pids1")
+)
+(allow file-read-data)
+(allow mach-task-name)
+(allow process-info-pidinfo)
+(allow process-info-pidfdinfo)
+(allow system-suspend-resume)
+(allow system-sched)
+(allow signal)
+(allow file-read-xattr)
+(allow sysctl-write (sysctl-name "kern.ipc.throttle_best_effort"))
+
+(allow iokit-open
+       (iokit-connection "IOGPU"))
+
+(allow mach-lookup (global-name "com.apple.lsd.mapdb"))
+(allow mach-lookup (global-name "com.apple.lsd.modifydb"))
+(allow mach-lookup (global-name "com.apple.PowerManagement.control"))
+(allow mach-lookup (global-name "com.apple.pluginkit.pkd"))
+(allow mach-lookup (global-name "com.apple.containermanagerd"))
+(allow mach-lookup (global-name "com.apple.mobile.usermanagerd.xpc"))
+(allow mach-lookup (global-name "com.apple.mobile.keybagd.UserManager.xpc"))
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.runningboardd"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+    (subpath (param "TMPDIR"))
+    (subpath (param "DARWIN_CACHE_DIR"))
+    (subpath (param "USER_DIR")))
+
+;;; For identifying locked files to unlock when suspending a process.
+(allow file-read*)

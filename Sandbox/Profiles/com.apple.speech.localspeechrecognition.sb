@@ -1,0 +1,100 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.speech.localspeechrecognition"))
+
+(allow user-preference-read
+       (preference-domain "com.apple.assistant.support")
+       (preference-domain "kCFPreferencesAnyApplication")
+)
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.speech.localspeechrecognition")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; mach service lookup
+(allow mach-lookup
+       (global-name "com.apple.appleneuralengine")
+       (global-name "com.apple.mobileassetd.v2")
+       (global-name "com.apple.triald.namespace-management")
+       (global-name "com.apple.FileCoordination")
+)
+
+;; Allow read-only access to $HOME/Library/Trial
+(allow file-read*
+    (home-subpath "/Library/Trial"))
+
+;; Allow read-only access to data in $HOME/Library/Developer/UaaPKit/ASR/ -- needed for UaaP support
+(allow file-read*
+    (home-subpath "/Library/Developer/UaaPKit/ASR"))
+
+;; iokit
+(allow iokit-open
+       (iokit-user-client-class "IOSurfaceRootUserClient")
+       (iokit-user-client-class "H11ANEInDirectPathClient")
+       (iokit-user-client-class "AGXDeviceUserClient")
+)
+
+;; Allow ANE framework to issue file read extensions for Trial assets
+(allow file-issue-extension
+       (require-all
+           (extension-class "com.apple.aned.read-only" "com.apple.app-sandbox.read")
+           (home-subpath "/Library/Trial/Treatments")))
+           
+           
+;; Read access
+(allow file-read*
+       (subpath "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains")
+)
+
+;; Filesystem access for consumeed sandbox extensions
+(allow file-read*
+       (extension "com.apple.app-sandbox.read"))
+(allow file-read* file-write*
+       (extension "com.apple.app-sandbox.read-write"))

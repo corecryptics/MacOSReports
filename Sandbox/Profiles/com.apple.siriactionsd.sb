@@ -1,0 +1,222 @@
+;; `siriactionsd` on macOS
+
+(version 1)
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+
+;; -- Helpers --
+;; Path helpers
+
+(define (home-literal relative)
+    (literal (string-append (param "HOME") relative)))
+(define (home-prefix relative)
+    (prefix (string-append (param "HOME") relative)))
+(define (home-subpath relative)
+    (subpath (string-append (param "HOME") relative)))
+(define (home-regex relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) relative-regex)))
+
+(define group-container-root
+    (string-append "/Library/Group Containers/" "group.is.workflow.my.app"))
+(define (group-container-literal relative)
+    (home-literal (string-append group-container-root relative)))
+(define (group-container-subpath relative)
+    (home-subpath (string-append group-container-root relative)))
+(define (group-container-regex relative-regex)
+    (home-regex (string-append (regex-quote group-container-root) relative-regex)))
+
+;; File access helpers
+
+(define (apply-read-and-issue-extensions filters)
+    (allow file-read* (apply require-any filters))
+    (allow file-issue-extension
+        (require-all
+            (extension-class "com.apple.app-sandbox.read")
+            (apply require-any filters))))
+(define (apply-write-and-issue-extensions filters)
+    (allow file-write* (apply require-any filters))
+    (allow file-issue-extension
+        (require-all
+            (extension-class "com.apple.app-sandbox.read-write")
+            (apply require-any filters))))
+(define (read-and-issue-extensions . filters)
+    (apply-read-and-issue-extensions filters))
+(define (read-write-and-issue-extensions . filters)
+    (apply-read-and-issue-extensions filters)
+    (apply-write-and-issue-extensions filters))
+
+; adapted from Sandbox_profiles/util.sb
+(define (allow-create-directory . filters)
+    (allow file-read-metadata
+           (apply require-any filters))
+    (allow file-read-metadata file-write-create
+        (require-all
+            (vnode-type DIRECTORY)
+            (apply require-any filters))))
+
+; adapted from Sandbox_profiles/common.sb
+(define (rw-apple-cache-folder bundle-id)
+    (let*
+        ((cache-root-filter (home-literal "/Library/Caches/"))
+        (cache-filter (home-subpath (string-append "/Library/Caches/" bundle-id))))
+
+        (allow-create-directory cache-root-filter)
+        (read-write-and-issue-extensions cache-filter)))
+
+;; -- Policy --
+
+; (allow (with report) default)
+; (allow (with report) file-map-executable process-info* nvram*)
+; (allow (with report) dynamic-code-generation)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+
+(corefoundation)
+
+(allow process-info* (target self))
+(allow mach-task-name (target self))
+(allow file-read-metadata)
+(allow process-info-codesignature)
+(allow iokit-get-properties)
+(allow distributed-notification-post)
+(allow appleevent-send)
+(allow lsopen)
+(allow job-creation)
+
+(allow sysctl-read
+    (sysctl-name-prefix "net.routetable."))
+
+(allow iokit-open
+    (iokit-user-client-class "AppleKeyStoreUserClient"
+                             "IOSurfaceRootUserClient"))
+
+; Allow reading and read-extending files we have a read sandbox extension for
+(with-filter (extension "com.apple.app-sandbox.read")
+    (allow file-read*)
+    (allow file-issue-extension (extension-class "com.apple.app-sandbox.read")))
+; Allow rw and rw-extending files we have a rw sandbox extension for
+(with-filter (extension "com.apple.app-sandbox.read-write")
+    (allow file-read* file-write*)
+    (allow file-issue-extension (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")))
+(read-and-issue-extensions 
+    (subpath "/System/Library/PrivateFrameworks/VoiceShortcuts.framework")
+    (home-subpath "/Library/Containers/com.apple.podcasts/Data/Documents/PodcastsDB.plist"))
+(read-write-and-issue-extensions
+    (subpath (param "DARWIN_CACHE_DIR"))
+    (subpath (param "TMPDIR"))
+    (group-container-subpath ""))
+
+(allow file-read*
+    (home-subpath "/Library/CoreBehavior")
+    (literal "/private/var/preferences/com.apple.networkd.plist")
+    (literal "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains"))
+
+(allow file-read* file-write*
+    (home-subpath "/Library/Caches/com.apple.proactive.eventtracker")
+    (home-subpath "/Library/Shortcuts")
+    (home-subpath "/Library/VoiceShortcuts")
+    (home-subpath "/Media/iTunes_Control/iTunes"))
+
+(read-write-and-issue-extensions
+    (home-subpath "/Library/Shortcuts/QuarantineAsset")
+    (home-subpath "/Library/Shortcuts/SecuredPreferences.plist")
+    (home-subpath "/Library/Shortcuts/ssh"))
+
+(allow system-fsctl
+       (fsctl-command APFSIOC_SYNC_ROOT_GET_FLAG))
+
+; For preferences (see Sandbox_profiles/common.sb#allow-preferences-common)
+(allow file-read-metadata
+    (home-literal "")
+    (home-literal "/Library/Preferences"))
+
+; HomeKit cache folders under ~/Library/Caches
+(rw-apple-cache-folder "com.apple.HomeKit.configurations")
+(rw-apple-cache-folder "com.apple.HomeKit/com.apple.siriactionsd")
+
+; Keep case-sensitive alphabetically sorted
+(allow mach-lookup
+    (global-name "com.apple.FileCoordination"
+                 "com.apple.FileProvider"
+                 "com.apple.SystemConfiguration.configd"
+                 "com.apple.accountsd.accountmanager"
+                 "com.apple.apsd"
+                 "com.apple.bird"
+                 "com.apple.calaccessd"
+                 "com.apple.ckdiscretionaryd" ; CloudKit
+                 "com.apple.cloudd" ; CloudKit
+                 "com.apple.commcenter.xpc"
+                 "com.apple.contactsd"
+                 "com.apple.containermanagerd"
+                 "com.apple.coreduetd.context"
+                 "com.apple.coreduetd.knowledge"
+                 "com.apple.coreservices.appleevents"
+                 "com.apple.coreservices.launchservicesd"
+                 "com.apple.coreservices.lsuseractivitymanager.xpc"
+                 "com.apple.coreservices.quarantine-resolver"
+                 "com.apple.dock.server"
+                 "com.apple.donotdisturb.service"
+                 "com.apple.donotdisturb.service.non-launching"
+                 "com.apple.fontservicesd"
+                 "com.apple.frontboard.systemappservices"
+                 "com.apple.homed.xpc"
+                 "com.apple.iconservices"
+                 "com.apple.itunescloudd.xpc"
+                 "com.apple.linkd.registry"
+                 "com.apple.locationd.registration" ; Location services
+                 "com.apple.locationd.spi" ; Location services
+                 "com.apple.locationd.synchronous" ; Location services
+                 "com.apple.lsd.mapdb"
+                 "com.apple.lsd.modifydb"
+                 "com.apple.medialibraryd.xpc"
+                 "com.apple.photos.service"
+                 "com.apple.remindd"
+                 "com.apple.routined.registration"
+                 "com.apple.scopedbookmarksagent.xpc"
+                 "com.apple.securityd"
+                 "com.apple.siri.client_lite"
+                 "com.apple.siri.vocabularyupdates"
+                 "com.apple.spotlight.IndexAgent"
+                 "com.apple.spotlight.IndexDelegateAgent"
+                 "com.apple.system.opendirectoryd.api"
+                 "com.apple.tccd.system"
+                 "com.apple.usernotifications.usernotificationservice"
+                 "com.apple.windowserver.active"))
+; CloudKit when running on AppleInternal OS
+(with-filter (system-attribute apple-internal)
+    (allow mach-lookup
+        (global-name "com.apple.ckdiscretionaryd.debug"
+                     "com.apple.cloudd.debug")))
+
+; Keep case-sensitive alphabetically sorted
+(allow user-preference-read
+    (preference-domain "com.apple.AppSupport")
+    (preference-domain "com.apple.AppSupport")
+    (preference-domain "com.apple.CloudKit")
+    (preference-domain "com.apple.CoreDuet")
+    (preference-domain "com.apple.DuetExpertCenter.AppPredictionExpert")
+    (preference-domain "com.apple.GEO")
+    (preference-domain "com.apple.coremedia")
+    (preference-domain "com.apple.locationd")
+    (preference-domain "com.apple.medialibrary")
+    (preference-domain "com.apple.mobilecal")
+    (preference-domain "com.apple.mobileslideshow")
+    (preference-domain "com.apple.spotlightui")
+    (preference-domain "kCFPreferencesAnyApplication"))
+
+; Keep case-sensitive alphabetically sorted
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.Intents.UpcomingMediaManager")
+    (preference-domain "com.apple.SiriViewService")
+    (preference-domain "com.apple.VoiceShortcuts")
+    (preference-domain "com.apple.shortcuts")
+    (preference-domain "com.apple.siri.VoiceShortcuts")
+    (preference-domain "com.apple.siri.shortcuts")
+    (preference-domain "com.apple.siriactionsd")
+    (preference-domain "group.is.workflow.my.app")
+    (preference-domain "pbs"))
+
+; For access resource extensions between siriactionsd and BackgroundShortcutRunner
+(allow generic-issue-extension
+    (extension-class-prefix "com.apple.shortcuts.access."))

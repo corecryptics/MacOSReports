@@ -1,0 +1,118 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+;;; Sourced from com.apple.sysextd.sb in the SystemExtensions project.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+(deny file-write*)
+
+(allow iokit*)
+
+;; rdar://problem/50446564
+(allow process-exec*)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements and other info of clients.
+(allow process-info-codesignature)
+(allow process-info-pidinfo)
+(allow process-info* (target self))
+
+(allow user-preference-read (preference-domain "kCFPreferencesAnyApplication"))
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.kernelmanagement"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;; for sandbox_init_with_parameters()
+(allow mach-priv-host-port)
+
+;; Read and write our SIP-protected filesystem area
+(allow file-read* file-write*
+  (subpath "/Library/DriverExtensions")
+  (subpath "/Library/KernelCollections")
+  (subpath "/Library/StagedExtensions")
+  (subpath "/private/var/db/KernelExtensionManagement"))
+
+;; Read and write to (iSC)Preboot volume for bootpolicy
+(allow file-read* file-write*
+  (subpath "/System/Volumes/iSCPreboot")
+  (subpath "/System/Volumes/Preboot"))
+
+;; Read and write the telemetry data file
+(allow file-read* file-write*
+  (literal "/private/var/db/loadedkextmt.plist"))
+
+;; Write to the console
+(allow file-write*
+  (literal "/dev/console"))
+
+;; Read the bundles of apps, anywhere
+(allow file-read*)
+
+;; We need to use the system-wide MDS database or Security gets very very sad
+(allow file-read* file-write* (subpath "/private/var/db/mds/system"))
+(allow ipc-posix-shm (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+;; Check AMFITrustedKeys for validating "anchor apple" signatures
+;; Copied from Security's framework.sb (why don't we get it automatically?)
+;; On internal builds, allow clients to read the AMFITrustedKeys NVRAM variable
+(with-filter (system-attribute apple-internal)
+    (allow nvram-get (nvram-variable "AMFITrustedKeys")))
+
+;; NVRAM variables we need read/write access to - SideEffects.NVRAMClient.set()/delete()
+(allow nvram*
+  (nvram-variable "boot_errors")
+  (nvram-variable "kcgen-data")
+  (nvram-variable "osenvironment")
+  (nvram-variable "panicmedic")
+  (nvram-variable "40A0DDD2-77F8-4392-B4A3-1E7304206516:panicmedic")
+  (nvram-variable "40A0DDD2-77F8-4392-B4A3-1E7304206516:one-time-boot-command"))
+
+;; NVRAM variables set by bootpolicy on our behalf
+(allow nvram*
+  (nvram-variable "policy-nonce-digests")
+  (nvram-variable "40A0DDD2-77F8-4392-B4A3-1E7304206516:policy-nonce-digests")
+  (nvram-variable "IONVRAM-FORCESYNCNOW-PROPERTY"))
+
+;; NVRAM variables we need read access to - SideEffects.NVRAMClient.get()
+(allow nvram-get
+  (nvram-variable "boot-breadcrumbs"))
+
+;; Various daemons needed to do our job
+(allow mach-lookup (global-name
+            "com.apple.SecurityServer"
+            "com.apple.ocspd"
+            "com.apple.coreservices.quarantine-resolver"
+            "com.apple.lsd.mapdb"
+            "com.apple.UNCUserNotification"
+            "com.apple.security.syspolicy"
+            "com.apple.security.syspolicy.kext"
+            "com.apple.FSEvents"
+            "com.apple.DiskArbitration.diskarbitrationd"
+            "com.apple.diskmanagementd"
+           ))
+
+;; As the daemon responsible for tracking, loading, and unloading kexts, we
+;; should be able to do those things.
+(allow system-kext*)
+
+;; To submit DriverKit launches to launchd
+(allow job-creation)

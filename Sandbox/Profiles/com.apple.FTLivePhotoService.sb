@@ -1,0 +1,116 @@
+;;;
+;;; FTLivePhotoService
+;;; /System/Library/PrivateFrameworks/TelephonyUtilities.framework/FTLivePhotoService
+;;; TelephonyUtilities | all
+;;;
+
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+(import "opendirectory.sb")
+
+; Create some custom filters that allow us to include paths relative to the home directory
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex))
+)
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath))
+)
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix))
+)
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal))
+)
+
+; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+; TelephonyUtilities’s preference domain.
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.TelephonyUtilities")
+)
+
+; Read/write access to our temporary directories.
+(allow file-read* file-write*
+    (subpath (param "TMPDIR"))
+    (subpath (param "DARWIN_CACHE_DIR"))
+)
+
+; Support for issuing extensions in our temporary directories.
+(allow file-issue-extension
+    (require-all
+        (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+        (require-any
+            (subpath (param "TMPDIR"))
+            (subpath (param "DARWIN_CACHE_DIR"))
+        )
+    )
+)
+
+(allow mach-lookup
+    (global-name "com.apple.commcenter.xpc")
+    (global-name "com.apple.commcenter.coretelephony.xpc")
+    (global-name "com.apple.identityservicesd.desktop.auth")
+    (global-name "com.apple.identityservicesd.idquery.desktop.auth")
+    (global-name "com.apple.tccd")
+    (global-name "com.apple.videoconference.camera")
+    (global-name "com.apple.photos.service")
+    (global-name "com.apple.telephonyutilities.callservicesdaemon.callprovidermanager")
+    (global-name "com.apple.telephonyutilities.callservicesdaemon.callcapabilities")
+    (global-name "com.apple.telephonyutilities.callservicesdaemon.callstatecontroller")
+    (global-name "com.apple.telephonyutilities.callservicesdaemon.usernotificationprovider")
+    (global-name "com.apple.telephonyutilities.callservicesdaemon.reportingcontroller")
+    (global-name "com.apple.telephonyutilities.callservicesdaemon.conversationmanager")
+)
+
+; For validating  entitlements and looking up process information of XPC clients
+(allow process-info-codesignature)
+(allow process-info-pidinfo)
+(allow process-info* (target self))
+
+(allow user-preference-read
+    (preference-domain "com.apple.TelephonyUtilities" "kCFPreferencesAnyApplication" "com.apple.ids" "com.apple.VideoConference")
+)
+
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.facetime.bag")
+)
+
+(allow file-read* file-write*
+    (extension "com.apple.avconference.moments")
+    (extension "com.apple.identityservices.deliver")
+    (extension "com.apple.app-sandbox.read-write")
+)
+
+; For sending files via -[IDSService sendResourceAtURL:metadata:toDestinations:priority:options:identifier:error:]
+(allow file-issue-extension
+    (require-all
+        (extension-class "com.apple.app-sandbox.read-write")
+        (subpath (param "TMPDIR"))
+    )
+)
+
+;;; Security.framework files that are dependent on uid. Some paths are covered by extensions that FTLivePhotoService issues to itself before entering the sandbox
+; mds: mds.lock, mdsDirectory.db, mdsObject.db
+; 1. extension "mds"
+;    uid == 0: r+w /private/var/db/mds/system
+;    uid  > 0: r+w <_DARWIN_USER_CACHE_DIR>/mds
+; 2. /private/var/db/mds/system/{mdsDirectory.db,mdsObject.db}
+;    uid == 0: r+w (already covered by (extension "com.apple.FTLivePhotoService.mds"))
+;    uid  > 0: r
+; 3. se_SecurityMessages:
+;    uid  < 500: /private/var/db/mds/messages/se_SecurityMessages
+;    uid >= 500: /private/var/db/mds/messages/<uid>/se_SecurityMessages
+(allow file-read* file-write*
+    (extension "com.apple.FTLivePhotoService.mds")
+)
+(allow file-read*
+    (literal "/private/var/db/mds/system/mdsDirectory.db")
+    (literal "/private/var/db/mds/system/mdsObject.db")
+    (extension "com.apple.FTLivePhotoService.securityMessages")
+)

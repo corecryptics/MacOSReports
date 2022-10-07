@@ -1,0 +1,66 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(import "system.sb")
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; We need to be able to take transactions, which requires proc_set_dirty()
+(allow process-info-dirtycontrol (target self))
+
+;; We need read/write access to the logging preferences and system logs to
+;; perform migration tasks
+(allow file-read* file-write*
+    (subpath "/Library/Preferences/Logging")
+    (subpath "/private/var/db/diagnostics")
+    (subpath "/private/var/db/uuidtext")
+    (regex #"^/System/Volumes/Preboot/[a-zA-Z0-9-]+/PreLoginData/(diagnostics|uuidtext)"))
+
+;; We need to read uuidtext information from executable binaries, libraries,
+;; and frameworks which can be anywhere on disk
+(allow file-read*
+    (require-all
+        (vnode-type REGULAR-FILE)
+        (require-any
+            (file-mode #o0100 #o0010 #o0001)
+            (regex #"\.dylib$")
+            (regex #"\.framework/"))))
+
+;; We need to query information about loaded kexts
+(allow system-kext-query)
+
+;; logd_helper reads firmware uuidtext data from the following location
+(allow file-read*
+    (regex #"^/private/preboot/[0-9A-F]+/usr/standalone/firmware/FUD(/|$)"))
+
+;; <rdar://problem/57893523> Allow logd to connect to the RTBuddyUserClient IOUserClient
+(allow iokit-open
+    (iokit-user-client-class "RTBuddyUserClient"))
+
+(allow iokit-get-properties
+    (iokit-property "crypto-hash-method")
+    (iokit-property "boot-manifest-hash")
+    (iokit-property "mix-n-match-prevention-status")
+    (iokit-property "board-id")
+    (iokit-property "chip-epoch")
+    (iokit-property "chip-id")
+    (iokit-property "certificate-production-status")
+    (iokit-property "certificate-security-mode")
+    (iokit-property "unique-chip-id")
+    (iokit-property "security-domain")
+    (iokit-property "effective-production-status-ap")
+    (iokit-property "effective-security-mode-ap")
+)

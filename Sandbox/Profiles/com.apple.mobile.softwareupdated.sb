@@ -1,0 +1,204 @@
+;;; This file is to be used on macOS only. Embedded uses a separate profile
+;;; Path: /System/Library/Sandbox/Profiles/com.apple.mobile.softwareupdated.sb
+(version 1)
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+;;(allow (with report) default)
+;;(allow (with report) file-map-executable process-info* nvram*)
+;;(allow (with report) dynamic-code-generation)
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow nvram-get
+          ;Prefixes
+          (nvram-variable-prefix "ota-")
+          (nvram-variable-prefix "OTA-")
+          (nvram-variable-prefix "ramrod-")
+          (nvram-variable-prefix "pre-recovery-")
+          (nvram-variable-prefix "recoveryos-")
+          (nvram-variable-prefix "boot-")
+          (nvram-variable-prefix "wake-perf-record-data")
+          (nvram-variable-prefix "efi-boot-device")
+          (nvram-variable-prefix "efi-backup-boot-device")
+          (nvram-variable-prefix "efi-apple-payload")
+          (nvram-variable-prefix "iboot-failure-")
+          
+          ;Full names
+          (nvram-variable "IASUCatalogURL")
+          (nvram-variable "IDInstallerDataV2")
+          (nvram-variable "HW_BOOT_DATA")
+          (nvram-variable "battery-health")
+          (nvram-variable "bluetoothInternalControllerInfo")
+          (nvram-variable "bluetoothActiveControllerInfo")
+          (nvram-variable "backlight-level")
+          (nvram-variable "fmm-computer-name")
+          (nvram-variable "prev-lang:kbd")
+          (nvram-variable "prev-lang-diags:kbd")
+          (nvram-variable "csr-active-config")
+          (nvram-variable "auto-boot")
+          (nvram-variable "IONVRAM-SYNCNOW-PROPERTY")
+          (nvram-variable "ac-rk-token")
+          (nvram-variable "LocationServicesEnabled")
+          (nvram-variable "multiupdater-state")
+          (nvram-variable "multiupdater-retry-limits")
+          (nvram-variable "SystemAudioVolume")
+          (nvram-variable "ThorUpdateResult")
+          (nvram-variable "BOSCatalogURL")
+          (nvram-variable "previous-system-uuid")
+          (nvram-variable "previous-lang-diags:kbd")
+          (nvram-variable "target-uuid")
+          (nvram-variable "IONVRAM-FORCESYNCNOW-PROPERTY")
+          (nvram-variable "hibhack-test-hmac")
+          (nvram-variable "upgrade-boot-volume")
+          (nvram-variable "personalized-boot-args")
+          (nvram-variable "preferred-networks")
+          (nvram-variable "update-volume")
+          (nvram-variable "usbcfwflasherResult")
+          (nvram-variable "current-network")
+          (nvram-variable "policy-nonce-digests")
+          (nvram-variable "last-boot-args-script-vers")
+          (nvram-variable "bootdelay")
+          (nvram-variable "_kdp_ipstr")
+          (nvram-variable "SystemAudioVolumeExtension")
+          (nvram-variable "panicmedic-timestamps")
+          (nvram-variable "IASInstallPhaseList")
+          (nvram-variable "IASCurrentInstallPhase")
+          (nvram-variable "lts-persistance")
+          (nvram-variable "backlight-nits")
+          (nvram-variable "root-live-fs")
+          (nvram-variable "stress-rack")
+          
+          ;System NVRAM versions
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:ota-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:OTA-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:ramrod-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:pre-recovery-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:recoveryos-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:boot-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:auto-boot")
+          (nvram-variable "40A0DDD2-77F8-4392-B4A3-1E7304206516:root-live-fs")
+)
+
+(allow nvram-delete
+          (nvram-variable-prefix "ota-")
+          (nvram-variable-prefix "OTA-")
+          (nvram-variable-prefix "ramrod-")
+          (nvram-variable-prefix "pre-recovery-")
+          (nvram-variable-prefix "recoveryos-")
+          ;System nvram versions
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:ota-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:OTA-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:ramrod-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:pre-recovery-")
+          (nvram-variable-prefix "40A0DDD2-77F8-4392-B4A3-1E7304206516:recoveryos-")
+)
+
+(allow mach-lookup
+      (global-name "com.apple.SBUserNotification")
+      (global-name "com.apple.cache_delete")
+      (global-name "com.apple.CoreServices.coreservicesd")
+      (global-name "com.apple.mobileassetd")
+      (global-name "com.apple.mobileassetd.v2")
+      (global-name "com.apple.cache_delete.public")
+      (global-name "com.apple.SBUserNotification")
+      (global-name "com.apple.cache_delete")
+      (global-name "com.apple.metadata.mds")
+      (global-name "com.apple.distributed_notifications@1v3")
+      (global-name "com.apple.AppSSO.service-xpc")
+      (global-name "com.apple.dnssd.service")
+      (global-name "com.apple.coreservices.quarantine-resolver")
+      (global-name "com.apple.lsd.mapdb")
+      (global-name "com.apple.SecurityServer")
+      (global-name "com.apple.remoted")
+)
+
+(allow system-fsctl
+        (fsctl-command APFSIOC_SNAP_LOOKUP)
+        ;;APFSIOC_EVAL_ROOTHASH has not been picked up by sandbox yet. It should be the next time sandbox picks up newer SDK headers. Till then hardcoding it in
+        (fsctl-command (_IO "J" 88))
+        (fsctl-command HFSIOC_SET_HOTFILE_STATE)
+)
+
+;;; File read/write
+(allow file-read*
+        (literal "/dev/console")
+        (literal "/Library")
+        (subpath "/Library/Frameworks")
+        (literal "/Library/Keychains")
+        (literal "/Library/Keychains/System.keychain")
+        (home-prefix "/Library/Logs/CrashReporter/OTAUpdate-")
+        (literal "/Library/Receipts/InstallHistory.plist")
+        (home-literal "/MobileSoftwareUpdate/restore.log")
+        (literal "/private")
+        (subpath "/private/etc/group")
+        (subpath "/private/tmp")
+        (literal "/private/var")
+        (literal "/private/var/db")
+        (subpath "/private/var/db/mds")
+        (subpath "/private/var/db/UpdateMetrics")
+        (subpath "/private/var/db/softwareupdate")
+        (subpath "/private/var/folders")
+        (literal "/private/var/run")
+        (literal "/private/var/run/systemkeychaincheck.done")
+        (subpath "/private/var/tmp")
+        (subpath "/System/Volumes/Update")
+        (literal "/usr")
+        (literal "/usr/local")
+)
+
+(allow file-write*
+        (literal "/dev/console")
+        (home-prefix "/Library/Logs/CrashReporter/OTAUpdate-")
+        (home-literal "/MobileSoftwareUpdate/restore.log")
+        (subpath "/private/tmp")
+        (subpath "/private/var/db/UpdateMetrics")
+        (subpath "/private/var/db/softwareupdate")
+        (subpath "/private/var/folders")
+        (subpath "/private/var/mobile")
+        (subpath "/private/var/tmp")
+        (subpath "/System/Volumes/Update")
+)
+
+;;; Support for update metrics
+(allow network-outbound)
+(allow network*
+    (remote tcp))
+(allow system-socket (socket-domain AF_SYSTEM))
+
+;;; misc
+(allow process-info-dirtycontrol (target self))
+(allow process-info-setcontrol (target self))
+(allow process-info-pidinfo (target self))
+
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged")
+)
+
+
+(allow iokit-open
+      (iokit-user-client-class "AppleAPFSUserClient")) ;; test with: expect_iokit_open(true, "AppleAPFSContainer");
+(allow iokit-open
+       (iokit-user-client-class "AppleMobileFileIntegrityUserClient"
+                                "IOAESAcceleratorUserClient"
+                                "AppleKeyStoreUserClient")
+)
+(allow iokit-set-properties
+       (iokit-property "IONVRAM-DELETE-PROPERTY"))
+(allow authorization-right-obtain
+        (right-name "system.install.app-store-software.standard-user")
+)
+(allow user-preference-read
+        (preference-domain "kCFPreferencesAnyApplication")
+)

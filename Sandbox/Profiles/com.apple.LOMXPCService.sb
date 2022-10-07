@@ -1,0 +1,74 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(allow network-outbound network-inbound)
+
+(allow system-socket)
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+(allow authorization-right-obtain (right-name "com.apple.ServiceManagement.daemons.modify"))
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow file-write*
+    (subpath "/Library/Logs/ManagedClient")
+)
+
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged")
+)
+
+(allow file-read* file-write-data file-ioctl
+       (regex #"^/dev/bpf[0-9]+$"))
+       
+(allow file*
+    (subpath "/Library/Keychains/")
+    (literal "/private/var/db/mds/system/mdsObject.db")
+    (literal "/private/var/db/mds/system/mds.lock")
+    (literal "/private/var/db/mds/system/mdsDirectory.db")
+    (literal "/private/var/db/mds/messages/se_SecurityMessages")
+)
+
+(allow file-read*
+    (regex #"/Library/Preferences/\.GlobalPreferences\.plist$")
+    (regex #"/Library/Preferences/ByHost/\.GlobalPreferences\.")
+)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.LOMXPCService"))
+
+
+(allow mach-lookup
+    (global-name "com.apple.AppleLOM.XPC")
+    (global-name "com.apple.securityd.xpc")
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.mdmclient.agent")
+    (global-name "com.apple.mdmclient.daemon")
+    (global-name "com.apple.xpc.smd")
+    (global-name "com.apple.mdmclient.agent.unrestricted")
+    (global-name "com.apple.mdmclient.daemon.unrestricted")
+)
+
+(allow file-map-executable
+    (literal "/System/Library/CoreServices/ManagedClient.app/Contents/PlugIns/MCXToolsInterface.bundle/Contents/MacOS/MCXToolsInterface"))

@@ -1,0 +1,87 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+;;; Note: Based on daemon-template.sb from the sandboxing team.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.mDNSResponderHelper")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+(allow file-read* file-write-data file-ioctl
+       (regex #"^/dev/bpf[0-9]+$"))
+
+(allow file-read*
+       (literal "/Library/Keychains/System.keychain")
+       (literal "/private/var/db/mds/system/mds.lock")
+       (literal "/private/var/db/mds/system/mdsDirectory.db")
+       (literal "/private/var/db/mds/system/mdsObject.db")
+       (literal "/usr/sbin"))
+
+(allow file-write*
+       (literal "/private/var/db/mds/system/mds.lock"))
+
+(allow iokit-open
+       (iokit-user-client-class "RootDomainUserClient"))
+
+(allow ipc-posix-shm-read* ipc-posix-shm-write*
+       (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+(allow mach-lookup
+       (global-name "com.apple.SecurityServer"
+                    "com.apple.SystemConfiguration.configd"
+                    "com.apple.UNCUserNotification"
+                    "com.apple.UNCUserNotification"))
+
+(allow network-outbound
+       (remote ip))
+
+(allow system-socket
+       (socket-domain AF_INET)
+       (socket-domain AF_INET6)
+       (socket-domain AF_ROUTE))

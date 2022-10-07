@@ -1,0 +1,30 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+    (subpath (param "TMPDIR")))
+
+(allow mach-lookup (global-name "com.apple.logd.admin"))
+
+(allow file-read*
+    (subpath "/private/var/db/diagnostics")
+    (subpath "/private/var/db/uuidtext"))

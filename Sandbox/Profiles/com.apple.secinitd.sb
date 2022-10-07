@@ -1,0 +1,52 @@
+;;;;;; Sandbox profile for secinitd(8)
+;;;;;;
+;;;;;; Copyright (c) 2008-2020 Apple Inc.  All Rights reserved.
+;;;;;;
+;;;;;; WARNING: The sandbox rules in this file currently constitute
+;;;;;; Apple System Private Interface and are subject to change at any time and
+;;;;;; without notice. The contents of this file are also auto-generated and
+;;;;;; not user editable; it may be overwritten at any time.
+
+(version 1)
+
+;; remove "(with no-callout)" to debug sandbox problems
+(deny default (with no-callout))
+;;(deny default)
+
+(import "system.sb")
+
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; Allow container creation and file migration.
+;; Ideally file-write* would be limited to the user's home directory.
+(allow file*)
+
+;; TMPDIR; could use a better solution
+(allow file-write* (subpath "/private/var/folders"))
+
+(allow ipc-posix-shm
+       (ipc-posix-name "apple.shm.notification_center"))
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+       (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+(allow mach-lookup
+       (global-name "com.apple.containermanagerd"
+                    "com.apple.ContainerRepairAgent"
+                    "com.apple.CoreServices.coreservicesd"
+                    "com.apple.FSEvents"
+                    "com.apple.iconservices"
+                    "com.apple.iconservices.store"
+                    "com.apple.lsd.mapdb"
+                    "com.apple.metadata.mds"
+                    "com.apple.ocspd"
+                    "com.apple.SecurityServer"
+                    "com.apple.system.DirectoryService.membership_v1"))
+
+(allow mach-per-user-lookup)
+
+;; Privileged File Operations
+(allow authorization-right-obtain
+       (right-name "com.apple.app-sandbox.create-symlink"
+                   "com.apple.app-sandbox.set-attributes"
+                   "com.apple.app-sandbox.replace-file"))

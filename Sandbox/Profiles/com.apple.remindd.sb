@@ -1,0 +1,162 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;; (allow (with report) default)
+;; (allow (with report) file-map-executable process-info* nvram*)
+;; (allow (with report) dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+  (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+  (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+  (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+  (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+  (preference-domain "com.apple.remindd"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+  (subpath (param "TMPDIR"))
+  (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.remindd")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; vvv start custom sandbox rules below vv
+
+(allow mach-lookup
+  (global-name "com.apple.accountsd.accountmanager")
+  (global-name "com.apple.AddressBook.abd") ;; Contacts
+  (global-name "com.apple.AddressBook.ContactsAccountsService") ;; Contacts
+  (global-name "com.apple.AddressBook.SourceSync") ;; Contacts
+  (global-name "com.apple.ak.anisette.xpc") ;; DA: via AuthKit/CFNetwork
+  (global-name "com.apple.AppSSO.service-xpc") ;; DA: via AuthKit/CFNetwork
+  (global-name "com.apple.apsd")
+  (global-name "com.apple.chronoservices")
+  (global-name "com.apple.cloudd")
+  (global-name "com.apple.CoreLocation.agent")
+  (global-name "com.apple.coreservices.launchservicesd") ;; DA: DADBuddyStateObserver
+  (global-name "com.apple.coreservices.lsuseractivitymanager.xpc") ;; rdar://problem/69018185
+  (global-name "com.apple.coreservices.quarantine-resolver") ;; NSFileManager
+  (global-name "com.apple.dnssd.service") ;; DA: via CFNetowrk/libnetwork
+  (global-name "com.apple.dock.server") ;; rdar://problem/69018185
+  (global-name "com.apple.dprivacyd") ;; DifferentialPrivacy
+  (global-name "com.apple.iconservices") ;; rdar://problem/69018185
+  (global-name "com.apple.iconservices.store") ;; rdar://problem/69018185
+  (global-name "com.apple.lsd.mapdb")
+  (global-name "com.apple.locationd.desktop.registration") ;; CoreLocation
+  (global-name "com.apple.locationd.desktop.synchronous") ;; CoreLocation
+  (global-name "com.apple.mobileassetd.v2") ;; MobileAssets
+  (global-name "com.apple.nehelper") ;; DA: via CFNetowrk/libnetwork
+  (global-name "com.apple.powerlog.plxpclogger.xpc") ;; PowerLog (not sure where does this come from)
+  (global-name "com.apple.remindd") ;; <rdar://problem/62524719>
+  (global-name "com.apple.securityd.xpc") ;; DA: CFNetwork
+  (global-name "com.apple.SecurityServer") ;; DA: CFNetwork/AOSKit
+  (global-name "com.apple.nesessionmanager.content-filter") ;; rdar://74540523
+  (global-name "com.apple.spotlight.IndexAgent")
+  (global-name "com.apple.SystemConfiguration.configd") ;; SystemConfiguration (e.g. Reachability)
+  (global-name "com.apple.system.opendirectoryd.api") ;; DA: via AuthKit/CFNetwork
+  (global-name "com.apple.symptom_diagnostics")
+  (global-name "com.apple.tccd")
+  (global-name "com.apple.tccd.system") ;; rdar://problem/69018185
+  (global-name "com.apple.usernotifications.usernotificationservice")
+  (global-name "com.apple.usymptomsd")
+  (global-name "com.apple.windowserver.active"))
+
+(allow distributed-notification-post) ;; Contacts/AddressBook: ABDefaultAccountDidChangeDistributedNotification
+
+(allow file-read*
+  (home-literal "/Library/Preferences/.GlobalPreferences.plist") ;; DA: +[DABehaviorOptions DAManagedDefaults]
+  (home-literal "/Library/Preferences/com.apple.security.plist") ;; DA: CFNetwork (this is needed in addition to user-preference-read)
+  (home-subpath "/Library/Keychains") ;; DA
+  (literal "/usr/libexec")
+  (literal "/usr/libexec/remindd") ;; <rdar://problem/62524719>
+  (subpath "/AppleInternal/Library/DifferentialPrivacy") ;; DifferentialPrivacy
+  (subpath "/Library/Application Support/CrashReporter") ;; CrashReporterSupport
+  (subpath "/Library/Keychains") ;; DA
+  (subpath "/private/var/db/mds"))
+
+(allow file-read* file-write*
+  (home-subpath "/Library/Reminders")
+  (home-literal "/Library/Logs/CrashReporter") ;; DA: DACPLogging
+  (home-subpath "/Library/Logs/CrashReporter/Reminders")) ;; DA: DACPLogging
+
+;; support consuming com.apple.app-sandbox.read and com.apple.app-sandbox.read-write extensions from clients (e.g. attachments)
+(allow file-read* (extension "com.apple.app-sandbox.read"))
+(allow file-read* file-write* (extension "com.apple.app-sandbox.read-write"))
+
+;; allow insuring extension to clients (e.g. attachments)
+(allow file-issue-extension
+  (require-all
+    (extension-class "com.apple.app-sandbox.read")
+    (home-subpath "/Library/Reminders/")))
+
+;; for ABGetSharedAddressBook on OS X (see <rdar://problem/19965241>) - from com.apple.cloudd.sb
+(allow file-read* file-write*
+  (home-subpath "/Library/Application Support/AddressBook")
+  (regex #"^/private/var/folders/[^/]+/[^/]+/T/\.AddressBookLocks($|/)"))
+
+;; -[DACPLogShared _logData:UUID:startNewFile:sizeCheck:wantsCompressed:maxFileCount:outDidCreateNewFile:outNewFilePath:]
+(allow file-read* file-write*
+  (literal "/Library/Preferences/com.apple.networkextension.uuidcache.plist"))
+
+(allow file-map-executable
+  (subpath "/System/Library/Address Book Plug-Ins")) ;; Contacts/AddressBook: +[CNContactStore initialize]
+
+(allow iokit-open
+  (iokit-user-client-class "RootDomainUserClient")) ;; DA: -[DADAgentManager init]
+
+(allow ipc-posix-shm-read* ipc-posix-shm-write*
+  (ipc-posix-name "com.apple.AppleDatabaseChanged")) ;; DA: CFNetwork/AOSKit
+
+(allow mach-task-name) ;; BoardServices (from NotificationCenter)
+
+(allow network-outbound) ;; DA: network
+
+(allow process-info-pidinfo) ;; BoardServices (from NotificationCenter)
+
+(allow system-socket) ;; DA: socket
+
+(allow user-preference-read
+  (preference-domain "com.apple.CloudKit")
+  (preference-domain "com.apple.security") ;; DA: CFNetwork
+  (preference-domain "com.apple.universalaccess") ;; rdar://problem/69018185
+  (preference-domain "kCFPreferencesAnyApplication"))
+
+(allow user-preference-read user-preference-write
+  (preference-domain "com.apple.AddressBook") ;; Contacts - rw permission needed c.f. -[ABPreferencesMigrator migrateDefaults]
+  (preference-domain "com.apple.remindd.babysitter")
+  (preference-domain "group.com.apple.reminders"))

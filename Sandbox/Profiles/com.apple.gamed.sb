@@ -1,0 +1,271 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.gamed")
+    (preference-domain "com.apple.gamecenter")
+    (preference-domain "com.apple.logging")
+    (preference-domain "com.apple.conference")
+)
+
+(allow user-preference-read
+    (preference-domain "com.apple.MultitouchSupport")
+    (preference-domain "com.apple.coreaudio")
+    (preference-domain "com.apple.coremedia")
+    (preference-domain "com.apple.itunesstored")
+    (preference-domain "com.apple.VideoConference")
+    (preference-domain "com.apple.springboard")
+)
+
+(if (param "_CACHE_DIR")
+       (allow file-write* file-read* (subpath (param "_CACHE_DIR"))))
+
+(if (param "_TMP_DIR")
+       (allow file-write* file-read* (subpath (param "_TMP_DIR"))))
+
+(allow file-write-create file-write-unlink
+    (subpath "/file")
+)
+
+(allow file-read* file-write*
+    (home-literal "/Library/Preferences/com.apple.AppleMediaServices.plist")
+    (home-subpath "/Library/Caches/GameKit")
+    (home-subpath "/Library/Caches/com.apple.VideoConference")
+    (home-subpath "/Library/GameKit")
+    (home-subpath "/Library/Caches/Metrics")
+    (home-subpath "/Library/Caches/com.apple.AppleMediaServices")
+    (home-subpath "/Library/Caches/com.apple.gamed")
+    (home-subpath "/Library/Caches/com.apple.nsurlsessiond/Downloads/com.apple.gamed")
+    (subpath "/private/var/folders")
+    (subpath "/Library/Caches/com.apple.nsurlsessiond")
+    (subpath "/private/var/root/Library/Caches/com.apple.nsurlsessiond")
+)
+
+(allow file-read*
+    (literal "/")
+    (literal "/Library/Preferences/.GlobalPreferences.plist")
+    (literal "/Library/Preferences/SystemConfiguration/preferences.plist")
+    (literal "/usr/libexec")
+    (literal "/usr/libexec/gamed")
+    (literal "/Users/patscott/Library/Preferences/com.apple.AppleMediaServices.plist")
+    (literal "/Library/Preferences/com.apple.security.plist")
+    (literal "/private/var/run/resolv.conf")
+    (subpath "/private/var/db/mds/system")
+    (subpath "/private/var/db/mds/messages")
+    (subpath "/Applications")
+    (subpath "/AppleInternal/Applications")
+    (subpath "/Library/Application Support/AppleConnect")
+    (home-subpath "/Library/Preferences")
+    (home-subpath "/Library/Caches/GeoServices")
+)
+
+(allow mach-lookup
+       (global-name "com.apple.SystemConfiguration.SCNetworkReachability")
+       (global-name "com.apple.SystemConfiguration.configd")
+       (global-name "com.apple.cfnetwork.cfnetworkagent")
+       (global-name "com.apple.coreservices.launchservicesd")
+       (global-name "com.apple.nsurlsessiond")
+       (global-name "com.apple.nsurlstorage-cache")
+       (global-name "com.apple.xpc.activity.control")
+       (global-name "com.apple.CrashReporterSupportHelper")
+       (global-name "com.apple.corerecents.recentsd")
+       (global-name "com.apple.coremedia.mutablecomposition.xpc")
+       (global-name "com.apple.coremedia.mutablemovie.xpc")
+       (global-name "com.apple.coremedia.player.xpc")
+       (global-name "com.apple.coremedia.visualcontext.xpc")
+       (global-name "com.apple.coremedia.sts")
+)
+
+(allow mach-lookup
+(global-name "PurpleSystemAppPort"
+             "PurpleSystemEventPort"
+             "com.apple.accountsd.accountmanager"
+             "com.apple.authkit.xpc"
+             "com.apple.frontboard.systemappservices"
+             "com.apple.commcenter.xpc"
+             "com.apple.corerecents.recentsd"
+             "com.apple.fairplayd"                ; <rdar://problem/12974324>
+             "com.apple.fairplayd.versioned"
+             "com.apple.GameController.gamecontrollerd"
+             "com.apple.GameController.gamecontrollerd.app"
+             "com.apple.GameController.gamecontrollerd.haptics"
+             "com.apple.imagent.embedded.auth"
+             "com.apple.itunesstored.xpc"
+             "com.apple.mediaserverd"
+             "com.apple.mobile.installd"
+             "com.apple.mobilemail.services.xpc"
+             "com.apple.springboard.backgroundappservices"
+             "com.apple.gamecenter"
+             "com.apple.cloudd"
+             "com.apple.windowserver.active"
+             "com.apple.lsd.mapdb"
+             "com.apple.usernotifications.usernotificationservice"
+             "com.apple.logind"
+             "com.apple.identityservicesd.desktop.auth"
+             "com.apple.AppSSO.service-xpc"
+             "com.apple.dnssd.service"
+             "com.apple.usymptomsd"
+             "com.apple.apsd"
+             "com.apple.securityd.xpc"
+             "com.apple.SecurityServer"
+             "com.apple.private.alloy.gamecenter-idswake"
+             "com.apple.appstoreagent.xpc"
+             "com.apple.SystemConfiguration.DNSConfiguration"
+             "com.apple.adid"
+             "com.apple.ocspd"
+             "com.apple.ak.anisette.xpc"
+             "com.apple.system.opendirectoryd.api"
+             "com.apple.SystemConfiguration.NetworkInformation"
+             "com.apple.storeassetd"
+             "com.apple.server.bluetooth"
+             "com.apple.ak.auth.xpc"
+             "com.apple.tccd"
+             "com.apple.tccd.system"
+             "com.apple.identityservicesd.idquery.desktop.auth"
+             "com.apple.AddressBook.ContactsAccountsService"
+             "com.apple.AddressBook.abd"
+             "com.apple.imagent.desktop.auth"
+             "com.apple.coreduetd.people"
+             "com.apple.SBUserNotification"
+))
+
+(allow file-read*
+    (literal "/private/var/db/CoreDuet/People/interactionC.db")
+    (literal "/private/var/db/CoreDuet/People/interactionC.db-shm")
+    (literal "/private/var/db/CoreDuet/People/interactionC.db-wal"))
+(allow file-write*
+    (literal "/private/var/db/CoreDuet/People/interactionC.db-shm"))
+    
+(allow file-map-executable
+    (subpath "/System/Library/Frameworks")
+    (subpath "/System/Library/PrivateFrameworks")
+    (subpath "/System/Library/Address Book Plug-Ins")
+)
+
+(allow process-info-pidinfo)
+
+(allow ipc-posix-shm-read-data  ipc-posix-shm-write-data ipc-posix-shm-write-create
+    (ipc-posix-name "com.apple.AppleDatabaseChanged")
+)
+
+(allow system-socket
+    (socket-domain AF_SYSTEM)
+)
+
+(with-filter (system-attribute apple-internal)
+    (allow nvram-get
+           (nvram-variable "AMFITrustedKeys")
+    )
+)
+
+(allow iokit-open
+    (iokit-registry-entry-class "RootDomainUserClient")
+)
+
+(system-network)
+(allow network-outbound)
+(allow network-inbound)
+
+(allow iokit-get-properties
+    (iokit-property "IOBuiltin")
+    (iokit-property "IOMACAddress")
+    (iokit-property "HiddenInterface")
+    (iokit-property "IOInterfaceType")
+    (iokit-property "BSD Name")
+    (iokit-property "IOPrimaryInterface")
+    (iokit-property "IOInterfaceNamePrefix")
+    (iokit-property "IOInterfaceUnit")
+    (iokit-property "IOTTYDevice")
+    (iokit-property "IOTTYBaseName")
+    (iokit-property "IOSerialBSDClientType")
+    (iokit-property "IOLocation")
+    (iokit-property "IOFeatures")
+    (iokit-property "name")
+    (iokit-property "NetworkConfigurationOverrides")
+    (iokit-property "IOClassNameOverride")
+    (iokit-property "InterfaceRole")
+    (iokit-property "SupportsIPhoneOS")
+    (iokit-property "DevicePPPOverrides")
+    (iokit-property "New Interface Detected Action")
+    (iokit-property "HiddenConfiguration")
+)
+
+(allow file-read* (extension "com.apple.app-sandbox.read"))
+(allow file-read-metadata (extension "com.apple.app-sandbox.read"))
+(allow file-issue-extension
+    (extension-class "com.apple.app-sandbox.read")
+)
+
+(allow file-read*
+    (extension "com.apple.sandbox.container")
+)
+
+(allow file-issue-extension*
+    (require-all
+        (extension-class "com.apple.app-sandbox.read-write")
+            (home-subpath "/Library/Caches/com.apple.AppleMediaServices")
+    )
+    (require-all
+        (extension-class "com.apple.app-sandbox.read-write")
+            (home-subpath "/library/caches/cloudkit/com.apple.gamed")
+    )
+)
+
+;; allow launching of games
+(allow mach-lookup
+    (global-name "com.apple.coreservices.quarantine-resolver")
+)
+(if (defined? 'lsopen)
+    (allow lsopen)
+)
+    
+;; Address book
+(allow distributed-notification-post)
+(with-filter (extension "com.apple.tcc.kTCCServiceAddressBook")
+    (allow mach-lookup
+           (global-name "com.apple.AddressBook.abd")
+           (global-name "com.apple.AddressBook.AddressBookApplicationFrameworkIPC")
+           (global-name "com.apple.AddressBook.AssistantService")
+           (global-name "com.apple.AddressBook.ContactsAccountsService")
+           (global-name "com.apple.AddressBook.SourceSync")
+           (global-name "com.apple.ContactsAgent.addressbook"))
+    (allow user-preference-read user-preference-write (preference-domain "com.apple.AddressBook"))
+    (allow file-read* file-write*
+           (home-subpath "/Library/Application Support/AddressBook")))

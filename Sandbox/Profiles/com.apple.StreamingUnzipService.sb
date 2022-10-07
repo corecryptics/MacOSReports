@@ -1,0 +1,49 @@
+;;;;;; OS X Sandbox profile for StreamingUnzipService
+;;;;;;
+;;;;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+
+(version 1)
+
+(deny default)
+
+;; Uncomment the following rules to report violations when testing a change and
+;;   set 'sysctl security.mac.sandbox.debug_mode=544' to see verbose violation reporting.
+;;
+;; (allow (with report) default)
+;; (allow (with report) file-map-executable process-info* nvram*)
+;; (allow (with report) dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; For atomic file writes from Foundation methods; create and rename out
+(allow file-write-create file-write-unlink file-read-metadata
+	(regex #"^/private/var/folders/[^/]+/[^/]+/T/TemporaryItems"))
+(allow file-write*
+	(mount-relative-regex #"^/.TemporaryItems/folders.[0-9]+(/|$)"))
+
+;; Access our prefs in ~/Library/Preferences/com.apple.StreamingUnzipService.plist
+(allow user-preference-read
+	(preference-domain "kCFPreferencesAnyApplication")
+	(preference-domain "com.apple.StreamingUnzipService"))
+
+;; Allow the service to extract archives into paths for which it has received an extension.
+(allow file-read* file-write*
+    (extension "com.apple.StreamingUnzipService"))
+;; Allow the service to read the metadata of parent paths to resolve symlinks.
+(allow file-read-metadata 
+	(extension-path-ancestor))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+;; Required for use of NSUserDefaults
+(allow file-read-metadata
+    ;; __CFXPreferencesCreatePreferencesDirectoryURLForTriplet stats the user's home directory.
+    (home-literal "")
+    ;; CFPreferencesCopyAppValue stats Preferences' parent directory.
+    (home-literal "/Library/Preferences"))

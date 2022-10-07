@@ -1,0 +1,288 @@
+;;; Copyright (c) 2021 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+
+(version 2)
+
+;;; Reminder: Change these to deny before finalizing this profile.
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Mach Lookup
+(allow mach-lookup
+       (global-name "com.apple.CARenderServer"
+                    "com.apple.MTLCompilerService"
+                    "com.apple.audio.AudioComponentRegistrar"
+                    "com.apple.audio.SandboxHelper"
+                    "com.apple.audio.audiohald"
+                    "com.apple.coremedia.videodecoder"
+                    "com.apple.coreservices.launchservicesd"
+                    "com.apple.coreservices.quarantine-resolver"
+                    "com.apple.lsd.mapdb"
+                    "com.apple.lsd.modifydb"
+                    "com.apple.tccd.system"
+                    "com.apple.window_proxies"
+                    "com.apple.windowserver.active"))
+
+;; Don't need to access these, disable reporting to reduce clutter
+(deny (with no-report)
+      mach-lookup
+      (global-name "com.apple.dock.server"
+                   "com.apple.coreservices.appleevents"))
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;;; User prefs
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.RAQL-Inline-Service"))
+(allow user-preference-read
+       (preference-domain "com.apple.universalaccess"
+                          "com.apple.HIToolbox"
+                          "kCFPreferencesAnyApplication"))
+
+;;;
+;;; IOKit
+;;;
+(allow iokit-get-properties)
+(system-graphics)
+
+(allow iokit-open-service
+       (iokit-registry-entry-class "IOAccelerator"))
+(allow iokit-open-user-client
+       (iokit-connection "IOAccelerator")
+       (iokit-user-client-class "IOAccelerationUserClient"
+                                "IOFramebufferSharedUserClient"
+                                "IOSurfaceAcceleratorClient"
+                                "IOSurfaceRootUserClient"
+                                "IOSurfaceSendRight"))
+
+;; From blastdoor.sb
+(with-filter (iokit-registry-entry-class "IOGraphicsAccelerator2")
+    (allow iokit-get-properties
+        (iokit-property "MetalPluginName"
+                        ;; Nonexistent properties
+                        "AAPL,slot-name"
+                        "SafeEjectRequested")))
+
+;; From blastdoor.sb
+(with-filter (iokit-registry-entry-class "IOPCIDevice")
+    (allow iokit-get-properties
+        (iokit-property "AAPL,slot-name"
+                        "ATY,DeviceName")))
+
+(with-filter (mac-policy-name "AMFI")
+  (allow system-mac-syscall
+         (mac-syscall-number  95)))  ; AMFI_SYSCALL_CDHASH_IN_TRUSTCACHE
+
+(with-filter (mac-policy-name "Quarantine")
+  (allow system-mac-syscall
+         (mac-syscall-number  180)))  ; QTN_SYSCALL_RESPONSIBILITY_GET
+
+
+;;;
+;;; IPC
+;;;
+(allow ipc-posix-shm-read* ipc-posix-shm-write-data
+       (ipc-posix-name-prefix "AudioIO"))
+
+;;;
+;;; Syscall
+;;;
+(allow syscall-mach
+       (machtrap-number MSC__kernelrpc_mach_port_allocate_trap
+                        MSC__kernelrpc_mach_port_construct_trap
+                        MSC__kernelrpc_mach_port_deallocate_trap
+                        MSC__kernelrpc_mach_port_destruct_trap
+                        MSC__kernelrpc_mach_port_extract_member_trap
+                        MSC__kernelrpc_mach_port_get_attributes_trap
+                        MSC__kernelrpc_mach_port_guard_trap
+                        MSC__kernelrpc_mach_port_insert_member_trap
+                        MSC__kernelrpc_mach_port_insert_right_trap
+                        MSC__kernelrpc_mach_port_mod_refs_trap
+                        MSC__kernelrpc_mach_port_request_notification_trap
+                        MSC__kernelrpc_mach_port_type_trap
+                        MSC__kernelrpc_mach_vm_allocate_trap
+                        MSC__kernelrpc_mach_vm_deallocate_trap
+                        MSC__kernelrpc_mach_vm_map_trap
+                        MSC__kernelrpc_mach_vm_protect_trap
+                        MSC__kernelrpc_mach_vm_purgable_control_trap
+                        MSC_host_create_mach_voucher_trap
+                        MSC_host_self_trap
+                        MSC_mach_generate_activity_id
+                        MSC_mach_msg_trap
+                        MSC_mach_reply_port
+                        MSC_mach_voucher_extract_attr_recipe_trap
+                        MSC_mk_timer_arm
+                        MSC_mk_timer_cancel
+                        MSC_mk_timer_create
+                        MSC_pid_for_task
+                        MSC_semaphore_signal_trap
+                        MSC_semaphore_timedwait_trap
+                        MSC_semaphore_wait_trap
+                        MSC_swtch_pri
+                        MSC_syscall_thread_switch
+                        MSC_task_name_for_pid
+                        MSC_thread_get_special_reply_port))
+
+
+(allow syscall-unix
+       (syscall-number SYS___disable_threadsignal)
+       (syscall-number SYS___pthread_kill)
+       (syscall-number SYS___pthread_sigmask)
+       (syscall-number SYS___semwait_signal)
+       (syscall-number SYS_access)
+       (syscall-number SYS_bsdthread_create)
+       (syscall-number SYS_bsdthread_ctl)
+       (syscall-number SYS_bsdthread_terminate)
+       (syscall-number SYS_csrctl)
+       (syscall-number SYS_faccessat)
+       (syscall-number SYS_fgetxattr)
+       (syscall-number SYS_flock)
+       (syscall-number SYS_fstat64)
+       (syscall-number SYS_fstatat64)
+       (syscall-number SYS_fstatfs64)
+       (syscall-number SYS_ftruncate)
+       (syscall-number SYS_getattrlist)
+       (syscall-number SYS_getattrlistbulk)
+       (syscall-number SYS_getaudit_addr)
+       (syscall-number SYS_getdirentries64)
+       (syscall-number SYS_getentropy)
+       (syscall-number SYS_geteuid)
+       (syscall-number SYS_getfsstat64)
+       (syscall-number SYS_getgid)
+       (syscall-number SYS_getpriority)
+       (syscall-number SYS_getrlimit)
+       (syscall-number SYS_gettimeofday)
+       (syscall-number SYS_getuid)
+       (syscall-number SYS_getxattr)
+       (syscall-number SYS_issetugid)
+       (syscall-number SYS_kdebug_trace)
+       (syscall-number SYS_kdebug_trace64)
+       (syscall-number SYS_kdebug_trace_string)
+       (syscall-number SYS_kevent_id)
+       (syscall-number SYS_kevent_qos)
+       (syscall-number SYS_kqueue_workloop_ctl)
+       (syscall-number SYS_lseek)
+       (syscall-number SYS_lstat64)
+       (syscall-number SYS_madvise)
+       (syscall-number SYS_mkdir)
+       (syscall-number SYS_mlock)
+       (syscall-number SYS_mmap)
+       (syscall-number SYS_mprotect)
+       (syscall-number SYS_msync)
+       (syscall-number SYS_munmap)
+       (syscall-number SYS_pread)
+       (syscall-number SYS_proc_rlimit_control)
+       (syscall-number SYS_psynch_cvbroad)
+       (syscall-number SYS_psynch_cvclrprepost)
+       (syscall-number SYS_psynch_cvsignal)
+       (syscall-number SYS_psynch_cvwait)
+       (syscall-number SYS_psynch_mutexdrop)
+       (syscall-number SYS_psynch_mutexwait)
+       (syscall-number SYS_read)
+       (syscall-number SYS_read_nocancel)
+       (syscall-number SYS_readlink)
+       (syscall-number SYS_rename)
+       (syscall-number SYS_sigprocmask)
+       (syscall-number SYS_socket)
+       (syscall-number SYS_stat64)
+       (syscall-number SYS_statfs64)
+       (syscall-number SYS_thread_selfid)
+       (syscall-number SYS_ulock_wait)
+       (syscall-number SYS_ulock_wake)
+       (syscall-number SYS_work_interval_ctl)
+       (syscall-number SYS_workq_kernreturn)
+       (syscall-number SYS_workq_open))
+
+
+
+;; From com.apple.opendirectoryd-deny-default.sb
+(with-filter (mac-policy-name "Sandbox")
+  (allow system-mac-syscall
+         (mac-syscall-number  2      ; SYSCALL_CHECK_SANDBOX
+                              4      ; SYSCALL_CONTAINER
+                              5
+                              6
+                              7)))
+
+(allow system-fcntl
+       (fcntl-command F_GETPROTECTIONCLASS
+                      F_NOCACHE
+                      F_SETFD
+                  ))
+
+;;;
+;;; Files
+;;;
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(define (tempdir-subpath temp-relative-subpath)
+    (subpath (string-append (param "TMPDIR") temp-relative-subpath)))
+
+
+(allow file-read* (extension "com.apple.app-sandbox.read"))
+
+(allow file-test-existence)
+
+;; Allow access to RAQL xpc
+(allow file-read* file-test-existence
+       (subpath "/System/Library/PrivateFrameworks/AssetViewer.framework/Versions/A/XPCServices/RAQL-Inline-Service.xpc"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+(allow file-issue-extension
+       (require-all
+           (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+           (subpath (param "TMPDIR"))))
+
+(allow file-read*
+       (tempdir-subpath "/com.apple.LaunchServices.dv") ;; From com.apple.Photos.CPLDiagnose.sb
+       (literal "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains"))
+
+(allow file-read-data
+       (literal "/Library/Preferences/com.apple.ViewBridge.plist"))
+
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.RAQL-Inline-Service")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+(allow file-issue-extension
+       (require-all
+           (extension-class "com.apple.app-sandbox.read")
+           (literal "/System/Library/PrivateFrameworks/AssetViewer.framework/Versions/A/XPCServices/RAQL-Inline-Service.xpc")))
+
+(allow file-map-executable
+       (literal "/System/Library/Components/AudioDSP.component/Contents/MacOS/AudioDSP"
+                "/System/Library/Components/CoreAudio.component/Contents/MacOS/CoreAudio"))

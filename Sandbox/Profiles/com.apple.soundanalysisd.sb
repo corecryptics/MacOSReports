@@ -1,0 +1,141 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;; bundle identifier for `soundanalysisd'
+(define snd-bundle-id (param "BUNDLE_ID"))
+
+;; install directory for `soundanalysisd'
+(define snd-executable-dir (param "EXECUTABLE_DIR"))
+
+;; executable name for `soundanalysisd'
+(define snd-executable-name (param "EXECUTABLE_NAME"))
+
+;; absolute path to `soundanalysisd' executable
+(define snd-executable-path
+        (string-append snd-executable-dir "/" snd-executable-name))
+
+;; defaults domain for `soundanalysisd'
+(define snd-preferences-domain (param "PREFERENCES_DOMAIN"))
+
+;; home directory for the user which owns `soundanalysisd`
+(define snd-user-home-dir (param "HOME"))
+
+;; a temporary directory where supporting files can be created and accessed
+(define snd-darwin-tmp-dir (param "DARWIN_TEMP_DIR"))
+
+;; a cache directory where supporting files can be created and accessed
+(define snd-darwin-cache-dir (param "DARWIN_CACHE_DIR"))
+
+;; a cache directory under `Library` for creation/access of supporting files
+(define snd-library-cache-dir
+        (string-append snd-user-home-dir
+                       "/Library/Caches/"
+                       snd-bundle-id))
+
+;;; -- RULES --
+
+;; Deny everything by default; add permissions
+(deny default)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+
+;; For anything that CoreFoundation might do
+(corefoundation)
+
+;; For getting information about the current process, including the PID
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients
+(allow process-info-codesignature)
+
+;; For access to a preferences domain
+;; This is used for reading settings configured with `defaults write`.
+(allow user-preference-read
+       (preference-domain snd-preferences-domain)
+       (preference-domain "kCFPreferencesAnyApplication"))
+
+;; For read/write access to cache/temporary directories (espresso uses these)
+(allow file-read* file-write*
+       (subpath snd-darwin-tmp-dir)
+       (subpath snd-darwin-cache-dir))
+
+;; For hosting audio analysis server
+(allow mach-register
+       (global-name snd-bundle-id))
+
+;; For read/write access to /Library/Caches directory
+(allow file-read* file-write*
+       (subpath snd-library-cache-dir))
+
+;; For tapping audio out of our DSP Graphs
+(allow file-read* file-map-executable
+       (path "/usr/local/lib/libAudioDiagnostics.dylib"))
+
+;; For connecting to the system audio server
+(allow mach-lookup (global-name "com.apple.audio.audiohald"))
+
+;; For interfacing specifically with the IOAudio1 built-in audio driver
+(allow file-map-executable
+       (subpath "/System/Library/Extensions/AppleHDA.kext"))
+(allow iokit-open
+        (iokit-user-client-class "IOAudioControlUserClient")
+        (iokit-user-client-class "IOAudioEngineUserClient"))
+
+;; For shuttling audio data to/from the audio server
+(allow ipc-posix-shm-read-data
+       ipc-posix-shm-write-data
+       (ipc-posix-name-regex #"^AudioIO"))
+
+;; For access to the system microphone
+(allow device-microphone)
+
+;; For access to Metal, for compiling MLModels
+(system-graphics)
+
+;; For drivers used by Metal (these may vary by GPU; match flexibly)
+(allow file-map-executable
+       (regex #"^/System/Library/Extensions/[A-Za-z0-9]+\.bundle/"))
+
+;; For MessageTracer, used by Metal, which accesses CrashReporter dir
+(allow file-read*
+       (subpath "/Library/Application Support/CrashReporter/"))
+
+;; For the ability to look up system audio dsp components
+(allow mach-lookup
+       (global-name "com.apple.audio.AudioComponentRegistrar"))
+
+;; For access to the dsp components themselves
+(allow file-map-executable
+       (subpath "/System/Library/Components/CoreAudio.component/"))
+
+;; For the ability to read info about own executable, such as bundle id
+(allow file-read-data (path snd-executable-dir))
+(allow file-read-data (path snd-executable-path))
+
+;; For supporting the audio clip file server on internal builds
+(with-filter (system-attribute apple-internal)
+
+  ;; For advertising saved audio clips to other devices
+  (allow mach-lookup (global-name "com.apple.CompanionLink"))
+
+  ;; For supporting CoreUtils and Rapport in advertising audio clips
+  (allow file-read*
+         (literal "/AppleInternal/Library/Preferences/com.apple.coreutils.dashboard.plist"))
+  (allow mach-lookup
+         (global-name "com.apple.SystemConfiguration.configd"))
+
+  ;; For the network access needed to send audio clips to other devices
+  (allow network-outbound
+         (literal "/private/var/run/mDNSResponder")
+         (remote tcp)
+         (remote udp "*:57421")
+         (remote udp "*:16402")))

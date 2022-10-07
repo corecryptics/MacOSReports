@@ -1,0 +1,111 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+
+(version 1)
+
+(deny default)
+(deny process-info* nvram*)
+(deny dynamic-code-generation)
+    
+(allow process-info-pidinfo)
+(allow process-info-dirtycontrol)
+(allow process-info-setcontrol)
+
+(allow network-outbound)
+
+(allow system-socket)
+(allow system-fsctl)
+
+(allow sysctl-read)
+
+(allow file-map-executable
+    (literal "/usr/lib/libobjc-trampolines.dylib"))
+
+(allow ipc-posix-shm-read-data
+    (ipc-posix-name "apple.cfprefs.501v1")
+    (ipc-posix-name "apple.cfprefs.daemonv1"))
+
+(allow mach-lookup
+    (global-name "com.apple.AppSSO.service-xpc"
+                 "com.apple.CoreServices.coreservicesd"
+                 "com.apple.SecurityServer"
+                 "com.apple.SystemConfiguration.DNSConfiguration"
+                 "com.apple.SystemConfiguration.configd"
+                 "com.apple.accountsd.accountmanager"
+                 "com.apple.adid"
+                 "com.apple.ak.anisette.xpc"
+                 "com.apple.analyticsd"
+                 "com.apple.apsd"
+                 "com.apple.cfprefsd.agent"
+                 "com.apple.cfprefsd.daemon"
+                 "com.apple.coreservices.quarantine"
+                 "com.apple.distributed"
+                 "com.apple.dnssd.service"
+                 "com.apple.locationd.desktop.synchronous"
+                 "com.apple.logd.events"
+                 "com.apple.lsd.mapdb"
+                 "com.apple.lsd.modifydb"
+                 "com.apple.mediaremoted.xpc"
+                 "com.apple.runningboard"
+                 "com.apple.symptom"
+                 "com.apple.system.opendirectoryd.api"
+                 "com.apple.trustd.agent"
+                 "com.apple.usernotifications.usernotificationservice"
+                 "com.apple.usymptomsd"
+                 "com.apple.windowserver.active"
+                 "com.apple.xpc.amsengagementd"
+                 "com.apple.xpc.amstoold"
+                 "com.apple.symptom_analytics"
+                 "com.apple.distributed_notifications@Uv3"
+                 "com.apple.watchlistd.aps"
+                 "com.apple.watchlistd.xpc"
+                 "com.apple.system.opendirectoryd.libinfo"
+                 "com.apple.diagnosticd"
+                 "com.apple.FileCoordination"))
+
+(allow user-preference-read
+    (preference-domain "com.apple.AppleMediaServices")
+    (preference-domain "com.apple.TV")
+    (preference-domain "com.apple.tv")
+    (preference-domain "com.apple.WatchListKit")
+    (preference-domain "com.apple.itunesstored")
+    (preference-domain "kCFPreferencesAnyApplication"))
+
+(allow user-preference-write
+    (preference-domain "com.apple.AppleMediaServices")
+    (preference-domain "com.apple.WatchListKit"))
+
+(allow file-read-metadata)
+
+(allow process-info-pidinfo)
+
+(allow distributed-notification-post)
+
+(allow file*
+    (literal "/dev/urandom")
+    (regex #"/Users/.*/Library/com\.apple\.WatchListKit/.*")
+    (regex #"/Users/.*/Library/Caches/com\.apple\.watchlistd/.*")
+    (regex #"/Users/.*/Caches/com\.apple\.AppleMediaServices/.*")
+    (regex #"/Users/.*/Caches/com\.apple\.AppleMediaServices/Storage/.*")
+    (regex #"/Users/.*/Library/Caches/com\.apple\.AppleMediaServices/Metrics/com\.apple\.AppleMediaServices/.*"))
+    
+(allow file-write*
+    (subpath "/private/var"))
+    
+(allow file-read-data
+    (literal "/private/var/run/resolv.conf")
+    (literal "/private/var/folders/lp")
+    (literal "/usr/share/icu/icudt68l.dat")
+    (literal "/usr/local/lib/log")
+    (literal "/System/Library/OpenDirectory/request-schema.plist")
+    (literal "/private/etc/passwd")
+    (subpath "/System/Library/CoreServices")
+    (subpath "/usr/lib")
+    (subpath "/Library/Preferences/Logging")
+    (subpath "/System/Library/Frameworks")
+    (subpath "/System/Library/PrivateFrameworks")
+    (subpath "/private/var"))

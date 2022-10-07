@@ -1,0 +1,64 @@
+(version 1)
+
+(deny default)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.AppStoreDaemon.StorePrivilegedTaskService"))
+
+(allow file-read*
+        (subpath "/private/var/folders")
+)
+
+(allow file-read* file-write*
+    (require-all
+        (vnode-type DIRECTORY)
+        (require-any
+            (literal "/Library/Application Support/App Store")
+            (regex #"^/Applications/.*\.appdownload(/Contents)?$")
+            (regex #"\.app/Contents/_MASReceipt$")))
+    (require-all
+        (vnode-type REGULAR-FILE)
+        (require-any
+            (literal "/Library/Application Support/App Store/adoption.plist")
+            (literal "/Library/Preferences/com.apple.commerce.plist")
+            (regex #"\.appdownload/Contents/placeholderinfo$")
+            (regex #"\.appdownload/Icon")
+            (regex #"\.app/Contents/_MASReceipt/receipt$")))
+
+    (subpath "/Library/Application Support/AppStoreContent")
+    (subpath "/Library/Application Support/AppStore/GroupContent")
+    (subpath "/System/Library/Caches/com.apple.appstored")
+    (subpath "/System/Library/Caches/OnDemandResources")
+    
+    ;; Writing files atomically will write them in the tmp directory initially, used for ODR
+    (subpath (param "_TMPDIR"))
+    
+    ;; Needed to move asset packs from appstoreagent's download directory
+    (regex #"^/private/var/folders/.*com.apple.appstore/ODR/")
+)
+
+;; Restrict the xattrs we can write/delete to the ones we actually need to set, and on app bundles only
+(allow file-write-xattr
+    (require-all
+        (regex #"\.app$")
+        (require-any
+            (xattr "com.apple.writer_bundle_identifier")
+            (xattr "com.apple.appstore.store_cohort")
+            (xattr "com.apple.appstore.storefront")
+            (xattr "com.apple.appstore.vendor_name")
+        )
+    )
+)

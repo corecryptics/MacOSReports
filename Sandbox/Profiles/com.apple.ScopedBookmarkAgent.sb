@@ -1,0 +1,90 @@
+(version 1)
+
+(deny default)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define (home-prefix home-relative-subpath)
+    (prefix (string-append (param "_HOME") home-relative-subpath)))
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "_HOME") home-relative-subpath)))
+(define (home-literal home-relative-literal)
+	(literal (string-append (param "_HOME") home-relative-literal)))
+
+;; Needed to check validity of the client
+(allow file-read*
+    (extension "com.apple.app-sandbox.read"))
+
+;; Read-metadata and r/w xattr access to the entire FS
+;; is needed to be able to create and resolve bookmarks
+(allow file-read-metadata)
+(allow file-read-xattr file-write-xattr
+    (xattr-prefix "com.apple.security.")
+    (xattr-prefix "com.apple.bookmark."))
+
+(allow user-preference-read
+    (preference-domain "kCFPreferencesAnyApplication"))
+(allow user-preference-read user-preference-write
+    (preference-domain "ScopedBookmarkAgent"))
+
+;; Issue sandbox extensions
+(allow file-issue-extension
+    (extension-class "com.apple.app-sandbox.read"
+                     "com.apple.app-sandbox.read-write"))
+
+
+;; Keychains
+(allow user-preference-read
+    (preference-domain "com.apple.security")
+    (preference-domain "com.apple.security-common"))
+
+(allow file-read*
+    (subpath "/Library/Keychains"))
+(allow file-read* file-write*
+    (home-subpath "/Library/Keychains"))
+
+(allow file-read-metadata
+    (literal "/private/var/run/systemkeychaincheck.done")
+    (literal "/private/var/run/systemkeychaincheck.socket"))
+
+(allow network-outbound
+    (literal "/private/var/run/systemkeychaincheck.socket"))
+
+
+;;; Security framework
+(allow mach-lookup
+    (global-name "com.apple.SecurityServer"))
+
+(allow file-read*
+    (subpath "/private/var/db/DetachedSignatures")
+    (subpath "/private/var/db/mds/system")
+    (subpath "/private/var/db/mds/messages"))
+
+
+(allow ipc-posix-shm-read-data
+    ipc-posix-shm-write-create
+    ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+
+;; Read/write access to temporary and cache directories.
+(allow file-read* file-write*
+    (subpath (param "TMPDIR"))
+    (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Container Manager
+(allow mach-lookup (global-name "com.apple.containermanagerd"))
+
+;; LaunchServices
+(allow mach-lookup
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.lsd.modifydb"))
+
+;; NetFS
+(allow mach-lookup
+    (global-name "com.apple.netauth.user.auth"))

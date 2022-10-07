@@ -1,0 +1,111 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(system-network)
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.symptomsd-diag"))
+
+(allow user-preference-read
+       (preference-domain "com.apple.conference"))
+
+;; Lifted from 'util.sb' in 'sandbox_profiles'
+(macro (define-once form)
+  (let* ((ps (cdr form))
+         (signature (car ps))
+         (body (cdr ps))
+         (name (car signature)))
+    (if (not (defined? name))
+        `(define ,signature ,@body))))
+
+;; Lifted from 'common.sb' in 'sandbox_profiles'
+(define-once (allow-read-write-and-issue-generic-extensions . filters)
+    (allow file-read* file-write*
+           (apply require-any filters))
+    ;; Explicitly allow reading the metadata so processes can get timestamps.
+    (allow file-read-metadata
+           (apply require-any filters))
+    (allow file-issue-extension
+        (require-all
+            ;; APP_SANDBOX_READ - default for sandbox_issue_extension() & sandbox_issue_fs_extension().
+            ;; APP_SANDBOX_READ_WRITE  - default for sandbox_issue_fs_extension() & sandbox_issue_fs_rw_extension().
+            (extension-class "com.apple.app-sandbox.read-write" "com.apple.app-sandbox.read")
+            (apply require-any filters))))
+
+;; Read/write/issue extensions access to a important FS locations
+(allow-read-write-and-issue-generic-extensions
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR"))
+       (subpath "/Library/Logs/AutoBugCapture")
+       (subpath "/Library/Logs/DiagnosticReports")
+       (subpath "/Library/AutoBugCapture")
+       (subpath "/Library/Application Support/CrashReporter")
+       (subpath "/usr/libexec")
+       (subpath "/private/var/db/DiagnosticPipeline"))
+
+(allow file-read*
+       (home-subpath "/Library/Preferences/")
+       (literal "/Library/Preferences/.GlobalPreferences.plist")
+)
+
+;; Allow consumption of R and RW sandbox extensions
+(allow file-read* (extension "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write"))
+(allow file-write* (extension "com.apple.app-sandbox.read-write"))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.symptomsd-diag")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Mach-lookup
+(allow mach-lookup
+        (global-name "com.apple.osanalytics.osanalyticshelper"
+                     "com.apple.awdd"
+                     "com.apple.networkdiagnosticsd"
+                     "com.apple.cloudd.system"
+                     "com.apple.symptom_diagnostics_collection"
+                     "com.apple.pluginkit.pkd"
+                     "com.apple.apsd"
+                     "com.apple.system.opendirectoryd.api"
+                     "com.apple.SystemConfiguration.configd"
+                     "com.apple.tailspind"))

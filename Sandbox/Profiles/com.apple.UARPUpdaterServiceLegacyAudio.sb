@@ -1,0 +1,109 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; Training wheels ON...
+(allow (with report) default)
+(allow (with report) file-map-executable iokit-get-properties process-info* nvram*)
+(allow (with report) dynamic-code-generation)
+
+;;; Training wheels OFF...
+;;; (deny default)
+;;; (deny file-map-executable iokit-get-properties process-info* nvram*)
+;;; (deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+(define
+    (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex))
+)
+
+(define
+    (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath))
+)
+
+(define
+    (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix))
+)
+
+(define
+    (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal))
+)
+
+(allow process-info* (target self))
+
+(allow file-read-metadata)
+
+(allow process-info-codesignature)
+
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.MobileAccessoryUpdater.EAUpdaterService")
+    (preference-domain "com.apple.UARPUpdaterServiceLegacyAudio")
+    (preference-domain "com.apple.UARPUpdaterServiceLegacyAudioDatabase")
+)
+
+(allow file-read* file-write*
+    (subpath (param "TMPDIR"))
+)
+
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.MobileAccessoryUpdater.EAUpdaterService")))
+    (allow file-read* file-write* cache-path-filter)
+    (allow file-issue-extension
+        (require-all
+            (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+            cache-path-filter
+        )
+    )
+)
+
+(allow file-read* file-write*
+    (subpath "/private/var/db/fud/")
+    (subpath "/private/var/run/fudinit/")
+    (subpath "/private/var/db/mds/")
+    (subpath "/private/var/db/com.apple.MobileAccessoryUpdater/")
+    (subpath "/private/var/db/accessoryupdater/")
+)
+
+(allow file-read-data
+    (subpath "/Applications/AppleConnect.app/")
+    (subpath "/Library/Frameworks/AppleConnect.framework/")
+    (subpath "/Library/Frameworks/RemoteLogger.framework/")
+)
+
+(allow mach-lookup
+    (global-name "com.apple.accessories.externalaccessory-server")
+    (global-name "com.apple.corespeech.corespeechservices")
+    (global-name "com.apple.mobileassetd")
+    (global-name "com.apple.mobileassetd.v2")
+    (global-name "com.apple.installerauthagent")
+    (global-name "com.apple.AppSSO.service-xpc")
+    (global-name "com.apple.commcenter.coretelephony.xpc")
+)
+
+(allow file-map-executable
+    (subpath "/Applications/AppleConnect.app/")
+    (subpath "/Library/Frameworks/RemoteLogger.framework/")
+    (subpath "/Library/Frameworks/AppleConnect.framework/")
+)
+
+(allow iokit-get-properties
+    (iokit-property "IOConsoleUsers")
+)
+
+(allow user-preference*
+    (preference-domain "com.apple.mobileaccessoryupdater")
+    (preference-domain "com.apple.MobileAccessoryUpdater")
+    (preference-domain "kCFPreferencesAnyApplication")
+)

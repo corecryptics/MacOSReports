@@ -1,0 +1,201 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <?xml version="1.0" encoding="UTF-8"?>\
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\
+<plist version="1.0">\
+<dict>\
+	<key>CustomTaggerMaxTokenCount</key>\
+	<integer>3</integer>\
+	<key>DifferentiallyPrivateLogLevels</key>\
+	<dict>\
+		<key>Extraction.high</key>\
+		<array>\
+			<string>movie</string>\
+			<string>tourist attraction</string>\
+		</array>\
+		<key>Extraction.low</key>\
+		<array>\
+			<string>professional athlete</string>\
+			<string>sports team</string>\
+			<string>politician</string>\
+			<string>actor</string>\
+		</array>\
+		<key>Extraction.medium</key>\
+		<array>\
+			<string>musician</string>\
+			<string>dynamic</string>\
+		</array>\
+	</dict>\
+	<key>ExtractionAlgorithmConfiguration</key>\
+	<dict>\
+		<key>AGGRESSIVE</key>\
+		<array>\
+			<string>Knowledge Graph</string>\
+			<string>Core Routine</string>\
+			<string>CoreNLP</string>\
+			<string>Data Detectors</string>\
+			<string>NSUA Structured Location</string>\
+			<string>Trusted Location</string>\
+			<string>Maps Interaction</string>\
+			<string>Media Player Now Playing</string>\
+			<string>EventKit Import</string>\
+			<string>Photos Knowledge Graph</string>\
+			<string>Parsec Donation</string>\
+			<string>Podcasts Interaction</string>\
+			<string>Contacts Import</string>\
+		</array>\
+		<key>AGGRESSIVE_RULES</key>\
+		<dict>\
+			<key>*</key>\
+			<dict>\
+				<key>ADD</key>\
+				<array/>\
+				<key>BUNDLES</key>\
+				<dict>\
+					<key>com.apple.AddressBook</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Custom Tagger</string>\
+						</array>\
+					</dict>\
+					<key>com.apple.MobileAddressBook</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Custom Tagger</string>\
+						</array>\
+					</dict>\
+					<key>com.apple.mobilenotes</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Custom Tagger</string>\
+						</array>\
+					</dict>\
+					<key>com.apple.reminders</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Custom Tagger</string>\
+						</array>\
+					</dict>\
+				</dict>\
+				<key>DEL</key>\
+				<array/>\
+			</dict>\
+			<key>en</key>\
+			<dict>\
+				<key>ADD</key>\
+				<array>\
+					<string>Augmented Gazetteer</string>\
+				</array>\
+				<key>BUNDLES</key>\
+				<dict>\
+					<key>com.apple.AddressBook</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Augmented Gazetteer</string>\
+						</array>\
+					</dict>\
+					<key>com.apple.MobileAddressBook</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Augmented Gazetteer</string>\
+						</array>\
+					</dict>\
+					<key>com.apple.mobilenotes</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Augmented Gazetteer</string>\
+						</array>\
+					</dict>\
+					<key>com.apple.reminders</key>\
+					<dict>\
+						<key>ADD</key>\
+						<array/>\
+						<key>DEL</key>\
+						<array>\
+							<string>Augmented Gazetteer</string>\
+						</array>\
+					</dict>\
+				</dict>\
+				<key>DEL</key>\
+				<array/>\
+			</dict>\
+		</dict>\
+		<key>CONSERVATIVE</key>\
+		<array>\
+			<string>Data Detectors</string>\
+		</array>\
+		<key>CONSERVATIVE_RULES</key>\
+		<dict>\
+			<key>*</key>\
+			<dict>\
+				<key>ADD</key>\
+				<array/>\
+				<key>BUNDLES</key>\
+				<dict/>\
+				<key>DEL</key>\
+				<array/>\
+			</dict>\
+			<key>en</key>\
+			<dict>\
+				<key>ADD</key>\
+				<array>\
+					<string>Augmented Gazetteer</string>\
+				</array>\
+				<key>BUNDLES</key>\
+				<dict/>\
+				<key>DEL</key>\
+				<array/>\
+			</dict>\
+		</dict>\
+	</dict>\
+	<key>FlattenNamedEntitiesForCoreML</key>\
+	<false/>\
+	<key>MapsSearchQueryFromDateInterval</key>\
+	<real>-3628800</real>\
+	<key>MapsSearchQueryLimit</key>\
+	<integer>500</integer>\
+	<key>MaxNumberNamedEntities</key>\
+	<integer>31536000</integer>\
+	<key>NamedEntityDecayHalfLifeSeconds</key>\
+	<integer>31536000</integer>\
+	<key>NamedEntityFeedbackUsesCoreML</key>\
+	<false/>\
+	<key>NamedEntityLoadAndMonitorInitialLoadLimit</key>\
+	<integer>500</integer>\
+	<key>NamedEntityScoringUsesCoreML</key>\
+	<false/>\
+	<key>NamedEntityScoringUsesHybrid</key>\
+	<false/>\
+	<key>ScoreThresholdForNamedEntity</key>\
+	<real>0.20000000000000001</real>\
+	<key>Use2StageScoreInterpreterForNEScoring</key>\
+	<true/>\
+</dict>\
+</plist>\
+}

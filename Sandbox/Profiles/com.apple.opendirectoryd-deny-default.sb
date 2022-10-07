@@ -1,0 +1,531 @@
+;; Copyright (c) 2011-2020 Apple Inc.  All Rights reserved.
+;;
+;; WARNING: The sandbox rules in this file currently constitute
+;; Apple System Private Interface and are subject to change at any time and
+;; without notice.
+;;
+
+;; Temporary (near) copy of the sandbox profile built into the Sandbox project
+;; used for testing the strict enforcement (deny default).
+
+(version 3)
+
+(disable-callouts)
+
+(deny default)
+
+;; Executable
+(allow file-read*
+       (literal "/usr/libexec"
+                "/usr/libexec/opendirectoryd"))
+
+;; Process info
+(allow process-info-codesignature)
+(allow process-info-dirtycontrol (target self))
+(allow process-info-pidinfo)
+
+;; Network
+
+(allow network-inbound (local udp))
+(allow network-bind (local ip))
+
+(allow network-outbound
+       (literal "/private/var/run/ldapi"
+                "/private/var/run/mDNSResponder"
+                "/private/var/run/passwordserver"
+                "/private/var/run/syslog")
+       (remote ip)
+       (require-all
+           (socket-domain AF_SYSTEM)
+           (socket-protocol 2)))  ; AF_SYS_CONTROL
+
+(allow system-socket
+       (socket-domain AF_SYSTEM))
+
+(allow socket-ioctl
+       (ioctl-command CTLIOCGINFO
+                      SIOCGIFFLAGS))
+
+(allow socket-option-get
+       (socket-option-name 262           ; missing alias
+                           SO_ERROR
+                           SO_NREAD
+                           SO_REUSEPORT))
+
+(allow socket-option-set
+       (socket-option-name SO_DEBUG
+                           SO_KEEPALIVE
+                           SO_NECP_ATTRIBUTES
+                           SO_NECP_CLIENTUUID
+                           SO_NOADDRERR
+                           SO_NOSIGPIPE
+                           SO_RCVBUF
+                           SO_RCVTIMEO
+                           SO_SNDTIMEO))
+
+(allow system-audit)
+
+;; Authorization
+(allow authorization-right-obtain
+       (right-name "com.apple.opendirectoryd.linkidentity"
+                   "config.modify.trust-settings"
+                   "system.services.directory.configure"))
+
+;; CFPreferences (direct mode)
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-data
+       (ipc-posix-name-prefix "apple.cfprefs.0v"))   ; <uid>v<shmem version>
+(allow user-preference-read
+       (preference-domain "com.apple.security"
+                          "kCFPreferencesAnyApplication"
+                          "opendirectoryd"))
+
+;; BootPolicy, Local Policy
+(allow file-read* file-write*
+       (subpath "/System/Volumes/iSCPreboot"))
+
+;; MobileActivation, Software Update
+(allow nvram-set
+       (iokit-property "IONVRAM-FORCESYNCNOW-PROPERTY"
+                       "policy-nonce-digests"))
+
+;; Security.framework
+(allow file-read* file-write*
+       (subpath "/private/var/db/mds/system"))
+(allow file-read*
+       (literal "/private/var/db/mds/messages/se_SecurityMessages"))
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+       (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+;; IOKit
+(allow iokit-open-service
+       (iokit-user-client-class "AppleAPFSContainer"
+                                "AppleCredentialManager"
+                                "AppleKeyStore"
+                                "BootPolicy"
+                                "IOPMrootDomain"))
+
+(allow iokit-open-user-client
+       (iokit-user-client-class "AppleAPFSUserClient"
+                                "AppleCredentialManagerUserClient"
+                                "AppleKeyStoreUserClient"
+                                "BootPolicyUserClient"
+                                "RootDomainUserClient"))
+
+(allow iokit-get-properties)
+
+;; Mach services
+(allow mach-lookup
+       (global-name "com.apple.AccountPolicyHelper"
+                    "com.apple.AppSSO.service-xpc"
+                    "com.apple.DiskArbitration.diskarbitrationd"
+                    "com.apple.GSSCred"
+                    "com.apple.PowerManagement.control"
+                    "com.apple.SecurityServer"
+                    "com.apple.SystemConfiguration.DNSConfiguration"
+                    "com.apple.SystemConfiguration.configd"
+                    "com.apple.analyticsd"
+                    "com.apple.analyticsd.messagetracer"
+                    "com.apple.authd"
+                    "com.apple.diagnosticd"
+                    "com.apple.distributed_notifications@1v3"
+                    "com.apple.logd.events"
+                    "com.apple.metadata.mds"
+                    "com.apple.ocspd"
+                    "com.apple.securityd.xpc"
+                    "com.apple.spindump"
+                    "com.apple.system.logger"
+                    "com.apple.trustd"))
+
+; Avoid deadlock with coreservicesd.
+(deny mach-lookup (with no-report)
+      (global-name "com.apple.CoreServices.coreservicesd"))
+
+;; sysctl
+(allow sysctl-read)
+
+;; opendirectoryd may launch executables using od_launch_task()
+;; 1. [ActiveDirectoryClientModule] nsupdate, slapconfig
+;; 2. [AppleODClientModule] slapconfig
+;; 3. [ODFDESupport] kextcache
+;;
+;; NB:
+;; 1. Launch nsupdate in opendirectoryd's sandbox to avoid SUGID tainting.
+;; 2. The other executables continue to launch un-sandboxed (for now).
+;; 3. Need to update this profile with nsupdate rules!
+(allow process-fork)
+(allow process-exec
+       (literal "/usr/bin/nsupdate"))
+(allow process-exec (with no-sandbox)
+       (literal "/usr/sbin/kextcache")
+       (literal "/usr/sbin/slapconfig"))
+
+;; Darwin user base directory for root
+(allow file-read* file-write*
+       (subpath "/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T/com.apple.opendirectoryd"))
+(with-filter (vnode-type DIRECTORY)
+  (allow file-write*
+         (literal "/private/var/folders/zz"
+                  "/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000"
+                  "/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T"
+                  "/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T/com.apple.opendirectoryd")))
+(allow file-read*
+       (subpath "/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/Cleanup At Startup/SMRemoteFileSystemCache/var/db/dslocal"))
+
+;; OpenDirectory database
+(allow file-read*
+       ; {/Volumes/<volume>,}/private/var/db/dslocal
+       (mount-relative-subpath "/Previous System/private/var/db/dslocal")
+       (mount-relative-subpath "/private/var/db/dslocal")
+       (subpath                "/private/var/db/openldap")
+       (subpath                "/private/var/db/temp/private/var/db/dslocal")
+       ; APFS Destination Mounts: kTMMountsDirectoryName
+       ; /Volumes/.timemachine/<UUID>/<YYYY-MM-DD-HHMMSS>.backup/<YYYY-MM-DD-HHMMSS>.backup/<Volume Name>/private/var/db/dslocal
+       (require-all
+           (subpath "/Volumes/.timemachine/${ANY_UUID}")
+           (regex  #"^/[^/]+/[^/]+/[^/]+/[0-9-]+\.backup/[0-9-]+\.backup/[^/]+/private/var/db/dslocal($|/)"))
+       ; Time Machine Backup
+       ; /Volumes/<Volume Name>/Backups.backupdb/<Computer Name>/<YYYY-MM-DD-HHMMSS>/<Volume Name>/private/var/db/dslocal
+       (regex #"^/Volumes/[^/]+/Backups\.backupdb/[^/]+/[^/]+/[^/]+/private/var/db/dslocal($|/)"))
+
+(allow file-write*
+       (mount-relative-subpath "/private/var/db/dslocal/nodes/Default")
+       (subpath                "/private/var/db/dslocal/nodes/Default"))
+
+;; SecureAccessToken
+;; FIXME: which other locations should be listed here (e.g. see OD database above)?
+(allow file-write-unlink
+       (require-all
+           (subpath "/Volumes/.timemachine/${ANY_UUID}")
+           (regex  #"$/[^/]+/[^/]+/[^/]+/[0-9-]+\.backup/[0-9-]+\.backup/[^/]+/private/var/db/dslocal/Default/secureaccesstoken.plist$")))
+
+;; Shadowhash files
+;; 1. opendirectoryd/src/modules/PlistFile/PlistFile.c :: odm_create_connection_with_options()
+;; 2. No events in Splunk so far.
+(allow file-read* file-write* (with telemetry)
+       (subpath                "/private/var/db/shadow")
+       (mount-relative-subpath "/private/var/db/shadow"))
+
+;; Configuration
+(allow file-read* file-write*
+       (literal "/Library/Preferences/opendirectoryd.plist")
+       (subpath "/Library/Preferences/OpenDirectory")
+       (subpath "/Library/Preferences/SystemConfiguration"))
+(allow file-read*
+       (literal "/Library/Managed Preferences/.GlobalPreferences.plist")
+       (literal "/Library/Managed Preferences/opendirectoryd.plist")
+       (literal "/Library/Managed Preferences/root/.GlobalPreferences.plist")
+       (literal "/Library/Managed Preferences/root/opendirectoryd.plist")
+       (subpath "/Library/OpenDirectory")
+       (literal "/Library/Preferences/.GlobalPreferences.plist")
+       (subpath "/Library/Preferences/Logging")
+       (literal "/Library/Preferences/com.apple.Kerberos.plist")
+       (literal "/Library/Preferences/com.apple.networkd.plist")
+       (literal "/Library/Preferences/com.apple.opendirectoryd.cache.plist")
+       (literal "/Library/Preferences/com.apple.security-common.plist")
+       (literal "/Library/Preferences/com.apple.security.plist")
+       (literal "/Library/Preferences/edu.mit.Kerberos")
+       (subpath "/System/Library/OpenDirectory")
+       (literal "/private/var/root/Library/Preferences/.GlobalPreferences_m.plist")
+       (literal "/private/var/root/Library/Preferences/.GlobalPreferences.plist")
+       (prefix  "/private/var/root/Library/Preferences/ByHost/.GlobalPreferences.")  ; {host-uuid}.plist
+       (prefix  "/private/var/root/Library/Preferences/ByHost/opendirectoryd.")
+       (literal "/private/var/root/Library/Preferences/opendirectoryd.plist"))
+
+(with-filter (system-attribute apple-internal)
+  (allow file-read*
+         (subpath "/AppleInternal/Library/Preferences/Logging/Subsystems")  ; com.apple.network.plist
+         (subpath "/usr/local/lib/log")))
+
+;; CrashReporter
+(allow file-read*
+       (literal "/Library/Application Support/CrashReporter/SubmitDiagInfo.domains"))
+
+;; Keychain
+(allow file-read* file-write*
+       (prefix  "/Library/Keychains/System.keychain")
+       (prefix  "/Library/Keychains/.fl"))
+(allow file-read*
+       (literal "/System/Library/Keychains/SystemTrustSettings.plist")
+       (prefix  "/Library/Keychains/FileVaultMaster.keychain")
+       (subpath "/private/var/root/Library/Keychains"))
+(allow file-write* (with telemetry)
+       (literal "/System/Library/Keychains/SystemTrustSettings.plist")
+       (prefix  "/Library/Keychains/FileVaultMaster.keychain"))
+
+(allow file-read* file-write*
+       ;; Kerberos keytab updates
+       (literal "/private/etc/krb5.keytab")  ; file-write-{data,mode,owner}
+       (prefix  "/private/tmp/krb5cc_")      ; file-read-{data,metadata}, file-write-{create,data,unlink}
+
+       ;; NIS
+       ;; _write_ypservers(): /var/yp/binding/<domain>.ypservers, /var/yp/binding/<domain>.{1,2}
+       (literal "/Library/Preferences/DirectoryService/nisdomain"
+                "/private/etc/defaultdomain")
+       (subpath "/private/var/yp")
+
+       ;; SystemCache
+       (prefix  "/private/etc/memberd.conf")
+       (subpath "/private/var/db/caches/opendirectory"))  ; file-write-{create,unlink}: mbr-cache.tmp}
+                                                          ; file-write-{create,unlink} + file-read-data: mbr-cache
+
+(allow file-read*
+       (subpath "/private/var/db/krb5kdc"))
+
+(allow file-read* file-map-executable
+       ;; GSSAPI
+       (subpath "/Library/KerberosPlugins/GSSAPI")
+       (subpath "/System/Library/KerberosPlugins/GSSAPI")
+
+       ;; KerberosFrameworkPlugins
+       (subpath "/Library/KerberosPlugins/KerberosFrameworkPlugins")
+       (subpath "/System/Library/KerberosPlugins/KerberosFrameworkPlugins")
+
+       ;; OpenDirectory modules
+       (subpath "/System/Library/OpenDirectory/Modules")
+
+       ;; Misc
+       (subpath "/Library/Frameworks/AppleConnectDefaults.framework")
+
+       ;; System (system.sb)
+       (subpath "/System/Library/Frameworks")
+       (subpath "/System/Library/PrivateFrameworks")
+       (subpath "/usr/lib/")
+)
+
+(allow file-read*
+       (subpath "/Library/DirectoryServices/PlugIns")
+       (subpath "/System/Library/FeatureFlags")
+
+       ;; Misc
+       (subpath "/private/etc")
+       ;; Temp
+       (prefix "/private/tmp/quic-keychain.")  ; [A-Za-z0-9]{5}
+)
+
+;; Symlink resolution etc
+(allow file-read-metadata)
+(allow file-test-existence)
+
+;;;
+;;; The rules below are copied from / inspired by system.sb.
+;;; Unlike most profiles, com.apple.opendirectoryd.sb likely cannot (import "system.sb")
+;;; directly due to layering, e.g. some Mach services in system.sb depend on opendirectoryd.
+;;;
+
+;;; Allow access to standard special files.
+(allow file-read*
+       (literal "/dev/random")
+       (literal "/dev/urandom")
+       (literal "/private/etc/master.passwd")
+       (subpath "/usr/share/"))
+
+(allow file-read* file-write-data
+       (literal "/dev/null")
+       (literal "/dev/zero"))
+
+(allow file-read* file-write-data file-ioctl
+       (literal "/dev/dtracehelper"))
+
+(allow file-read*
+       (mount-relative-subpath "/System/Library/CoreServices")   ; SystemVersion.plist
+     ; (subpath "/System/Library/CoreServices")
+     ; (literal "/System/Library/Keychains/SystemTrustSettings.plist")
+     ; (subpath "/System/Library/OpenDirectory")
+     ; (subpath "/System/Library/FeatureFlags")
+     ; (subpath "/System/Library/Security")
+       (subpath "/System")
+       (subpath "/private/var/db/timezone"))
+
+
+;;; Syscall Filtering
+(allow syscall-unix
+       (syscall-group-bsdthread)
+     ; (syscall-group-fcntl                           ; inferred from system-fcntl
+     ; (syscall-group-necp-session)                   ; inferred from necp-client-open, system-necp-client-action
+       (syscall-group-open-dprotected)
+       (syscall-group-pthread-cv)
+       (syscall-group-pthread-locks)
+       (syscall-group-recv)
+       (syscall-group-send)
+       (syscall-group-ulock)
+       (syscall-number SYS___channel_open             ; Only syscall from (syscall-group-network-channel)
+                       SYS___disable_threadsignal
+                       SYS___pthread_kill             ; (syscall-group-pthread)
+                       SYS___pthread_sigmask          ; (syscall-group-pthread)
+                       SYS___semwait_signal
+                       SYS___semwait_signal_nocancel
+                       SYS_abort_with_payload
+                       SYS_access
+                       SYS_audit
+                       SYS_auditon
+                       SYS_change_fdguard_np
+                       SYS_csrctl
+                       SYS_dup
+                       SYS_exit
+                       SYS_faccessat
+                       SYS_fgetattrlist
+                       SYS_fgetxattr
+                       SYS_flock
+                       SYS_fsetattrlist
+                       SYS_fsgetpath
+                       SYS_fstat64
+                       SYS_fstat64_extended
+                       SYS_fstatat64
+                       SYS_fstatfs64
+                       SYS_fsync
+                       SYS_ftruncate
+                       SYS_getattrlist
+                       SYS_getattrlistbulk
+                       SYS_getaudit_addr
+                       SYS_getdirentries64
+                       SYS_getegid
+                       SYS_getentropy
+                       SYS_geteuid
+                       SYS_getfsstat64
+                       SYS_getgid
+                       SYS_gethostuuid
+                       SYS_getpeername
+                       SYS_getrlimit
+                       SYS_getrusage
+                       SYS_getsockname
+                       SYS_gettid
+                       SYS_gettimeofday
+                       SYS_getuid
+                       SYS_getxattr
+                       SYS_guarded_close_np           ; (syscall-group-close)
+                       SYS_guarded_open_np            ; (syscall-group-open)
+                       SYS_guarded_pwrite_np
+                       SYS_identitysvc
+                       SYS_issetugid
+                       SYS_kdebug_trace64
+                       SYS_kdebug_trace_string
+                       SYS_kdebug_typefilter
+                       SYS_kevent                     ; (syscall-group-kevent)
+                       SYS_kevent_id                  ; (syscall-group-kevent)
+                       SYS_kevent_qos                 ; (syscall-group-kevent)
+                       SYS_kqueue                     ; (syscall-group-kqueue)
+                       SYS_lseek
+                       SYS_lstat64
+                       SYS_lstat64_extended
+                       SYS_madvise
+                       SYS_mkdir                      ; (syscall-group-mkdir), but no SYS_mkdir_extended, SYS_mkdirat
+                       SYS_mmap
+                       SYS_mprotect
+                       SYS_munmap
+                       SYS_pathconf
+                       SYS_pipe
+                       SYS_poll
+                       SYS_posix_spawn
+                       SYS_pread
+                       SYS_read
+                       SYS_read_nocancel
+                       SYS_readlink
+                       SYS_rename
+                       SYS_select                     ; (syscall-group-select)
+                       SYS_select_nocancel            ; (syscall-group-select)
+                       SYS_setrlimit
+                       SYS_shutdown
+                       SYS_sigaction
+                       SYS_sigprocmask
+                       SYS_sigsuspend_nocancel
+                       SYS_socketpair
+                       SYS_stat64
+                       SYS_stat64_extended
+                       SYS_statfs64
+                       SYS_terminate_with_payload
+                       SYS_thread_selfid
+                       SYS_wait4
+                       SYS_workq_kernreturn
+                       SYS_workq_open))
+
+;; MAC syscalls
+;; NB: Required, but commented out to gather telemetry on policies + syscall numbers.
+; (allow system-mac-syscall)
+(with-filter (mac-policy-name "AMFI")
+  (allow system-mac-syscall
+         (mac-syscall-number  95)))  ; AMFI_SYSCALL_CDHASH_IN_TRUSTCACHE
+
+(with-filter (mac-policy-name "Quarantine")
+  (allow system-mac-syscall
+         (mac-syscall-number  82)))  ; QTN_SYSCALL_QUARANTINE_GETINFO_FD
+
+(with-filter (mac-policy-name "Sandbox")
+  (allow system-mac-syscall
+         (mac-syscall-number  2      ; SYSCALL_CHECK_SANDBOX
+                              4)))   ; SYSCALL_CONTAINER
+
+(with-filter (mac-policy-name "vnguard")
+  (allow system-mac-syscall
+         (mac-syscall-number  1)))   ; VNG_SYSC_SET_GUARD
+
+;; Mach traps
+(allow syscall-mach
+       (machtrap-number MSC__kernelrpc_mach_port_allocate_trap
+                        MSC__kernelrpc_mach_port_construct_trap
+                        MSC__kernelrpc_mach_port_deallocate_trap
+                        MSC__kernelrpc_mach_port_destruct_trap
+                        MSC__kernelrpc_mach_port_guard_trap
+                        MSC__kernelrpc_mach_port_insert_member_trap
+                        MSC__kernelrpc_mach_port_insert_right_trap
+                        MSC__kernelrpc_mach_port_mod_refs_trap
+                        MSC__kernelrpc_mach_port_request_notification_trap
+                        MSC__kernelrpc_mach_port_type_trap
+                        MSC__kernelrpc_mach_vm_allocate_trap
+                        MSC__kernelrpc_mach_vm_deallocate_trap
+                        MSC__kernelrpc_mach_vm_map_trap
+                        MSC__kernelrpc_mach_vm_protect_trap
+                        MSC__kernelrpc_mach_vm_purgable_control_trap
+                        MSC_host_create_mach_voucher_trap
+                        MSC_host_self_trap
+                        MSC_mach_generate_activity_id
+                        MSC_mach_msg_overwrite_trap
+                        MSC_mach_msg_trap
+                        MSC_mach_reply_port
+                        MSC_mach_voucher_extract_attr_recipe_trap
+                        MSC_mk_timer_arm
+                        MSC_mk_timer_create
+                        MSC_semaphore_signal_trap
+                        MSC_semaphore_timedwait_trap
+                        MSC_semaphore_wait_trap
+                        MSC_swtch_pri
+                        MSC_syscall_thread_switch
+                        MSC_task_dyld_process_info_notify_get
+                        MSC_thread_get_special_reply_port))
+
+;; fcntl
+(allow system-fcntl
+       (fcntl-command F_ADDFILESIGS_RETURN
+                      F_BARRIERFSYNC
+                      F_CHECK_LV
+                      F_FULLFSYNC
+                      F_GETCONFINED
+                      F_GETFD
+                      F_GETFL
+                      F_GETPATH
+                      F_GETPROTECTIONCLASS
+                      F_GETSIGSINFO
+                      F_NOCACHE
+                      F_OFD_GETLK
+                      F_OFD_SETLK
+                      F_SETCONFINED
+                      F_SETFD
+                      F_SETFL
+                      F_SETLKW
+                      F_SETPROTECTIONCLASS
+                      F_SINGLE_WRITER))
+
+;; fsctl
+(allow system-fsctl
+       (fsctl-command FSIOC_CAS_BSDFLAGS))
+
+;; NECP
+(allow necp-client-open)
+(allow system-necp-client-action
+       (necp-client-action NECP_CLIENT_ACTION_ADD
+                           NECP_CLIENT_ACTION_ADD_FLOW
+                           NECP_CLIENT_ACTION_COPY_AGENT
+                           NECP_CLIENT_ACTION_COPY_INTERFACE
+                           NECP_CLIENT_ACTION_COPY_RESULT
+                           NECP_CLIENT_ACTION_COPY_UPDATED_RESULT
+                           NECP_CLIENT_ACTION_REMOVE
+                           NECP_CLIENT_ACTION_REMOVE_FLOW))

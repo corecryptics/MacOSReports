@@ -1,0 +1,51 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <?xml version="1.0" encoding="UTF-8"?>\
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\
+<plist version="1.0">\
+<dict>\
+	<key>ContactLabelScoringMap</key>\
+	<dict>\
+		<key>DateAnniversary</key>\
+		<real>0.01</real>\
+		<key>EmailiCloud</key>\
+		<real>0.01</real>\
+		<key>Home</key>\
+		<real>0.02</real>\
+		<key>HomeFax</key>\
+		<real>-0.10000000000000001</real>\
+		<key>Main</key>\
+		<integer>0</integer>\
+		<key>Mobile</key>\
+		<real>0.040000000000000001</real>\
+		<key>Other</key>\
+		<integer>0</integer>\
+		<key>OtherFax</key>\
+		<real>-0.10000000000000001</real>\
+		<key>Pager</key>\
+		<real>-0.050000000000000003</real>\
+		<key>School</key>\
+		<real>0.02</real>\
+		<key>URLAddressHomePage</key>\
+		<real>0.01</real>\
+		<key>Work</key>\
+		<real>0.02</real>\
+		<key>WorkFax</key>\
+		<real>-0.10000000000000001</real>\
+		<key>iPhone</key>\
+		<real>0.050000000000000003</real>\
+	</dict>\
+	<key>PeopleSuggesterMaxCount</key>\
+	<integer>50</integer>\
+	<key>RecordSourceContactsInitialScore</key>\
+	<real>0.5</real>\
+	<key>RecordSourceNonContactsInitialScore</key>\
+	<real>0.40000000000000002</real>\
+</dict>\
+</plist>\
+}

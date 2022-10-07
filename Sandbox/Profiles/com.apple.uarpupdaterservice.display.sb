@@ -1,0 +1,160 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; Training wheels off
+;;(allow (with report) default)
+;;(allow (with report) file-map-executable process-info* nvram*)
+;;(allow (with report) dynamic-code-generation)
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.uarpupdaterservice.display"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+)
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.uarpupdaterservice.display")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+(allow user-preference-read
+    (preference-domain "com.apple.DarwinAccessoryUpdate.A2525")
+    (preference-domain "com.apple.SoftwareUpdate")
+    (preference-domain "kCFPreferencesAnyApplication")
+)
+
+(allow mach-lookup
+    (global-name "com.apple.remoted")
+    (global-name "com.apple.mobileassetd.v2")
+    (global-name "com.apple.mobileassetd")
+    (global-name "com.apple.accessoryupdater.uarp")
+    (global-name "com.apple.installerauthagent")
+    (global-name "com.apple.AppSSO.service-xpc")
+    (global-name "com.apple.dnssd.service")
+    (global-name "com.apple.PowerManagement.control")
+    (global-name "com.apple.SecurityServer")
+    (global-name "com.apple.remotepairing.version")
+    (global-name "com.apple.remotepairing.service")
+    (global-name "com.apple.ist.ds.service.rlogd")
+    (global-name "com.apple.softwareupdated")
+    (global-name "com.apple.softwareupdated.OSUpdate")
+    (global-name "com.apple.CoreAuthentication.daemon")
+    (global-name "com.apple.CoreAuthentication.daemon.libxpc")
+    (global-name "com.apple.SystemConfiguration.configd")
+    (global-name "com.apple.metadata.mds")
+    (global-name "com.apple.iokit.powerdxpc")
+    (global-name "com.apple.storagekitd")
+    (global-name "com.apple.lsd.mapdb")
+    (global-name "com.apple.DiskArbitration.diskarbitrationd")
+    (global-name "com.apple.coreservices.quarantine-resolver")
+    (global-name "com.apple.iconservices")
+    (global-name "com.apple.iconservices.store")
+    (global-name "com.apple.DeviceSupportUpdater")
+)
+
+(allow file-read-data
+    (literal "/AppleInternal/usr/local/misc/SupportedAccessoriesUARP-Internal.plist")
+    (literal "/AppleInternal/usr/local/misc/SupportedAccessoriesUARP-InternalFuture.plist")
+    (subpath "/Library/Frameworks/AppleConnect.framework")
+    (subpath "/Library/Frameworks/RemoteLogger.framework")
+    (literal "/usr/local/lib/libMobileRestoreInternalExtensions.dylib")
+    (literal "/usr/local/standalone/firmware/device_map.plist")
+    (subpath "/usr/local/share/astris/boosterpack/")
+    (subpath "/usr/local/lib/log/")
+    (subpath "/AppleInternal/System/Library/ExtensionKit/ExtensionPoints/")
+)
+
+(allow file-read* file-write*
+    (subpath "/private/tmp/")
+    (subpath "/private/var/")
+    (home-subpath "/Library/HTTPStorages/com.apple.uarpupdaterservice.display")
+    (home-literal "/Library/Application Support/Astris/astris_prefs.plist")
+)
+
+(allow file-read-data file-write-data file-ioctl
+    (literal "/dev/console")
+)
+
+(allow file-map-executable
+    (subpath "/System/Library/Extensions/AppleHPM.kext/")
+    (subpath "/System/Library/Extensions/IOUSBHostFamily.kext/")
+    (subpath "/System/AppleInternal/Library/Frameworks/AppleConnectClient.framework")
+    (subpath "/Library/Frameworks/AppleConnect.framework")
+    (subpath "/Library/Frameworks/RemoteLogger.framework")
+    (literal "/usr/local/lib/libMobileRestoreInternalExtensions.dylib")
+    (subpath "/usr/local/share/astris/boosterpack/")
+)
+
+(allow file-read* file-map-executable
+    (subpath "/Library/Developer/PrivateFrameworks/RemotePairing.framework")
+    (subpath "/Library/Apple/System/Library/PrivateFrameworks/RemotePairing.framework")
+    (subpath "/Library/Developer/PrivateFrameworks/Mercury.framework")
+    (subpath "/Library/Apple/System/Library/PrivateFrameworks/Mercury.framework")
+    (subpath "/Applications/AppleConnect.app/Contents/Frameworks/SSOClient.framework")
+)
+
+(allow iokit-get-properties
+    (iokit-property "RID")
+    (iokit-property "AdapterDetails")
+)
+
+(allow iokit-open
+    (iokit-user-client-class "AppleHPMUserClient")
+    (iokit-user-client-class "AppleUSBHostDeviceUserClient")
+    (iokit-user-client-class "AppleUSBHostInterfaceUserClient")
+)
+
+(allow network-outbound)
+
+(allow ipc-posix-shm
+    (ipc-posix-name "com.apple.AppleDatabaseChanged")
+)
+
+(allow sysctl-write
+    (sysctl-name "vfs.generic.noremotehang")
+)
+
+(allow system-socket)

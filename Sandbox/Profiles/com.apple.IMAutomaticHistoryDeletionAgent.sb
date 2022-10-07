@@ -1,0 +1,92 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; (trace "/tmp/com.apple.IMAutomaticHistoryDeletionAgentTrace.sb")
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+
+(import "com.apple.iMessage.shared.sb")
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.IMAutomaticHistoryDeletionAgent")
+    )
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.IMAutomaticHistoryDeletionAgent")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+      
+(deny syscall-unix (with send-signal SIGKILL))
+(allow syscall-unix
+       (syscall-group-bsdthread)
+       (syscall-group-chflags)
+       (syscall-group-close)
+       (syscall-group-fcntl)
+       (syscall-group-kevent)
+       (syscall-group-kqueue)
+       (syscall-group-pthread-locks)
+       (syscall-group-read)
+       (syscall-group-rlimit)
+       (syscall-group-select)
+       (syscall-group-signal)
+       (syscall-group-stat)
+       (syscall-group-ulock)
+       (syscall-number SYS___disable_threadsignal
+                       SYS___mac_syscall
+                       SYS___semwait_signal
+                       SYS___semwait_signal_nocancel
+                       SYS_abort_with_payload
+                       SYS_access
+                       SYS_access_extended
+                       SYS_csops
+                       SYS_csrctl
+                       SYS_debug_syscall_reject
+                       SYS_exit
+                       SYS_faccessat
+                       SYS_fsetattrlist
+                       SYS_fsgetpath
+                       SYS_getattrlist
+                       SYS_getattrlistbulk
+                       SYS_getdirentries64
+                       SYS_getegid
+                       SYS_getentropy
+                       SYS_geteuid
+                       SYS_getgid
+                       SYS_getpid
+                       SYS_getppid
+                       SYS_gettid
+                       SYS_gettimeofday
+                       SYS_getuid
+                       SYS_getxattr
+                       SYS_issetugid
+                       SYS_kdebug_trace_string
+                       SYS_kdebug_trace64
+                       SYS_kdebug_typefilter
+                       SYS_kevent_id
+                       SYS_kevent_qos
+                       SYS_lseek
+                       SYS_madvise
+                       SYS_mmap
+                       SYS_mprotect
+                       SYS_mremap_encrypted
+                       SYS_munmap
+                       SYS_os_fault_with_payload
+                       SYS_proc_info
+                       SYS_psynch_mutexdrop
+                       SYS_psynch_mutexwait
+                       SYS_shared_region_check_np
+                       SYS_terminate_with_payload
+                       SYS_thread_selfid
+                       SYS_workq_kernreturn
+                       SYS_workq_open)
+)

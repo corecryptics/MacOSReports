@@ -1,0 +1,68 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; For macOS: /System/Library/PrivateFrameworks/DiskSpaceDiagnostics.framework/XPCServices/FilesystemMetadataSnapshotService.xpc/FilesystemMetadataSnapshotService
+;;; Project:   DiskSpaceDiagnostics
+;;; Component: Performance Software | Disk Space Tools
+;;; Role Account: root (0)
+;;; Team Email:   os-perf-tools@group.apple.com
+
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;; Full process-info access for self
+(allow process-info* (target self))
+
+;; process-info...: needed to enumerate processes to learn of paths they have open-but-unlinked
+;; (because they hold onto blocks which won't appear in filesystem content listing)
+(allow process-info-listpids process-info-pidinfo process-info-pidfdinfo)
+
+;; Read information about APFS snapshots
+(allow system-fsctl
+       (fsctl-command APFSIOC_SNAP_RANGE_PRIV_SIZE
+                      APFSIOC_GET_PURGEABLE_FILE_FLAGS))
+
+;; FilesystemMetadataSnapshotService needs to be able to crawl through metadata
+;; on the entire system
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+(allow file-read*
+       (vnode-type DIRECTORY))
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow mach-lookup
+       (global-name "com.apple.atc.xpc"
+                    "com.apple.cache_delete"
+                    "com.apple.cache_delete.public"
+                    "com.apple.PowerManagement.control"))
+
+;; Preferences domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.FilesystemMetadataSnapshotService"))
+
+;; Global preferences domain
+(allow user-preference-read
+       (preference-domain ".GlobalPreferences"))
+
+(allow file-read*
+       (regex #"/.GlobalPreferences[^/]*\.plist"))
+
+;; Read/write access to temporary/caches/destination directories.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR"))
+       (subpath (param "DESTDIR")))

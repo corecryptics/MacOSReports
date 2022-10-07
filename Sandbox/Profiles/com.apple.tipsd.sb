@@ -1,0 +1,146 @@
+;;; Copyright © 2019-2021 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.tipsd")
+    (preference-domain "group.com.apple.tips"))
+
+(allow user-preference-read
+    (preference-domain "com.apple.assistant.backedup")
+    (preference-domain "com.apple.assistant.support")
+    (preference-domain "com.apple.FindMyMac")
+    (preference-domain "com.apple.homed")
+    (preference-domain "com.apple.security")
+    (preference-domain "com.apple.SetupAssistant")
+    (preference-domain "com.apple.speech.recognition.AppleSpeechRecognition.prefs")
+    (preference-domain "com.apple.voicetrigger")
+    (preference-domain "group.com.apple.ip.redirects")
+    (preference-domain "kCFPreferencesAnyApplication"))
+
+;; Read-Only file access
+(allow file-read*
+       (regex "/private/var/db/mds/messages/([A-Za-z0-9]+/)?se_SecurityMessages")
+       (literal "/private/var/db/mds/system/mdsDirectory.db")
+       (literal "/private/var/db/mds/system/mdsObject.db")
+       (literal "/usr/libexec")
+       (literal "/usr/libexec/tipsd"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+       
+;; set_source_application_by_bundle_id
+(allow file-read* file-write*
+       (literal "/Library/Preferences/com.apple.networkextension.uuidcache.plist"))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.tipsd")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Group container access
+(allow file-read* file-write*
+       (home-subpath "/Library/Group Containers/group.com.apple.tips")
+       (home-subpath "/Library/Group Containers/group.com.apple.ip.redirects"))
+
+;; HTTP Storage access
+(allow file-read* file-write*
+       (home-subpath "/Library/HTTPStorages/com.apple.tipsd"))
+
+(let
+    ((relative-regex #"/Library/HTTPStorages/com.apple.tipsd.binarycookies(_tmp[A-Za-z0-9_]*\.dat)?$"))
+    (allow file-read* file-write*
+           (home-regex relative-regex)))
+
+(allow mach-register
+    (global-name "com.apple.private.alloy.tips-idswake"))
+
+(allow mach-lookup
+       (global-name
+            "com.apple.accountsd.accountmanager"
+            "com.apple.AppSSO.service-xpc"
+            "com.apple.audio.audiohald"
+            "com.apple.biome.PublicStreamAccessService"
+            "com.apple.containermanagerd"
+            "com.apple.coreservices.quarantine-resolver"
+            "com.apple.coreduetd.context"
+            "com.apple.coreduetd.knowledge"
+            "com.apple.coreduetd.knowledge.user"
+            "com.apple.coreduetd.people"
+            "com.apple.dnssd.service"
+            "com.apple.familycircle.agent"
+            "com.apple.FileCoordination"
+            "com.apple.icloud.searchpartyuseragent.beaconmanager"
+            "com.apple.identityservicesd.desktop.auth"
+            "com.apple.itunescloud.music-subscription-status-service"
+            "com.apple.kvsd"
+            "com.apple.logind"
+            "com.apple.lsd.mapdb"
+            "com.apple.lsd.modifydb"
+            "com.apple.nehelper"
+            "com.apple.passd.account"
+            "com.apple.remindd"
+            "com.apple.remoted"
+            "com.apple.SecurityServer"
+            "com.apple.securityd.xpc"
+            "com.apple.server.bluetooth"
+            "com.apple.server.bluetooth.general.xpc"
+            "com.apple.server.bluetooth.le.att.xpc"
+            "com.apple.syncdefaultsd"
+            "com.apple.tccd"
+            "com.apple.usernotifications.usernotificationservice"
+            "com.apple.windowserver.active"))
+
+(allow ipc-posix-shm-read-data ipc-posix-shm-write-create ipc-posix-shm-write-data
+    (ipc-posix-name "com.apple.AppleDatabaseChanged"))
+
+(allow iokit-get-properties)
+    
+(allow iokit-open
+    (iokit-user-client-class "AppleKeyStoreUserClient")
+    (iokit-user-client-class "RootDomainUserClient"))
+
+(allow device-microphone)
+(allow network-outbound)
+(allow system-socket)

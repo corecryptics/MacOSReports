@@ -1,0 +1,87 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+
+;;; THIS IS THE MACOS SANDBOX FILE
+;;; build with:
+;;; sbutil compile -f sbasm -D HOME=$HOME -D TMPDIR=$TMPDIR -D DARWIN_CACHE_DIR=/var/folders/whatever com.apple.proactiveeventtrackerd.sb
+
+(version 1)
+
+(deny default)
+(deny file-map-executable iokit-get-properties process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+(allow file-read*
+    (literal "/usr/libexec")
+    (literal "/usr/libexec/proactiveeventtrackerd")
+    (literal "/Library/Application Support/CrashReporter/DiagnosticMessagesHistory.plist"))
+
+(allow user-preference-read
+    (preference-domain "com.apple.parsecd")
+    (preference-domain "com.apple.SubmitDiagInfo")
+    (preference-domain "kCFPreferencesAnyApplication"))
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+    (preference-domain "com.apple.proactiveeventtrackerd"))
+
+(allow mach-lookup
+       (global-name "com.apple.parsecd")
+       (global-name "com.apple.SystemConfiguration.configd"))
+
+(allow file-read* file-write*
+    (subpath (param "TMPDIR"))
+    (subpath (param "DARWIN_CACHE_DIR"))
+    (home-subpath "/Library/Caches/com.apple.parsecd/CustomFeedback/") ;; Parsec feedback
+    (home-subpath "/Library/Caches/com.apple.feedbacklogger")   ;; FBFv2
+    (home-subpath "/Library/Caches/com.apple.proactive.eventtracker")
+    (home-subpath "/Library/Logs/DiagnosticReports"))    ;; OSA submission
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.proactiveeventtrackerd")))
+    (allow file-read* file-write* cache-path-filter)
+    (allow file-issue-extension
+        (require-all
+        (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+        cache-path-filter)))
+
+;; MobileAsset
+(allow file-read* (require-all
+      (subpath "/Library/Assets")
+      (extension "com.apple.assets.read")))
+(allow user-preference-read (preference-domain "com.apple.SoftwareUpdate"))
+(allow mach-lookup
+       (global-name "com.apple.mobileassetd")
+       (global-name "com.apple.mobileassetd.v2"))

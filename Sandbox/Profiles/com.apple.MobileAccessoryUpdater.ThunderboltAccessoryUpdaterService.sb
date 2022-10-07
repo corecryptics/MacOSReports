@@ -1,0 +1,95 @@
+;;; Copyright (c) 2020 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+
+;;; Training wheels ON...
+(allow (with report) default)
+(allow (with report) file-map-executable iokit-get-properties process-info* nvram*)
+(allow (with report) dynamic-code-generation)
+
+;;; Training wheels OFF...
+;;; (deny default)
+;;; (deny file-map-executable iokit-get-properties process-info* nvram*)
+;;; (deny dynamic-code-generation)
+
+
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.ThunderboltAccessoryFirmwareUpdaterService"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+;;       (subpath (param "DARWIN_CACHE_DIR"))
+       )
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.ThunderboltAccessoryFirmwareUpdaterService")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+(allow nvram-get nvram-set
+    (nvram-variable "boot-args")
+)
+
+(allow iokit-get-properties
+	(iokit-property "Route String")
+	(iokit-property "UID")
+	(iokit-property "Depth")
+	(iokit-property "Firmware Mode")
+	(iokit-property "Device Vendor Name")
+	(iokit-property "Device Model Name")
+	(iokit-property "Vendor ID")
+	(iokit-property "Device ID")
+	(iokit-property "Revision ID")
+	(iokit-property "Device Model ID")
+	(iokit-property "Device Vendor ID")
+	(iokit-property "Device Model Revision")
+	(iokit-property "EEPROM Revision")
+	(iokit-property "ROM Version")
+	(iokit-property "board-id")
+	(iokit-property "board-rev")
+	(iokit-property "OS Build Version")
+	(iokit-property "IOClassNameOverride")
+	(iokit-property "Address")
+	(iokit-property "RID")
+	(iokit-property "Revision")
+	(iokit-property "UUID")
+)

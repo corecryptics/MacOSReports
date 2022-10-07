@@ -1,0 +1,93 @@
+;;; Copyright (c) 2017 Apple Inc.  All Rights reserved.
+;;;
+;;; WARNING: The sandbox rules in this file currently constitute
+;;; Apple System Private Interface and are subject to change at any time and
+;;; without notice.
+;;;
+(version 1)
+
+;;; Deny defaults
+(deny default)
+(deny file-map-executable process-info* nvram*)
+(deny dynamic-code-generation)
+
+(deny mach-priv-host-port)
+
+(import "system.sb")
+(import "com.apple.corefoundation.sb")
+(corefoundation)
+
+;;; Homedir-relative path filters
+(define (home-regex home-relative-regex)
+    (regex (string-append "^" (regex-quote (param "HOME")) home-relative-regex)))
+
+(define (home-subpath home-relative-subpath)
+    (subpath (string-append (param "HOME") home-relative-subpath)))
+
+(define (home-prefix home-relative-prefix)
+    (prefix (string-append (param "HOME") home-relative-prefix)))
+
+(define (home-literal home-relative-literal)
+    (literal (string-append (param "HOME") home-relative-literal)))
+
+
+(allow process-info* (target self))
+
+;; For resolving symlinks, realpath(3), and equivalents.
+(allow file-read-metadata)
+
+;; For validating the entitlements of clients.
+(allow process-info-codesignature)
+
+;; Your preference domain
+(allow user-preference-read user-preference-write
+       (preference-domain "com.apple.proactived"))
+
+;; Read/write access to a temporary directory.
+(allow file-read* file-write*
+       (subpath (param "TMPDIR"))
+       (subpath (param "DARWIN_CACHE_DIR")))
+
+;; Read/write cache access
+(let ((cache-path-filter (home-subpath "/Library/Caches/com.apple.proactived")))
+  (allow file-read* file-write* cache-path-filter)
+  (allow file-issue-extension
+    (require-all
+      (extension-class "com.apple.app-sandbox.read" "com.apple.app-sandbox.read-write")
+      cache-path-filter)))
+
+;; Read/write access to DuetExpertCenter directory
+(allow file-read* file-write*
+    (home-subpath "/Library/DuetExpertCenter")
+)
+
+;; Mach lookups
+(allow mach-lookup
+(global-name "com.apple.biome.compute.source"
+             "com.apple.containermanagerd"
+             "com.apple.proactive.SuggestionRequest.ps_unstructured_reminder_interaction_suggestions"
+             "com.apple.proactive.SuggestionRequest.cd_calendar_interaction_suggestions"
+             "com.apple.proactive.SuggestionRequest.ps_unstructured_calendar_interaction_suggestions"
+             "com.apple.proactive.SuggestionRequest.ps_facetime_interaction_model"
+             "com.apple.proactive.SuggestionRequest.ps_facetime_fallback_interaction_model"
+             "com.apple.proactive.SuggestionRequest.ps_share_sheet_interaction_model"
+             "com.apple.proactive.SuggestionRequest.ps_phone_call_interaction_heuristics"
+             "com.apple.proactive.SuggestionRequest.ps_expanse_session_interaction_heuristics"
+             "com.apple.proactive.SuggestionRequest.ps_hyper_recent_interaction_heuristics"
+             "com.apple.proactive.SuggestionRequest.ps_photos_asset_present_interaction_heuristics"
+             "com.apple.proactive.SuggestionRequest.ps_photos_asset_or_memory_present_interaction_heuristics"
+             "com.apple.proactive.SuggestionRequest.ps_rule_mining_interaction_model"
+             "com.apple.proactive.SuggestionRequest.ps_knn_interaction_model"
+             "com.apple.proactive.SuggestionRequest.ps_share_sheet_fallback_interaction_model"
+))
+
+;; Allow reading libexec directory
+(allow file-read*
+    (literal "/usr/libexec")
+    (literal "/usr/libexec/proactived")
+)
+
+;; Allow user prefernce read
+(allow user-preference-read
+    (preference-domain "kCFPreferencesAnyApplication")
+)
