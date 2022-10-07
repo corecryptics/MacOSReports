@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Version</key>
+	<integer>1</integer>
+	<key>SchemaVersion</key>
+	<integer>1</integer>
+	<key>Vendors</key>
+	<dict>
+		<key>9050</key>
+		<dict>
+			<key>Name</key>
+			<string>CHIP</string>
+			<key>AppStoreID</key>
+			<string>12345</string>
+			<key>AppBundleID</key>
+			<string>com.apple.chip</string>
+			<key>Products</key>
+			<dict>
+				<key>65275</key>
+				<dict>
+					<key>Category</key>
+					<integer>10</integer>
+					<key>Name</key>
+					<string>Temperature Sensor</string>
+					<key>Model</key>
+					<string>Temperature Sensor Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65276</key>
+				<dict>
+					<key>Category</key>
+					<integer>6</integer>
+					<key>Name</key>
+					<string>Lock</string>
+					<key>Model</key>
+					<string>Lock Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65277</key>
+				<dict>
+					<key>Category</key>
+					<integer>8</integer>
+					<key>Name</key>
+					<string>Switch</string>
+					<key>Model</key>
+					<string>Switch Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65278</key>
+				<dict>
+					<key>Category</key>
+					<integer>7</integer>
+					<key>Name</key>
+					<string>Outlet</string>
+					<key>Model</key>
+					<string>Outlet Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65279</key>
+				<dict>
+					<key>Category</key>
+					<integer>5</integer>
+					<key>Name</key>
+					<string>Light</string>
+					<key>Model</key>
+					<string>Light Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65280</key>
+				<dict>
+					<key>Category</key>
+					<integer>99</integer>
+					<key>Name</key>
+					<string>CompositeDevice</string>
+					<key>Model</key>
+					<string>CompositeDevice Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65281</key>
+				<dict>
+					<key>Category</key>
+					<integer>14</integer>
+					<key>Name</key>
+					<string>WindowCovering</string>
+					<key>Model</key>
+					<string>Window Covering Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65282</key>
+				<dict>
+					<key>Category</key>
+					<integer>10</integer>
+					<key>Name</key>
+					<string>Occupancy Sensor</string>
+					<key>Model</key>
+					<string>Occupancy Sensor Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65283</key>
+				<dict>
+					<key>Category</key>
+					<integer>10</integer>
+					<key>Name</key>
+					<string>Contact Sensor</string>
+					<key>Model</key>
+					<string>Contact Sensor Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65285</key>
+				<dict>
+					<key>Category</key>
+					<integer>9</integer>
+					<key>Name</key>
+					<string>Thermostat</string>
+					<key>Model</key>
+					<string>Thermostat Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65286</key>
+				<dict>
+					<key>Category</key>
+					<integer>10</integer>
+					<key>Name</key>
+					<string>Humidity Sensor</string>
+					<key>Model</key>
+					<string>Humidity Sensor Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65287</key>
+				<dict>
+					<key>Category</key>
+					<integer>10</integer>
+					<key>Name</key>
+					<string>Light Sensor</string>
+					<key>Model</key>
+					<string>Light Sensor Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+				<key>65288</key>
+				<dict>
+					<key>Category</key>
+					<integer>10</integer>
+					<key>Name</key>
+					<string>BooleanState Sensor</string>
+					<key>Model</key>
+					<string>BooleanState Sensor Model</string>
+					<key>InstallationGuideURL</key>
+					<string>https://apple.com</string>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>
