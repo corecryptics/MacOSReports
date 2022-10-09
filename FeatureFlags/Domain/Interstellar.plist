@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Livability</key>
+	<dict>
+		<key>DisclosureRequired</key>
+		<string>a7b91b4b-3c76-40b6-bed3-8f4e880c5718</string>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

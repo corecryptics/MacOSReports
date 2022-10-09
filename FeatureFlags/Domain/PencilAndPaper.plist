@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SystemNoteTaking</key>
+	<dict>
+		<key>DisclosureRequired</key>
+		<string>e6ee20dc-0320-4c1b-bd95-94d2aa154e6f</string>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

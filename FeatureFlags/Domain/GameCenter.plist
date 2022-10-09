@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>arcade_dashboard_section</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>friend_requests_inbox</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>gc_friends_api</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>group_friending</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>improved_friending</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>improved_friending_completed</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>improved_friending_testable</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>improved_multiplayer_flow</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>new_dashboard_ui</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

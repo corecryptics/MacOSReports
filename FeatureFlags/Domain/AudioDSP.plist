@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Expanse</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Expanse_BT_HFP</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Expanse_Handoff_PostSuppressor</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Expanse_Handoff_VoiceIsolation</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Expanse_ThirdParty_BT</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>SKSpeechAnalysis</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>muted_talker_detection</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>voice_isolation</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

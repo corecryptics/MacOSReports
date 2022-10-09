@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AddEndpointSecurityCheck</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>DirectoryEviction</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>EvictUsingPurgeSingleFile</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>IgnoreRestrictionsIOPolicy</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>IndexingXPCActivity</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>InitialSQLTelemetry</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>MaterializationHelpers</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>PackageEviction</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>PartialMaterialization</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>PeriodicFPCK</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UserIgnoredItems</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>mTimeIOpolicy</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

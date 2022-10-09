@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ALA_Setup_iOS</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>BA_AirPods</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>BA_Buddy</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>BA_LPEM</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>BA_Power_Off</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>BT_RSSI_Finding</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Live_Locations</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Notify_While_Traveling</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Separation_Alerts</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Show_Place_Inference_Debug</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UT_RSSI_Finding</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

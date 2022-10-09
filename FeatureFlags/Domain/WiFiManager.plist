@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AirPlayReceiver</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>DNSSymptoms</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>DSA</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>LowPowerScanCore</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>QuickDPS</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>SlowWiFi</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>kvr</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>linkLossSuppression</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

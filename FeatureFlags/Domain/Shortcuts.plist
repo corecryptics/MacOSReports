@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FilesActions</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>contextual_suggestions</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>menu_bar_runningUI</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>out_of_process_execution</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>signed_shortcuts</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>smart_prompts</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>swiftUI_chiclets</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

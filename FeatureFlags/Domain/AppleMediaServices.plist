@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AgeVerification</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>EngagementNFCHandling</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>SandboxAccountManagement</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>ServerDataCache</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>StorageDatabase</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>TurnWatchPasscodeOff</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UnifiedBooksAccountStore</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UniversalLinksDynamicRules</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

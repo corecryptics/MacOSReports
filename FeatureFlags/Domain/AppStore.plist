@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>gamecenter_friend_inbox</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>hero_carousel</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>pause_resume_support</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

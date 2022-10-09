@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>zkw_v2</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>zkw_v2_corecipient_predictions</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>zkw_v2_enable_blending_layer_ios</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>zkw_v2_enable_blending_layer_macos</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

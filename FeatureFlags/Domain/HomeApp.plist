@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>automation_naming</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>cameras</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>diffable_data_source</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>new_features_onboarding</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>range_automations</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>resume_setup</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

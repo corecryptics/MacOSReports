@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AllPlaylistsGrid</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>AutoPlay</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>CMAudioEffects</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Glide</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Integrated_Play_History</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>MFU</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>Oasis</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UseJETAppleMusicViews</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UserNotifications</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>add_download_qfa</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>expanse</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

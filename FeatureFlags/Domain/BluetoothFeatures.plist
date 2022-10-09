@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AnnounceTelephony</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>BTUCMCATS</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>RingtoneOverA2DP</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>RuleBasedHIDClassification</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>StereoHFP</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>VirtualAddress</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Search20</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>UserNotifications</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>V3Tabs</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>VideoProductPlacementButtonOverlay</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>VideoSkipButtonOverlay</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>VideoSkipTwoPointZero</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

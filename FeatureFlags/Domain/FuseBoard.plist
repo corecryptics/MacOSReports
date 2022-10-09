@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>allow_task_suspension</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>crash_if_poisoned</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>enable_skybridge</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>poison_scene_ids</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>allow_mac_multi_instance</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>manage_all_extensions</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>runningboard_appnap_all</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

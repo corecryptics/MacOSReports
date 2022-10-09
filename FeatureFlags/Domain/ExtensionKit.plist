@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>host_requires_entitlements</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>prefer_inprocess_discovery</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>provides_ns_extension_implememntation</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>swiftui_subsystem_calls_main</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

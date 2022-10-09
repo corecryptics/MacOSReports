@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SKESiriNLUTypesUserParseAdoption</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>audio_session_coordination</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>cda_face_detection</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>conversational_action_manager</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>home_automation_background_request</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>mini_block</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>siri_data_sharing_reprompt</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>siri_request_dispatcher</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>sirix</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>trial_dictation_asset_delivery</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>tv_push_to_talk</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>use_flow_runtime</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BuildMachineOSBuild</key>
+	<string>20A241133</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>com.apple.DriverKit-Apple16X50PCI</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.apple.DriverKit-Apple16X50PCI</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>com.apple.DriverKit-Apple16X50PCI</string>
+	<key>CFBundlePackageType</key>
+	<string>DEXT</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>DriverKit</string>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>DTCompiler</key>
+	<string>com.apple.compilers.llvm.clang.1_0</string>
+	<key>DTPlatformBuild</key>
+	<string>13E6049a</string>
+	<key>DTPlatformName</key>
+	<string>driverkit</string>
+	<key>DTPlatformVersion</key>
+	<string>21.6</string>
+	<key>DTSDKBuild</key>
+	<string></string>
+	<key>DTSDKName</key>
+	<string>driverkit.macosx21.6.internal</string>
+	<key>DTXcode</key>
+	<string>1330</string>
+	<key>DTXcodeBuild</key>
+	<string>13E6049a</string>
+	<key>IOKitPersonalities</key>
+	<dict>
+		<key>DriverKit-Apple16X50PCI</key>
+		<dict>
+			<key>CFBundleIdentifierKernel</key>
+			<string>com.apple.driver.driverkit.serial</string>
+			<key>IOClass</key>
+			<string>IOUserService</string>
+			<key>IOPCIClassMatch</key>
+			<string>0x07000000&amp;0xFFFF0000</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+			<key>IOUserClass</key>
+			<string>Apple16X50PCI</string>
+			<key>IOUserServerName</key>
+			<string>com.apple.DriverKit.Apple16X50PCI</string>
+			<key>UART</key>
+			<dict>
+				<key>IOClass</key>
+				<string>IOUserSerial</string>
+				<key>IOUserClass</key>
+				<string>Apple16X50</string>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2018 Apple Inc. All rights reserved.</string>
+	<key>OSMinimumDriverKitVersion</key>
+	<string>21.6</string>
+</dict>
+</plist>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>customSmartList</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>deleteCompletedReminders</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>deleteRenameTag</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>hashtags</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>printing</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>queryParser</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>remindersListSortBy</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>smartListManualSort</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

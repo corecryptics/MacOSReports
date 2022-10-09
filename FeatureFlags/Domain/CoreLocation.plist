@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLLoiLocationProvider</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>CMCaloriePushModelEnabled</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>CMCyclingAutoStartRetroactiveDistanceCoverage</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>CMCyclingWorkoutAlertsEnabled</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>CloudKitForVO2Max</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>cl_fence_handoff</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

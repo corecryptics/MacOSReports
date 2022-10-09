@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>app_wrappers</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>enumerate_extension_points_using_extension_kit</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>launch_thru_runningboard</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>registration_multiuser_dissemination</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+	<key>url_overrides</key>
+	<dict>
+		<key>Enabled</key>
+		<true/>
+	</dict>
+</dict>
+</plist>
