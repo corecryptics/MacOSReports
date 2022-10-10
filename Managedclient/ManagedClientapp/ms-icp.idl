@@ -1,0 +1,33 @@
+// Please refer to [MS-WCCE] for the definition of the 
+// CERTTRANSBLOB
+
+[
+    uuid(91ae6020-9e3c-11cf-8d7c-00aa00c091be),
+    pointer_default(unique)
+]
+interface ICertPassage
+{
+import "nt/dtyp.idl";
+
+typedef struct _CERTTRANSBLOB {
+    ULONG                       cb;
+    [size_is(cb), unique] BYTE *pb;
+} CERTTRANSBLOB;
+
+DWORD CertServerRequest(
+ [in] handle_t h,
+ [in] DWORD dwFlags,
+ [in, string, unique] unsigned short *pwszAuthority,
+ [in, out, ref] DWORD* pdwRequestId,
+ [out] DWORD* pdwDisposition,
+ [in, ref] CERTTRANSBLOB* pctbAttribs,
+ [in, ref] CERTTRANSBLOB* pctbRequest,
+ [out, ref] CERTTRANSBLOB* pctbCert,
+ [out, ref] CERTTRANSBLOB* pctbEncodedCert,
+ [out, ref] CERTTRANSBLOB* pctbDispositionMessage
+);
+
+}
+
+
+

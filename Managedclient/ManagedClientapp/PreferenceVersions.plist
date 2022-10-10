@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.MCX</key>
+	<dict>
+		<key>mcx_maximum_preference_version</key>
+		<integer>2</integer>
+		<key>mcx_minimum_preference_version</key>
+		<integer>1</integer>
+	</dict>
+	<key>com.apple.systempreferences</key>
+	<dict>
+		<key>mcx_maximum_preference_version</key>
+		<integer>2</integer>
+		<key>mcx_minimum_preference_version</key>
+		<integer>1</integer>
+	</dict>
+    <key>com.apple.universalaccess</key>
+	<dict>
+		<key>mcx_maximum_preference_version</key>
+		<integer>2</integer>
+		<key>mcx_minimum_preference_version</key>
+		<integer>1</integer>
+	</dict>
+</dict>
+</plist>

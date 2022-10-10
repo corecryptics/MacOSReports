@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PayloadBundleWhiteList</key>
+	<array>
+        <dict>
+            <key>BundleID</key>
+            <string>loginwindow</string>
+        </dict>
+        <dict>
+            <key>BundleID</key>
+            <string>com.apple.loginwindow</string>
+        </dict>
+        <dict>
+            <key>BundleID</key>
+            <string>com.apple.MCX</string>
+        </dict>
+        <dict>
+            <key>BundleID</key>
+            <string>com.apple.screensaver</string>
+        </dict>
+    </array>
+	<key>PayloadBundleWhiteListEnabled</key>
+	<integer>1</integer>
+</dict>
+</plist>
