@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BuildMachineOSBuild</key>
+	<string>20A241133</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>remotepairingd</string>
+	<key>CFBundleExecutable</key>
+	<string>remotepairingd</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.apple.CoreDevice.remotepairingd</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>remotepairingd</string>
+	<key>CFBundlePackageType</key>
+	<string>XPC!</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>49.6</string>
+	<key>DTCompiler</key>
+	<string>com.apple.compilers.llvm.clang.1_0</string>
+	<key>DTPlatformBuild</key>
+	<string>13E6049a</string>
+	<key>DTPlatformName</key>
+	<string>macosx</string>
+	<key>DTPlatformVersion</key>
+	<string>12.6</string>
+	<key>DTSDKBuild</key>
+	<string>21G105</string>
+	<key>DTSDKName</key>
+	<string>macosx12.6.internal</string>
+	<key>DTXcode</key>
+	<string>1330</string>
+	<key>DTXcodeBuild</key>
+	<string>13E6049a</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>11.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2019 Apple. All rights reserved.</string>
+	<key>XPCService</key>
+	<dict>
+		<key>RunLoopType</key>
+		<string>NSRunLoop</string>
+		<key>ServiceType</key>
+		<string>User</string>
+	</dict>
+</dict>
+</plist>

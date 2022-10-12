@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CoreCaptureConfig</key>
+		<dict>
+			<key>CCConfigureStream</key>
+			<dict>
+				<key>com.apple.iokit.IO80211Family</key>
+				<dict>
+					<key>IO80211AWDLPeerManager</key>
+					<dict>
+						<key>bpfIO80211Awdl</key>
+						<dict>
+							<key>CoreCapture</key>
+							<dict>
+								<key>LogFlags</key>
+								<integer>301416523934224</integer>
+								<key>LogLevel</key>
+								<integer>5</integer>
+							</dict>
+							<key>Console</key>
+							<dict>
+								<key>LogFlags</key>
+								<integer>0</integer>
+								<key>LogLevel</key>
+								<integer>4</integer>
+							</dict>
+						</dict>
+					</dict>
+				</dict>
+			</dict>
+			<key>CCConfigurePipe</key>
+			<dict>
+				<key>com.apple.iokit.IO80211Family</key>
+				<dict>
+					<key>IO80211AWDLPeerManager</key>
+					<dict>
+						<key>Policy</key>
+						<integer>1</integer>
+					</dict>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</plist>
